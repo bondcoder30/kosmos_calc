@@ -154,11 +154,11 @@
    ========================================================= */
 const CFG = {
   text:      '404',
-  stepX:     24,   // шаг по горизонтали (плотность)
-  stepY:     30,   // шаг по вертикали
+  // десктоп — одна строка «404»
+  desktop:   { stepX:24, stepY:30, cherryW:22, cherryH:42, fzFactor:1.0  },
+  // мобилка — три строки «4 / 0 / 4», цифры мельче и сетка плотнее
+  mobile:    { stepX:14, stepY:18, cherryW:14, cherryH:26, fzFactor:0.66 },
   hex:       true, // сдвиг каждой второй строки на stepX/2 (соты)
-  cherryW:   22,   // ширина одной вишни, px
-  cherryH:   42,   // высота (с черенком)
   rotMax:    14,   // макс. угол наклона стебля, ±°
   alpha:     90,   // порог прозрачности пикселя из canvas (0..255)
   inDelayPerCol: 0.010, // волна появления слева-направо, сек/колонка
@@ -180,6 +180,7 @@ async function build(){
   const isMobile = window.innerWidth < 640 || window.innerWidth < window.innerHeight * 0.85;
   document.body.classList.toggle('is-mobile', isMobile);
   const lines = isMobile ? CFG.text.split('') : [CFG.text];
+  const P = isMobile ? CFG.mobile : CFG.desktop;
 
   // ждём, пока загрузится жирный ALS Beast — иначе canvas нарисует системным
   try{
@@ -205,11 +206,11 @@ async function build(){
 
   // ищем максимальный шрифт, при котором все строки влезают и по ширине, и по высоте
   const lineH = H / lines.length;
-  let fz = Math.floor(lineH * 1.05);
+  let fz = Math.floor(lineH * P.fzFactor);
   while (fz > 40){
     ctx.font = `900 ${fz}px "ALS Beast", system-ui, sans-serif`;
     const maxW = Math.max(...lines.map(l => ctx.measureText(l).width));
-    if (maxW <= W * 0.96) break;
+    if (maxW <= W * 0.92) break;
     fz -= 4;
   }
   ctx.font = `900 ${fz}px "ALS Beast", system-ui, sans-serif`;
@@ -222,8 +223,8 @@ async function build(){
 
   // bbox колонок — чтобы анимация шла волной слева-направо
   let minX = Infinity, maxX = -Infinity;
-  for (let y = 0; y < H; y += CFG.stepY){
-    for (let x = 0; x < W; x += CFG.stepX){
+  for (let y = 0; y < H; y += P.stepY){
+    for (let x = 0; x < W; x += P.stepX){
       const px = ((y*dpr|0) * (W*dpr) + (x*dpr|0)) * 4;
       if (data[px + 3] > CFG.alpha){
         if (x < minX) minX = x;
@@ -235,13 +236,15 @@ async function build(){
   const span = Math.max(1, maxX - minX);
 
   // расставляем вишни только внутри контура «404»
-  const offsetX = CFG.hex ? CFG.stepX/2 : 0;
-  for (let y = CFG.stepY/2; y < H; y += CFG.stepY){
-    const row    = Math.floor(y / CFG.stepY);
+  const offsetX = CFG.hex ? P.stepX/2 : 0;
+  const jitterX = Math.min(4, P.stepX * 0.2);
+  const jitterY = Math.min(3, P.stepY * 0.15);
+  for (let y = P.stepY/2; y < H; y += P.stepY){
+    const row    = Math.floor(y / P.stepY);
     const rowOff = (CFG.hex && (row % 2)) ? offsetX : 0;
-    for (let x = rowOff; x < W; x += CFG.stepX){
-      const jx = (Math.random() - 0.5) * 4;
-      const jy = (Math.random() - 0.5) * 3;
+    for (let x = rowOff; x < W; x += P.stepX){
+      const jx = (Math.random() - 0.5) * jitterX;
+      const jy = (Math.random() - 0.5) * jitterY;
       const sx = Math.max(0, Math.min(W-1, x + jx));
       const sy = Math.max(0, Math.min(H-1, y + jy));
       const px = ((sy*dpr|0) * (W*dpr) + (sx*dpr|0)) * 4;
@@ -253,10 +256,10 @@ async function build(){
 
       const el = document.createElement('div');
       el.className = 'cherry';
-      el.style.left  = (sx - CFG.cherryW/2)      + 'px';
-      el.style.top   = (sy - CFG.cherryH * 0.72) + 'px';
-      el.style.setProperty('--cw',    CFG.cherryW + 'px');
-      el.style.setProperty('--ch',    CFG.cherryH + 'px');
+      el.style.left  = (sx - P.cherryW/2)      + 'px';
+      el.style.top   = (sy - P.cherryH * 0.72) + 'px';
+      el.style.setProperty('--cw',    P.cherryW + 'px');
+      el.style.setProperty('--ch',    P.cherryH + 'px');
       el.style.setProperty('--rot',   rot + 'deg');
       el.style.setProperty('--delay', delay + 's');
       el.innerHTML =
