@@ -275,7 +275,6 @@ window.renderTieredCake = function(cake){
       <div class="hint">От ${cake.minTiers} ярус${cake.minTiers===1?'а':'ов'}. От ${fmtWeight(cake.minWeight)} кг.${cake.note?'<br>'+cake.note:''}</div>
       <div class="hint hint--big">Стоимость начинки в ярусных тортах фиксированная — 3&nbsp;200&nbsp;р/кг.</div>
       ${totalHTML(r.total)}
-      ${classBadgeAll()}
     `;
 
     root.querySelectorAll('button[data-act]').forEach(b => {
@@ -376,6 +375,7 @@ window.renderWeightCake = function(cake){
 
   function draw(){
     if (!cake.fillings.includes(state.filling)) state.filling = cake.fillings[0];
+    const hasFillingPicker = cake.fillings.length > 1;
     const r = calc();
     root.innerHTML = `
       ${renderHeader(cake)}
@@ -385,13 +385,15 @@ window.renderWeightCake = function(cake){
         <div class="value">${fmtWeight(state.weight)}</div>
         <button class="step-btn plus"  data-act="w+" aria-label="плюс" type="button">${SVG_PLUS}</button>
       </div>
-      <div class="label">Начинка</div>
-      <div class="tier-row">
-        <select class="to-custom" id="filling">
-          ${cake.fillings.map(f=>`<option ${f===state.filling?'selected':''}>${f}</option>`).join('')}
-        </select>
-      </div>
-      ${classBadge(fillingClass(state.filling))}
+      ${hasFillingPicker ? `
+        <div class="label">Начинка</div>
+        <div class="tier-row">
+          <select class="to-custom" id="filling">
+            ${cake.fillings.map(f=>`<option ${f===state.filling?'selected':''}>${f}</option>`).join('')}
+          </select>
+        </div>
+        ${classBadge(fillingClass(state.filling))}
+      ` : ''}
       ${totalHTML(r.total)}
     `;
     root.querySelectorAll('button[data-act]').forEach(b => {
@@ -402,7 +404,8 @@ window.renderWeightCake = function(cake){
         draw();
       };
     });
-    root.querySelector('#filling').onchange = e => { state.filling = e.target.value; draw(); };
+    const fillSel = root.querySelector('#filling');
+    if (fillSel) fillSel.onchange = e => { state.filling = e.target.value; draw(); };
     broadcastCake({
       cake: cake.name, total: r.total,
       weight: fmtWeight(state.weight), filling: state.filling,
