@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Калькулятор — ярусные</title>
+<style>
+/* ============================================================
+   ШРИФТЫ
+   Сначала пробуем подхватить локально (если они добавлены
+   в Тильду/Редимаг под именами 'ALS Beast' / 'Golos Text').
+   Если нет — тянем с GitHub Pages.
+   ============================================================ */
+@font-face{
+  font-family:'ALS Beast';
+  src: local('ALS Beast'), local('ALS Beast Ultra'), local('ALSBeast'),
+       url('https://ab-aacoop.github.io/kosmos_calc/calculator/assets/ALS_Beast_Ultra.otf') format('opentype'),
+       url('assets/ALS_Beast_Ultra.otf') format('opentype');
+  font-weight:900;font-style:normal;font-display:swap;
+}
+@font-face{
+  font-family:'Golos Text';
+  src: local('Golos Text'), local('GolosText'),
+       url('https://ab-aacoop.github.io/kosmos_calc/calculator/assets/GolosText-Regular.ttf') format('truetype'),
+       url('assets/GolosText-Regular.ttf') format('truetype');
+  font-weight:400;font-style:normal;font-display:swap;
+}
+
+:root{
+  --bg:#cfcfcf;
+  --red:#d83448;
+  --red-2:#c41d33;
+  --pink:#f08a99;
+  --display:'ALS Beast', system-ui, sans-serif;
+  --text:'Golos Text', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+*{box-sizing:border-box}
+html,body{
+  margin:0;padding:0;height:100%;
+  background:var(--bg);
+  font-family:var(--text);color:#1a1a1a;
+}
+
+/* ============ FRAME ============
+   Заполняет родителя по высоте.
+   Если контент больше — скроллится внутри .calc-scroll. */
+.calc-frame{position:relative;height:100%;background:var(--bg);overflow:hidden}
+.calc-scroll{
+  height:100%;overflow-y:auto;
+  padding:32px 24px 32px;
+  scrollbar-width:thin;scrollbar-color:rgba(0,0,0,.25) transparent;
+}
+.calc-scroll::-webkit-scrollbar{width:6px}
+.calc-scroll::-webkit-scrollbar-thumb{background:rgba(0,0,0,.2);border-radius:3px}
+.calc-scroll::-webkit-scrollbar-track{background:transparent}
+
+/* ============ META ============ */
+.calc-meta{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:10px;
+  font-family:var(--text);font-size:11px;color:#555;
+  letter-spacing:.3px;text-transform:uppercase;
+}
+
+/* ============ DROPDOWNS (Golos) ============ */
+.cake-picker, .pill-select{
+  width:100%;display:block;
+  font-family:var(--text);font-size:15px;font-weight:400;
+  border:2px solid var(--red);border-radius:999px;
+  background:#fff;color:var(--red);
+  padding:11px 16px;text-align:center;appearance:none;cursor:pointer;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' stroke='%23d83448' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat:no-repeat;background-position:right 16px center;background-size:14px;
+  padding-right:38px;
+}
+
+/* ============ LABEL (display) ============ */
+.label{
+  text-align:center;color:#fff;
+  font-family:var(--display);font-weight:900;
+  font-size:34px;text-transform:lowercase;line-height:1;
+  margin:22px 0 10px;
+}
+.label::first-letter{text-transform:uppercase}
+
+/* ============ STEPPER ============ */
+.stepper{
+  display:flex;align-items:center;justify-content:center;gap:22px;
+  color:var(--red);
+}
+.stepper .step-btn{
+  background:none;border:0;padding:0;cursor:pointer;color:var(--red);
+  display:inline-flex;align-items:center;justify-content:center;
+  transition:transform .08s ease, filter .15s ease;
+}
+.stepper .step-btn:active{transform:scale(.92)}
+.stepper .step-btn:hover{filter:brightness(.95) saturate(1.15)}
+.stepper .step-btn svg{display:block;fill:currentColor}
+.stepper .step-btn.minus svg{width:48px;height:18px}
+.stepper .step-btn.plus svg{width:48px;height:48px}
+.stepper .value{
+  font-family:var(--display);font-weight:900;
+  font-size:88px;line-height:1;min-width:140px;text-align:center;color:var(--red);
+}
+
+/* ============ FIXED WEIGHT ============ */
+.fixed-row{
+  display:flex;align-items:center;justify-content:center;gap:28px;
+  margin:8px 0;cursor:pointer;border-radius:8px;padding:6px 10px;
+  user-select:none;
+}
+.fixed-row .value{
+  font-family:var(--display);font-weight:900;
+  font-size:88px;line-height:1;color:var(--red);
+}
+.radio-big{
+  width:72px;height:72px;border-radius:50%;border:0;
+  background:#fff;cursor:pointer;flex-shrink:0;padding:0;
+  transition:background-color .15s ease, transform .08s ease;
+}
+.radio-big:hover{background:var(--pink)}
+.radio-big.checked{background:var(--red)}
+.radio-big:active{transform:scale(.94)}
+.fixed-row:hover .radio-big:not(.checked){background:var(--pink)}
+
+/* ============ HINT (Golos) ============ */
+.hint{
+  text-align:center;color:#3a3a3a;font-size:13px;
+  margin:14px 8px 6px;line-height:1.4;
+  font-family:var(--text);
+}
+
+/* ============ TIERS / FILLING LABELS (Golos) ============ */
+.tiers{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.tier-row .tier-label{
+  text-align:center;
+  font-family:var(--text);font-weight:400;
+  font-size:12px;color:var(--red);
+  margin-bottom:5px;letter-spacing:.3px;
+}
+
+/* ============ TOTAL ============ */
+.total-wrap{margin-top:30px;text-align:center}
+.total-label{
+  font-family:var(--text);font-weight:400;
+  color:var(--red);font-size:13px;
+  letter-spacing:1px;margin-bottom:8px;
+}
+.total-value{
+  font-family:var(--display);font-weight:900;
+  color:var(--red);font-size:60px;line-height:1;
+}
+
+/* ============ SEND ============ */
+.send-row{margin-top:22px;display:flex;justify-content:center}
+.send-row button{
+  font-family:var(--text);font-weight:400;
+  font-size:14px;letter-spacing:.5px;text-transform:uppercase;
+  background:var(--red);color:#fff;border:0;
+  padding:13px 24px;border-radius:999px;cursor:pointer;
+}
+.send-row button:hover{background:var(--red-2)}
+
+/* ============ RESPONSIVE ============ */
+@media (max-width:480px){
+  .calc-scroll{padding:24px 18px 24px}
+  .stepper{gap:14px}
+  .stepper .step-btn.minus svg{width:36px;height:14px}
+  .stepper .step-btn.plus svg{width:36px;height:36px}
+  .stepper .value, .fixed-row .value{font-size:64px;min-width:auto}
+  .label{font-size:26px}
+  .total-value{font-size:44px}
+  .radio-big{width:56px;height:56px}
+}
+
+</style>
+</head>
+<body>
+
+<div class="calc-frame">
+  <div class="calc-scroll" id="root"></div>
+</div>
+
+<script>
+/* ================================================================
+   ОБЩИЕ ДАННЫЕ И УТИЛИТЫ ДЛЯ ВСЕХ ТРЁХ КАЛЬКУЛЯТОРОВ
+   ================================================================ */
+
+// Цены начинок за кг — из таблицы тортоначинки.xlsx.
+// Для ярусных тортов (Тип 1) применяется фикс-ставка 3200р/кг
+// независимо от выбранной начинки.
+window.FILLING_PRICES = {
+  "яблочный синнабон": 2800,
+  "шоколадный с шоколадом": 3000,
+  "ванильный с клубникой": 3000,
+  "ванильный с вишней": 3000,
+  "кукис энд крим": 2800,
+  "мак-лимон": 2800,
+  "фундук-кофе шоколад": 3600,
+  "фисташка-малина": 3600,
+  "шоколад-кокос": 2800,
+  "морковный": 3000,
+  "сникерс": 2800,
+  "дорблю груша-грецкий орех": 3600,
+  "апельсин-манго-маракуйя": 2800,
+  "черника-шоколад": 3600,
+  "фисташковый чизкейк": 2800,
+  "чизкейк орео": 2800,
+  "чизкейк Нью Йорк": 3000,
+  "тирамису": 3000
+};
+
+// Готовые наборы начинок (используются в данных каждого торта).
+window.FILLING_SETS = (() => {
+  const BASE = ["яблочный синнабон","шоколадный с шоколадом","ванильный с клубникой","ванильный с вишней","кукис энд крим","мак-лимон","фундук-кофе шоколад","фисташка-малина","шоколад-кокос","морковный","сникерс","дорблю груша-грецкий орех","апельсин-манго-маракуйя"];
+  return {
+    BASE,
+    PLUS_CHERNIKA: [...BASE, "черника-шоколад"],
+    PLUS_CHEESECAKE: [...BASE, "черника-шоколад", "чизкейк Нью Йорк", "чизкейк орео", "фисташковый чизкейк"],
+    NO_SNICKERS_NO_DORBLU: ["яблочный синнабон","шоколадный с шоколадом","ванильный с клубникой","ванильный с вишней","кукис энд крим","мак-лимон","фундук-кофе шоколад","фисташка-малина","шоколад-кокос","морковный","апельсин-манго-маракуйя"],
+    TYPE3_LOVE: ["яблочный синнабон","шоколадный с шоколадом","ванильный с клубникой","ванильный с вишней","кукис энд крим","мак-лимон","фундук-кофе шоколад","фисташка-малина","шоколад-кокос","морковный","дорблю груша-грецкий орех","апельсин-манго-маракуйя"]
+  };
+})();
+
+window.fmtMoney = (n) => Math.round(n).toLocaleString('ru-RU').replace(/,/g,' ') + 'р';
+window.fmtWeight = (w) => Number.isInteger(w) ? w.toFixed(1) : w.toString();
+
+window.range = (min, max, price) => ({min, max, price});
+
+window.decorForWeight = (table, w) => {
+  for (const r of table) { if (w >= r.min && w <= r.max) return r.price; }
+  return table[table.length-1].price;
+};
+
+/* ================================================================
+   ОТПРАВКА ЗАКАЗА (заглушка — на втором заходе подключим Sheets/TG)
+   ================================================================ */
+window.sendOrder = (payload) => {
+  console.log('[ORDER]', payload);
+  alert('Заказ собран (см. консоль). На втором заходе подключим Google Sheets / Telegram-бот.\n\n' + JSON.stringify(payload, null, 2));
+};
+
+/* ================================================================
+   ТИП 1 — ЯРУСНЫЕ
+   total = ярусы × декор/ярус  +  вес_кг × 3200
+   На каждый ярус — выбор начинки (для информации), 3200р/кг фикс.
+   ================================================================ */
+
+const {BASE, PLUS_CHEESECAKE, TYPE3_LOVE} = FILLING_SETS;
+
+const CAKES = [
+  { id:"bell",      name:"белль",                 decorPerTier:3000, minWeight:6,   minTiers:6,  fillings:BASE },
+  { id:"lumiere",   name:"люмьер",                decorPerTier:3000, minWeight:10,  minTiers:10, fillings:PLUS_CHEESECAKE },
+  { id:"fairy",     name:"fairy cake",            decorPerTier:3000, minWeight:4,   minTiers:2,  fillings:BASE },
+  { id:"bigcherry", name:"big cherry fairy cake", decorPerTier:3000, minWeight:4,   minTiers:3,  fillings:BASE },
+  { id:"chapito",   name:"шапито",                decorPerTier:3000, minWeight:6,   minTiers:2,  fillings:BASE },
+  { id:"kuinji",    name:"куинджи",               decorPerTier:3000, minWeight:1.5, minTiers:1,  fillings:BASE, note:"Стоимость декора зависит от сложности — может быть выше." },
+  { id:"darcy",     name:"дарси",                 decorPerTier:3000, minWeight:1.5, minTiers:1,  fillings:BASE },
+  { id:"shine",     name:"shine bright",          decorPerTier:3500, minWeight:1.5, minTiers:1,  fillings:BASE },
+  { id:"kelly",     name:"келли",                 decorPerTier:2000, minWeight:4,   minTiers:2,  fillings:TYPE3_LOVE },
+  { id:"elizabeth", name:"элизабет",              decorPerTier:3000, minWeight:1.5, minTiers:1,  fillings:BASE },
+];
+
+const FILLING_RATE = 3200;
+
+const state = { cakeIdx:0, weight:6, tiers:6, tierFillings:[] };
+
+const root = document.getElementById('root');
+
+function calc(){
+  const c = CAKES[state.cakeIdx];
+  const decor = state.tiers * c.decorPerTier;
+  const filling = state.weight * FILLING_RATE;
+  return { total: decor + filling, decor, filling };
+}
+
+function render(){
+  const c = CAKES[state.cakeIdx];
+  if (state.weight < c.minWeight) state.weight = c.minWeight;
+  if (state.tiers  < c.minTiers)  state.tiers  = c.minTiers;
+  while (state.tierFillings.length < state.tiers) state.tierFillings.push(c.fillings[0]);
+  state.tierFillings = state.tierFillings.slice(0, state.tiers);
+
+  const r = calc();
+  root.innerHTML = `
+    <div class="calc-meta">
+      <span>Тип 1 · ярусные</span>
+      <span>декор ${c.decorPerTier}р/ярус · начинка ${FILLING_RATE}р/кг</span>
+    </div>
+    <select class="cake-picker" id="cake">
+      ${CAKES.map((x,i)=>`<option value="${i}" ${i===state.cakeIdx?'selected':''}>${x.name}</option>`).join('')}
+    </select>
+
+    <div class="label">Сколько килограмм?</div>
+    <div class="stepper">
+      <button class="step-btn minus" data-act="w-" aria-label="минус"><svg viewBox="0 0 100 30" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="30" rx="15"/></svg></button>
+      <div class="value">${fmtWeight(state.weight)}</div>
+      <button class="step-btn plus"  data-act="w+" aria-label="плюс"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect x="33" width="34" height="100" rx="14"/><rect y="33" width="100" height="34" rx="14"/></svg></button>
+    </div>
+
+    <div class="label">Сколько ярусов?</div>
+    <div class="stepper">
+      <button class="step-btn minus" data-act="t-" aria-label="минус"><svg viewBox="0 0 100 30" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="30" rx="15"/></svg></button>
+      <div class="value">${state.tiers}</div>
+      <button class="step-btn plus"  data-act="t+" aria-label="плюс"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect x="33" width="34" height="100" rx="14"/><rect y="33" width="100" height="34" rx="14"/></svg></button>
+    </div>
+
+    <div class="hint">От ${c.minTiers} ярус${c.minTiers===1?'а':'ов'}. От ${fmtWeight(c.minWeight)} кг.${c.note?'<br>'+c.note:''}</div>
+
+    <div class="tiers">
+      ${state.tierFillings.map((val,i)=>`
+        <div class="tier-row">
+          <div class="tier-label">начинка ${i+1} ярус</div>
+          <select class="pill-select" data-tier="${i}">
+            ${[...c.fillings, 'фальш ярус'].map(f=>`<option ${f===val?'selected':''}>${f}</option>`).join('')}
+          </select>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="total-wrap">
+      <div class="total-label">итоговая стоимость</div>
+      <div class="total-value">${fmtMoney(r.total)}</div>
+    </div>
+    <div class="send-row">
+      <button id="send">Отправить заказ</button>
+    </div>
+  `;
+
+  root.querySelector('#cake').onchange = (e)=>{
+    state.cakeIdx = +e.target.value;
+    state.tierFillings = [];
+    const nc = CAKES[state.cakeIdx];
+    state.weight = Math.max(state.weight, nc.minWeight);
+    state.tiers  = Math.max(state.tiers,  nc.minTiers);
+    render();
+  };
+  root.querySelectorAll('button[data-act]').forEach(b => {
+    b.onclick = () => {
+      const a = b.dataset.act;
+      if (a==='w+') state.weight = +(state.weight + 0.5).toFixed(1);
+      if (a==='w-') state.weight = Math.max(c.minWeight, +(state.weight - 0.5).toFixed(1));
+      if (a==='t+') state.tiers++;
+      if (a==='t-') state.tiers = Math.max(c.minTiers, state.tiers - 1);
+      render();
+    };
+  });
+  root.querySelectorAll('select[data-tier]').forEach(s => {
+    s.onchange = (e) => { state.tierFillings[+s.dataset.tier] = e.target.value; render(); };
+  });
+  root.querySelector('#send').onclick = () => {
+    sendOrder({
+      type:'tiered', cake:c.name, weight:state.weight, tiers:state.tiers,
+      tierFillings: state.tierFillings.slice(0, state.tiers),
+      decor:r.decor, filling:r.filling, total:r.total
+    });
+  };
+}
+
+render();
+</script>
+</body>
+</html>

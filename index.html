@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Kosmos — превью трёх калькуляторов</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:#eaeaea;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  body{padding:24px;color:#222}
+  h1{margin:0 0 6px;font-size:22px}
+  p.lead{margin:0 0 18px;color:#555;font-size:14px;max-width:760px}
+  .grid{
+    display:grid;gap:18px;
+    grid-template-columns:repeat(auto-fit, minmax(340px, 1fr));
+    align-items:stretch;
+  }
+  .card{
+    display:flex;flex-direction:column;background:#fff;border-radius:10px;overflow:hidden;
+    box-shadow:0 1px 4px rgba(0,0,0,.08);
+  }
+  .card header{
+    padding:10px 14px;font-size:13px;font-weight:600;color:#555;border-bottom:1px solid #eee;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .card header a{font-size:12px;color:#999;text-decoration:none}
+  .card header a:hover{color:#d83448}
+  .frame-wrap{
+    aspect-ratio: 380 / 760;
+    width:100%;
+  }
+  iframe{display:block;width:100%;height:100%;border:0}
+</style>
+</head>
+<body>
+
+<h1>Калькулятор тортов — превью</h1>
+<p class="lead">Три отдельных файла-калькулятора. Каждый встраивается в сайт как iframe или как HTML-блок. Файлы лежат в этой же папке: <code>tiered.html</code>, <code>fixed.html</code>, <code>weight.html</code>. Все ассеты — в <code>assets/</code>. Каждый файл занимает 100% высоты родителя; контент скроллится внутри.</p>
+
+<div class="grid">
+  <div class="card">
+    <header>Тип 1 · ярусные <a href="tiered.html" target="_blank">открыть в новой вкладке →</a></header>
+    <div class="frame-wrap"><iframe src="tiered.html" title="Ярусные"></iframe></div>
+  </div>
+  <div class="card">
+    <header>Тип 2 · фикс. вес <a href="fixed.html" target="_blank">открыть в новой вкладке →</a></header>
+    <div class="frame-wrap"><iframe src="fixed.html" title="Фикс. вес"></iframe></div>
+  </div>
+  <div class="card">
+    <header>Тип 3 · вес + декор <a href="weight.html" target="_blank">открыть в новой вкладке →</a></header>
+    <div class="frame-wrap"><iframe src="weight.html" title="Плоский по весу"></iframe></div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Калькулятор — плоский по весу</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="calc-frame">
+  <div class="calc-scroll" id="root"></div>
+</div>
+
+<script src="core.js"></script>
+<script>
+/* ================================================================
+   ТИП 3 — ПЛОСКИЙ ПО ВЕСУ
+   total = вес × цена_начинки  +  декор_для_веса (кусочная функция)
+   Шаг веса 0.5 кг.
+   ================================================================ */
+
+const {BASE, PLUS_CHERNIKA, PLUS_CHEESECAKE, NO_SNICKERS_NO_DORBLU, TYPE3_LOVE} = FILLING_SETS;
+
+const CAKES = [
+  // богемская рапсодия: от 4 кг. До 8 кг — 4500, с 9 кг — 6500
+  { id:"bohemian", name:"богемская рапсодия", minWeight:4, maxWeight:20,
+    decorTable:[range(4,8.5,4500), range(9,20,6500)], fillings:BASE },
+
+  // вавилон: от 10 кг. 10-14 — 10000, 15-18 — 15000, от 19 — 18500
+  { id:"vavilon", name:"вавилон", minWeight:10, maxWeight:30,
+    decorTable:[range(10,14.5,10000), range(15,18.5,15000), range(19,30,18500)], fillings:NO_SNICKERS_NO_DORBLU },
+
+  // лебединое озеро: от 2 кг, фикс декор 2500
+  { id:"swan", name:"лебединое озеро", minWeight:2, maxWeight:20,
+    decorTable:[range(2,20,2500)], fillings:PLUS_CHERNIKA },
+
+  // green day: от 3 кг. До 10 — 4500, от 10 — 6500
+  { id:"greenday", name:"green day", minWeight:3, maxWeight:20,
+    decorTable:[range(3,9.5,4500), range(10,20,6500)], fillings:PLUS_CHEESECAKE },
+
+  // вишневый сад: 4-7 — 5500, 8-12 — 8000, 12+ — 12500
+  { id:"cherryorch", name:"вишневый сад", minWeight:4, maxWeight:20,
+    decorTable:[range(4,7.5,5500), range(8,12,8000), range(12.5,20,12500)], fillings:BASE },
+
+  // любовное настроение: 3-6 — 3500, 7-12 — 5000, 12+ — 6500
+  { id:"loveinmood", name:"любовное настроение", minWeight:3, maxWeight:20,
+    decorTable:[range(3,6.5,3500), range(7,12,5000), range(12.5,20,6500)], fillings:TYPE3_LOVE },
+
+  // анна: 4-7 — 6000, 8-12 — 10000, 12+ — 16000
+  { id:"anna", name:"анна", minWeight:4, maxWeight:20,
+    decorTable:[range(4,7.5,6000), range(8,12,10000), range(12.5,20,16000)], fillings:BASE },
+
+  // ягодные поля навсегда: per-kg, .5 округляем вверх к следующей цене
+  { id:"berryfields", name:"ягодные поля навсегда", minWeight:2, maxWeight:20,
+    decorTable:[
+      range(2,2,3000),    range(2.5,3,5500),  range(3.5,4,6000),  range(4.5,5,7000),
+      range(5.5,6,8000),  range(6.5,7,9000),  range(7.5,8,10000), range(8.5,9,11000),
+      range(9.5,10,12000),range(10.5,11,13000),range(11.5,12,14000),range(12.5,13,15000),
+      range(13.5,14,16000),range(14.5,15,17000),range(15.5,16,18000),range(16.5,17,19000),
+      range(17.5,18,20000),range(18.5,19,22000),range(19.5,20,24000)
+    ], fillings:PLUS_CHEESECAKE },
+
+  // вам письмо: 4-7 — 3000, 8-12 — 4500, 12+ — 5000
+  { id:"letter", name:"вам письмо", minWeight:4, maxWeight:20,
+    decorTable:[range(4,7.5,3000), range(8,12,4500), range(12.5,20,5000)], fillings:BASE },
+
+  // орфей: 4-7 — 3500, 8-12 — 5000, 13+ — 6500
+  { id:"orpheus", name:"орфей", minWeight:4, maxWeight:20,
+    decorTable:[range(4,7.5,3500), range(8,12.5,5000), range(13,20,6500)], fillings:PLUS_CHERNIKA },
+
+  // аполлон: 4-6 — 4000, 7-12 — 6000, 12+ — 7500
+  { id:"apollo", name:"аполлон", minWeight:4, maxWeight:20,
+    decorTable:[range(4,6.5,4000), range(7,12,6000), range(12.5,20,7500)], fillings:PLUS_CHERNIKA },
+
+  // sailor moon: 1.5-3 — 3000, 4-5 — 3500, 6-7 — 5500. Только 1 ярус.
+  { id:"sailor", name:"sailor moon", minWeight:1.5, maxWeight:7,
+    decorTable:[range(1.5,3.5,3000), range(4,5.5,3500), range(6,7,5500)], fillings:PLUS_CHEESECAKE },
+
+  // dancing queen: от 2 кг. До 5 — 4000, от 5 — 6500
+  { id:"dq", name:"dancing queen", minWeight:2, maxWeight:20,
+    decorTable:[range(2,4.5,4000), range(5,20,6500)], fillings:BASE },
+
+  // тоторо: 1.5-2.5 — 2500, 3-5 — 3500
+  { id:"totoro", name:"тоторо", minWeight:1.5, maxWeight:5,
+    decorTable:[range(1.5,2.5,2500), range(3,5,3500)], fillings:PLUS_CHEESECAKE },
+
+  // fuji: 1.5-2.5 — 3000, 3-5.5 — 4000
+  { id:"fuji", name:"fuji", minWeight:1.5, maxWeight:5.5,
+    decorTable:[range(1.5,2.5,3000), range(3,5.5,4000)], fillings:PLUS_CHERNIKA },
+
+  // тирамису: 3000р/кг, только тирамису, декор = 0
+  { id:"tiramisu", name:"тирамису", minWeight:1, maxWeight:10,
+    decorTable:[range(1,10,0)], fillings:["тирамису"] },
+];
+
+const state = { cakeIdx:0, weight:4, filling:null };
+
+const root = document.getElementById('root');
+
+function calc(){
+  const c = CAKES[state.cakeIdx];
+  const f = state.filling || c.fillings[0];
+  const decor = decorForWeight(c.decorTable, state.weight);
+  const filling = state.weight * FILLING_PRICES[f];
+  return { total: decor + filling, decor, filling };
+}
+
+function decorHint(c){
+  if (c.id === 'berryfields') return `От ${fmtWeight(c.minWeight)} кг. Цена декора растёт по 1 кг — от 3 000р до 24 000р.`;
+  if (c.id === 'tiramisu')    return `Стоимость только начинки — 3 000р/кг.`;
+  const parts = c.decorTable.map(r => {
+    if (r.min === r.max) return `${r.min} кг — ${r.price.toLocaleString('ru-RU').replace(/,/g,' ')}р`;
+    return `${fmtWeight(r.min)}–${fmtWeight(r.max)} кг — ${r.price.toLocaleString('ru-RU').replace(/,/g,' ')}р`;
+  });
+  return `От ${fmtWeight(c.minWeight)} кг. Декор: ${parts.join(' · ')}.`;
+}
+
+function render(){
+  const c = CAKES[state.cakeIdx];
+  if (state.weight < c.minWeight) state.weight = c.minWeight;
+  if (state.weight > c.maxWeight) state.weight = c.maxWeight;
+  if (!state.filling || !c.fillings.includes(state.filling)) state.filling = c.fillings[0];
+
+  const r = calc();
+  root.innerHTML = `
+    <div class="calc-meta">
+      <span>Тип 3 · вес + декор</span>
+      <span>декор зависит от веса</span>
+    </div>
+    <select class="cake-picker" id="cake">
+      ${CAKES.map((x,i)=>`<option value="${i}" ${i===state.cakeIdx?'selected':''}>${x.name}</option>`).join('')}
+    </select>
+
+    <div class="label">Сколько килограмм?</div>
+    <div class="stepper">
+      <button class="step-btn minus" data-act="w-" aria-label="минус"><svg viewBox="0 0 100 30" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="30" rx="15"/></svg></button>
+      <div class="value">${fmtWeight(state.weight)}</div>
+      <button class="step-btn plus"  data-act="w+" aria-label="плюс"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect x="33" width="34" height="100" rx="14"/><rect y="33" width="100" height="34" rx="14"/></svg></button>
+    </div>
+
+    <div class="hint">${decorHint(c)}</div>
+
+    <div class="tier-row" style="margin-top:18px">
+      <div class="tier-label">начинка</div>
+      <select class="pill-select" id="filling">
+        ${c.fillings.map(f=>`<option ${f===state.filling?'selected':''}>${f}</option>`).join('')}
+      </select>
+    </div>
+
+    <div class="total-wrap">
+      <div class="total-label">итоговая стоимость</div>
+      <div class="total-value">${fmtMoney(r.total)}</div>
+    </div>
+    <div class="send-row">
+      <button id="send">Отправить заказ</button>
+    </div>
+  `;
+
+  root.querySelector('#cake').onchange = (e) => {
+    state.cakeIdx = +e.target.value; state.filling = null; render();
+  };
+  root.querySelectorAll('button[data-act]').forEach(b => {
+    b.onclick = () => {
+      const a = b.dataset.act;
+      if (a==='w+') state.weight = +Math.min(c.maxWeight, state.weight + 0.5).toFixed(1);
+      if (a==='w-') state.weight = +Math.max(c.minWeight, state.weight - 0.5).toFixed(1);
+      render();
+    };
+  });
+  root.querySelector('#filling').onchange = (e) => { state.filling = e.target.value; render(); };
+  root.querySelector('#send').onclick = () => {
+    sendOrder({
+      type:'weight', cake:c.name, weight:state.weight, filling:state.filling,
+      decor:r.decor, fillingCost:r.filling, total:r.total
+    });
+  };
+}
+
+render();
+</script>
+</body>
+</html>
