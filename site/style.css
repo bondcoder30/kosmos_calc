@@ -1,0 +1,306 @@
+/* ============================================================
+   ОБЩИЕ СТИЛИ САЙТА «KOSMOS CAKE»
+   палитра и шрифты те же, что в калькуляторе
+   ============================================================ */
+@font-face{
+  font-family:'ALS Beast';
+  src: local('ALS Beast'), local('ALS Beast Ultra'),
+       url('assets/ALS_Beast_Ultra.otf') format('opentype');
+  font-weight:900;font-style:normal;font-display:swap;
+}
+@font-face{
+  font-family:'Golos Text';
+  src: local('Golos Text'),
+       url('assets/GolosText-Regular.ttf') format('truetype');
+  font-weight:400;font-style:normal;font-display:swap;
+}
+
+:root{
+  --bg:#cfcfcf;
+  --red:#D2363C;
+  --pink:#F16471;
+  --rose:#E55264;
+  --display:'ALS Beast', system-ui, sans-serif;
+  --text:'Golos Text', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+*{box-sizing:border-box}
+html,body{
+  margin:0;padding:0;height:100%;
+  background:var(--bg);
+  color:#1a1a1a;font-family:var(--text);
+  cursor:url('assets/cursor.svg') 8 8, auto;
+}
+
+/* глобально прячем скроллбары — скролл работает, но полосок не видно */
+*{scrollbar-width:none;-ms-overflow-style:none}
+*::-webkit-scrollbar{display:none;width:0;height:0}
+button,a,.menu-btn,.menu-list li{
+  cursor:url('assets/cursor.svg') 8 8, pointer;
+}
+a{color:inherit}
+img{display:block;max-width:100%}
+
+/* ============ МЕНЮ К В УГЛУ ============ */
+.menu{
+  position:fixed;top:18px;left:22px;z-index:50;
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+}
+.menu-btn{
+  background:none;border:0;padding:0;
+  display:block;width:46px;height:55px;
+}
+.menu-btn svg{display:block;width:100%;height:100%}
+.menu-btn svg path{fill:var(--pink);transition:fill .15s ease}
+.menu-btn:hover svg path{fill:var(--rose)}
+.menu-label{
+  font-family:var(--display);font-weight:900;color:var(--pink);
+  font-size:14px;line-height:1;letter-spacing:.4px;text-transform:lowercase;
+}
+.menu-list{
+  position:fixed;top:88px;left:22px;z-index:49;
+  list-style:none;margin:0;padding:0;
+  display:none;flex-direction:column;gap:6px;
+}
+.menu.is-open + .menu-list,
+.menu-list.is-open{display:flex}
+.menu-list a{
+  font-family:var(--display);font-weight:900;color:var(--pink);
+  font-size:18px;line-height:1;text-transform:lowercase;text-decoration:none;
+}
+.menu-list a:hover{color:var(--rose)}
+
+/* ============ ГЛАВНАЯ — ГРИД ОБЛОЖЕК ============ */
+.cover-grid{
+  padding:80px 24px 24px;
+  display:grid;
+  grid-template-columns:repeat(3, 1fr);
+  gap:18px;
+  max-width:1400px;margin:0 auto;
+}
+.cover{
+  position:relative;display:block;
+  aspect-ratio:1/1.25;overflow:hidden;
+  background:#222;text-decoration:none;
+}
+.cover img{
+  width:100%;height:100%;object-fit:cover;
+  transition:transform .5s ease, filter .3s ease;
+}
+.cover:hover img{transform:scale(1.04);filter:brightness(.75)}
+.cover .cover-name{
+  position:absolute;inset:auto 0 0 0;
+  padding:14px 16px 18px;
+  font-family:var(--display);font-weight:900;color:#fff;
+  font-size:clamp(22px, 2.4vw, 32px);line-height:.95;letter-spacing:.2px;
+  text-transform:lowercase;
+  opacity:0;transform:translateY(8px);
+  transition:opacity .25s ease, transform .25s ease;
+  text-shadow:0 2px 12px rgba(0,0,0,.45);
+  pointer-events:none;
+}
+.cover:hover .cover-name{opacity:1;transform:translateY(0)}
+
+@media (max-width:780px){
+  .cover-grid{grid-template-columns:repeat(2, 1fr);gap:12px;padding:70px 14px 14px}
+  /* на мобильных тапах подпись остается видна — наведения нет */
+  .cover .cover-name{opacity:1;transform:none;font-size:18px;padding:10px 12px 12px}
+  .cover:hover img{transform:none;filter:none}
+}
+
+/* ============ СТРАНИЦА ТОРТА — ТРИ КОЛОНКИ ============ */
+.cake-page{
+  position:fixed;inset:0;
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  background:var(--bg);
+}
+.cake-col{
+  position:relative;height:100%;
+  overflow-y:auto;
+}
+
+/* ----- колонка 1: фото торта (плотно, без зазоров) ----- */
+.col-photo{background:var(--bg)}
+.col-photo .photo{
+  display:block;width:100%;height:auto;object-fit:cover;
+  margin:0;
+}
+
+/* ----- колонка 2: описание + калькулятор ----- */
+.col-info{padding:24px 22px 24px;display:flex;flex-direction:column;align-items:center;gap:10px;min-height:0}
+.col-info .cake-title{
+  font-family:var(--display);font-weight:900;color:var(--pink);
+  font-size:56px;line-height:.9;text-transform:lowercase;letter-spacing:.2px;
+  margin:0;text-align:center;
+}
+.col-info .cake-desc{
+  font-family:var(--display);font-weight:900;color:#fff;
+  font-size:17px;line-height:1.15;text-align:center;
+  margin:0;text-transform:lowercase;max-width:380px;
+}
+.col-info .cake-desc::first-letter{text-transform:uppercase}
+.col-info .cake-sub{
+  font-family:var(--text);font-weight:400;
+  font-size:11px;line-height:1.4;color:var(--red);text-align:center;
+  margin:0 0 4px;max-width:380px;
+}
+.col-info .calc-frame{
+  width:100%;max-width:460px;flex:1 1 0;min-height:0;height:100%;
+  border:0;background:transparent;display:block;
+}
+
+/* ----- колонка 3: «колбаса» начинок + оверлей доставки -----
+   Контейнер col-third содержит два слоя: длинную колонку срезов и
+   блок доставки, который выезжает поверх начинок по нажатию «далее».
+*/
+.col-third{
+  position:relative;overflow:hidden;background:var(--bg);
+}
+.col-third .col-fillings,
+.col-third .col-delivery{
+  position:absolute;inset:0;
+  overflow-y:auto;
+  transition:transform .4s ease;
+  -webkit-overflow-scrolling:touch;
+}
+
+/* блок доставки: спрятан справа, выезжает влево по is-delivery */
+.col-third .col-delivery{
+  transform:translateX(100%);
+  z-index:2;background:var(--bg);
+  display:flex;flex-direction:column;
+}
+.cake-page.is-delivery .col-third .col-delivery{transform:translateX(0)}
+/* колонка с начинками чуть «уводится» влево — намёк, что она скрылась под доставку */
+.cake-page.is-delivery .col-third .col-fillings{transform:translateX(-20%);opacity:.45}
+
+/* «назад к начинкам» — белая стрелка влево в нижнем левом углу
+   (визуально как на макете) */
+.delivery-back{
+  position:absolute;left:14px;bottom:18px;z-index:3;
+  width:64px;height:64px;border:0;background:none;padding:0;
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;
+  transition:transform .12s ease, color .15s ease;
+  cursor:url('assets/cursor.svg') 8 8, pointer;
+}
+.delivery-back:hover{color:var(--pink)}
+.delivery-back:active{transform:scale(.92)}
+.delivery-back svg{width:42px;height:42px;display:block;fill:currentColor}
+
+.col-delivery .delivery-frame{
+  flex:1 1 auto;width:100%;height:100%;
+  border:0;background:transparent;display:block;
+}
+
+.col-fillings{padding:0;background:var(--bg)}
+.col-fillings .slice-wrap{
+  position:relative;
+  width:100%;aspect-ratio:1/1;
+  overflow:hidden;margin:0;
+}
+.col-fillings .slice-wrap .slice{
+  display:block;width:100%;height:100%;object-fit:cover;
+}
+/* кружок-подсказка: маленький серый кружок с красной искрой */
+.col-fillings .info-dot{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:32px;height:32px;border-radius:50%;
+  background:var(--bg);border:0;padding:0;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 10px rgba(0,0,0,.25);
+  transition:transform .15s ease, background-color .15s ease;
+  z-index:2;
+}
+.col-fillings .info-dot:hover{
+  transform:translate(-50%,-50%) scale(1.08);
+  background:#fff;
+}
+.col-fillings .info-dot svg{width:14px;height:14px;color:var(--red)}
+.col-fillings .info-dot svg path{fill:currentColor}
+.col-fillings .slice-wrap.is-open .info-dot{display:none}
+
+/* ============ ПУЗЫРЁК НАЧИНКИ ВНУТРИ КВАДРАТНОГО СРЕЗА ============
+   попап встаёт строго в границы своего .slice-wrap, без затемнения,
+   каждый независимый — можно открыть хоть все одновременно. */
+.col-fillings .filling-bubble{
+  position:absolute;inset:0;
+  display:none;
+  flex-direction:column;align-items:center;justify-content:flex-start;
+  text-align:center;color:var(--red);
+  /* паддинги подобраны так, чтобы заголовок попадал в самую широкую
+     часть круга, а цена внизу не уезжала за окружность */
+  padding:23% 13% 20%;
+  z-index:3;
+}
+.col-fillings .slice-wrap.is-open .filling-bubble{display:flex}
+
+/* круглая серая «таблетка» с тонкой красной обводкой,
+   чуть меньше квадрата — помещается с воздухом по бокам */
+.col-fillings .filling-bubble::before{
+  content:'';
+  position:absolute;inset:11%;
+  border-radius:50%;
+  background:var(--bg);border:1px solid var(--red);
+  box-shadow:0 6px 22px rgba(0,0,0,.18);
+  z-index:-1;
+}
+
+.col-fillings .filling-bubble h3{
+  font-family:var(--display);font-weight:900;color:var(--pink);
+  font-size:clamp(18px, 2.6vw, 30px);line-height:.95;letter-spacing:.2px;
+  text-transform:lowercase;
+  margin:0 0 10px;
+}
+.col-fillings .filling-bubble p.desc{
+  font-family:var(--text);font-weight:400;color:var(--red);
+  font-size:12px;line-height:1.35;margin:0 0 10px;
+  max-width:88%;
+}
+/* класс начинки — SVG-картинка «космос база/классика/люкс» */
+.col-fillings .filling-bubble .bb-class{
+  display:block;margin:6px auto 4px;
+  width:36%;max-width:130px;height:auto;
+}
+/* цена — обычным текстом красным */
+.col-fillings .filling-bubble .bb-price{
+  font-family:var(--text);font-weight:400;color:var(--red);
+  font-size:12px;line-height:1.2;margin:0 0 2px;
+}
+
+/* две большие искры по бокам круга — белые с тонкой красной обводкой */
+.col-fillings .filling-bubble .spark{
+  position:absolute;top:50%;transform:translateY(-50%);
+  width:18%;height:18%;pointer-events:none;
+}
+.col-fillings .filling-bubble .spark.left { left:0;  }
+.col-fillings .filling-bubble .spark.right{ right:0; }
+.col-fillings .filling-bubble .spark svg{width:100%;height:100%;display:block;overflow:visible}
+.col-fillings .filling-bubble .spark svg path{
+  fill:#fff;stroke:var(--red);stroke-width:1.4;
+  stroke-linejoin:round;
+  vector-effect:non-scaling-stroke;
+}
+
+@media (max-width:900px){
+  .cake-page{grid-template-columns:1fr;grid-template-rows:auto auto auto}
+  .cake-col{height:auto;overflow:visible}
+  .col-info{padding:24px 18px 40px}
+  .col-info .cake-title{font-size:48px}
+
+  /* третья «колонка» в мобиле — обычный стек, без оверлей-анимации:
+     по «далее» просто прячем начинки и показываем доставку, кнопка «назад»
+     возвращает обратно. */
+  .col-third{overflow:visible;height:auto}
+  .col-third .col-fillings,
+  .col-third .col-delivery{
+    position:relative;inset:auto;transform:none;transition:none;opacity:1;
+    height:auto;overflow:visible;
+  }
+  .col-third .col-delivery{display:none;min-height:80vh}
+  .cake-page.is-delivery .col-third .col-fillings{display:none}
+  .cake-page.is-delivery .col-third .col-delivery{display:flex}
+  .delivery-back{position:fixed;left:14px;bottom:14px;width:54px;height:54px}
+  .delivery-back svg{width:34px;height:34px}
+}

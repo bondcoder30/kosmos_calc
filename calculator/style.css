@@ -55,17 +55,35 @@ button, select, .csel__trigger, .csel__opt, .radio-big, .fixed-row, .next-btn, .
 .calc-scroll{
   height:100%;overflow-y:auto;
   padding:28px 22px 28px;
-  scrollbar-width:thin;scrollbar-color:var(--red) transparent;
+  scrollbar-width:none;-ms-overflow-style:none;
 }
-.calc-scroll::-webkit-scrollbar{width:3px}
-.calc-scroll::-webkit-scrollbar-thumb{background:var(--red);border-radius:2px}
-.calc-scroll::-webkit-scrollbar-track{background:transparent}
+.calc-scroll::-webkit-scrollbar{display:none;width:0;height:0}
+/* глобально прячем скроллбары — оставляем функциональность,
+   но визуально без полосок везде в калькуляторе */
+html,body{scrollbar-width:none;-ms-overflow-style:none}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar{display:none;width:0;height:0}
 
-/* мобильный режим — фикс по контенту, без скролла внутри iframe */
+/* мобильный режим — компактный по высоте, без скролла внутри iframe.
+   Используется и на телефонах, и в правой колонке десктопной страницы торта:
+   плотная вёрстка, чтобы калькулятор целиком умещался в одно окно. */
 body.mobile,
 body.mobile html{height:auto;min-height:0}
 body.mobile .calc-frame{height:auto;overflow:visible}
-body.mobile .calc-scroll{height:auto;overflow:visible;padding:18px 18px 22px}
+body.mobile .calc-scroll{height:auto;overflow:visible;padding:14px 16px 18px}
+body.mobile .label{font-size:28px;margin:8px 0 0}
+body.mobile .stepper{gap:10px}
+body.mobile .stepper .value, body.mobile .fixed-row .value{font-size:96px}
+body.mobile .stepper .step-btn.plus svg{width:46px;height:46px}
+body.mobile .stepper .step-btn.minus svg{width:46px;height:17px}
+body.mobile .hint{margin:6px 6px 0}
+body.mobile .hint--big{margin:10px 12px 0;font-size:12px}
+body.mobile .total-wrap{margin-top:10px;padding:6px 0 0;gap:2px}
+body.mobile .total-meta{font-size:18px}
+body.mobile .total-value{font-size:60px}
+body.mobile .send-row{margin-top:4px}
+body.mobile .next-btn{font-size:28px}
+body.mobile .fill-class{margin-top:8px}
 
 /* ============ CAKE HEADER ============ */
 .cake-header{margin:0 0 22px;text-align:center}
@@ -215,10 +233,9 @@ body.mobile .calc-scroll{height:auto;overflow:visible;padding:18px 18px 22px}
   max-height:260px;overflow-y:auto;
   z-index:100;
   display:none;
-  scrollbar-width:thin;scrollbar-color:var(--red) transparent;
+  scrollbar-width:none;-ms-overflow-style:none;
 }
-.csel__list::-webkit-scrollbar{width:3px}
-.csel__list::-webkit-scrollbar-thumb{background:var(--red);border-radius:2px}
+.csel__list::-webkit-scrollbar{display:none;width:0;height:0}
 .csel.is-open .csel__list{display:block}
 .csel__opt{
   padding:9px 16px;cursor:pointer;
@@ -230,14 +247,14 @@ body.mobile .calc-scroll{height:auto;overflow:visible;padding:18px 18px 22px}
 
 /* ============ TOTAL (надпись «стоимость торта» + красная цена с искрами по бокам) ============ */
 .total-wrap{
-  margin-top:24px;
-  padding:18px 0 6px;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+  margin-top:16px;
+  padding:10px 0 0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
 }
 .total-wrap .total-meta{
   font-family:var(--display);font-weight:900;
-  color:var(--red);
-  font-size:18px;line-height:1;letter-spacing:.2px;
+  color:var(--pink);
+  font-size:20px;line-height:1;letter-spacing:.2px;
   text-transform:lowercase;
 }
 .total-wrap .total-meta::first-letter{text-transform:uppercase}
@@ -251,7 +268,7 @@ body.mobile .calc-scroll{height:auto;overflow:visible;padding:18px 18px 22px}
 .total-wrap .sparkle svg{width:100%;height:100%;fill:currentColor;display:block}
 .total-value{
   font-family:var(--display);font-weight:900;
-  color:var(--red);font-size:64px;line-height:1;letter-spacing:-1px;
+  color:var(--red);font-size:76px;line-height:1;letter-spacing:-1px;
   white-space:nowrap;
 }
 /* старая подпись «итоговая стоимость» больше не показывается */
@@ -288,28 +305,20 @@ body.mobile .calc-scroll{height:auto;overflow:visible;padding:18px 18px 22px}
   .fill-class--all .fill-class__ico{width:90px;height:40px}
 }
 
-/* «далее» в макетах больше не показываем — на сайте свою кнопку,
-   которая открывает блок доставки (см. /delivery/). Чтобы вернуть —
-   просто удалите/закомментируйте эту строку. */
-.send-row{display:none}
-
-/* ============ NEXT BUTTON («далее» розовым жирным + искорка) ============ */
-.send-row{margin-top:22px;display:flex;justify-content:center}
+/* ============ NEXT BUTTON («далее» розовым жирным под итоговой ценой) ============
+   Размер совпадает с .label («Сколько килограмм?»). Клик — postMessage в
+   родительскую страницу, которая открывает блок доставки поверх начинок. */
+.send-row{margin-top:10px;display:flex;justify-content:center}
 .next-btn{
   background:none;border:0;padding:0;cursor:pointer;
-  display:inline-flex;align-items:center;gap:10px;
   font-family:var(--display);font-weight:900;
   font-size:32px;line-height:1;letter-spacing:.2px;
   color:var(--pink);text-transform:lowercase;
   transition:color .15s ease, transform .08s ease;
 }
+.next-btn::first-letter{text-transform:lowercase}
 .next-btn:hover{color:var(--rose)}
 .next-btn:active{transform:scale(.96)}
-.next-btn .sparkle{
-  display:inline-block;width:22px;height:22px;color:inherit;
-  flex-shrink:0;
-}
-.next-btn .sparkle svg{width:100%;height:100%;fill:currentColor;display:block}
 
 /* ============ RESPONSIVE ============ */
 @media (max-width:420px){

@@ -194,14 +194,14 @@ function renderHeader(cake){
 }
 
 /* ================================================================
-   КНОПКА «ДАЛЕЕ»
+   КНОПКА «ДАЛЕЕ» — розовая, такого же размера как заголовок-label
+   («Сколько килограмм?»). Эмитит kosmos-next родительской странице
+   через postMessage, чтобы та могла открыть блок доставки.
    ================================================================ */
 function nextBtnHTML(){
   return `
     <div class="send-row">
-      <button id="send" class="next-btn" type="button">
-        <span>далее</span>
-      </button>
+      <button id="send" class="next-btn" type="button">далее</button>
     </div>
   `;
 }
@@ -231,6 +231,18 @@ function postDraw(root){
       title.dataset.resizeBound = '1';
       window.addEventListener('resize', () => fitTitle(title));
     }
+  }
+  // кнопка «далее» — просит родителя открыть блок доставки
+  const send = root.querySelector('#send');
+  if (send && !send.dataset.bound){
+    send.dataset.bound = '1';
+    send.addEventListener('click', () => {
+      try {
+        if (window.parent && window.parent !== window){
+          window.parent.postMessage({ type:'kosmos-next' }, '*');
+        }
+      } catch(_){}
+    });
   }
 }
 
@@ -275,6 +287,7 @@ window.renderTieredCake = function(cake){
       <div class="hint">От ${cake.minTiers} ярус${cake.minTiers===1?'а':'ов'}. От ${fmtWeight(cake.minWeight)} кг.${cake.note?'<br>'+cake.note:''}</div>
       <div class="hint hint--big">Стоимость начинки в ярусных тортах фиксированная — 3&nbsp;200&nbsp;р/кг.</div>
       ${totalHTML(r.total)}
+      ${nextBtnHTML()}
     `;
 
     root.querySelectorAll('button[data-act]').forEach(b => {
@@ -334,6 +347,7 @@ window.renderFixedCake = function(cake){
       </div>
       ${classBadge(fillingClass(state.filling))}
       ${totalHTML(r.total)}
+      ${nextBtnHTML()}
     `;
     root.querySelectorAll('.fixed-row[data-w]').forEach(row => {
       row.onclick = () => { state.weight = parseFloat(row.dataset.w); draw(); };
@@ -395,6 +409,7 @@ window.renderWeightCake = function(cake){
         ${classBadge(fillingClass(state.filling))}
       ` : ''}
       ${totalHTML(r.total)}
+      ${nextBtnHTML()}
     `;
     root.querySelectorAll('button[data-act]').forEach(b => {
       b.onclick = () => {

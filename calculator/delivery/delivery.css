@@ -4,48 +4,57 @@
    и встроенным в мобильные «полные» страницы (cakes-mobile-full/).
    ============================================================ */
 
+/* Шрифты, цвета и пропорции — те же что в калькуляторе:
+   var(--display)=ALS Beast (заголовки), var(--text)=Golos Text (мелочь),
+   --pink — лейблы, --red — крупные значения.
+   Размеры подобраны под высоту .total-meta / .total-value в style.css. */
+
 .dlv-frame{
-  max-width:520px;margin:0 auto;padding:20px 22px 28px;
-  display:flex;flex-direction:column;gap:14px;align-items:stretch;
+  max-width:520px;margin:0 auto;padding:14px 16px 18px;
+  display:flex;flex-direction:column;gap:10px;align-items:stretch;
   background:var(--bg);
 }
 
-/* «Мы бережно доставляем…» — обычный мелкий красный текст */
+/* «Мы бережно доставляем…» — обычный мелкий красный текст (Golos) */
 .dlv-title{
   margin:0;
   font-family:var(--text);font-weight:400;
-  font-size:13px;line-height:1.45;letter-spacing:.2px;
+  font-size:12px;line-height:1.4;letter-spacing:.2px;
   text-align:center;color:var(--red);
 }
 
 .dlv-map{
   width:100%;
-  aspect-ratio: 360 / 320;
+  aspect-ratio: 360 / 280;
   background:#dcdcdc;border-radius:8px;overflow:hidden;
 }
 .dlv-map iframe{display:block;width:100%;height:100%;border:0}
 
+/* «выберите зону» — Beast розовым, как .label в калькуляторе */
 .dlv-zone-label{
-  margin-top:6px;text-align:center;
+  margin:4px 0 0;text-align:center;
   font-family:var(--display);font-weight:900;
-  color:var(--pink);font-size:20px;text-transform:lowercase;
+  color:var(--pink);font-size:28px;line-height:1;text-transform:lowercase;
 }
+.dlv-zone-label::first-letter{text-transform:uppercase}
 
+/* шесть зон в один ряд */
 .dlv-zones{
-  display:grid;grid-template-columns:repeat(3, 60px);
-  gap:18px;justify-content:center;margin:0 auto;
+  display:grid;grid-template-columns:repeat(6, minmax(0,1fr));
+  gap:10px;justify-content:center;align-items:center;
+  margin:0 auto;width:100%;max-width:420px;
 }
 .dlv-zone{
-  width:60px;height:60px;border-radius:50%;
+  aspect-ratio:1/1;width:100%;border-radius:50%;
   border:0;outline:0;padding:0;
   display:flex;align-items:center;justify-content:center;
-  font-family:var(--display);color:#fff;font-size:24px;
+  font-family:var(--display);font-weight:900;color:#fff;font-size:20px;
   position:relative;
   transition:transform .15s ease, box-shadow .15s ease, opacity .15s ease;
   box-shadow:0 0 0 0 transparent;
 }
 .dlv-zone:hover{transform:scale(1.06)}
-.dlv-zone.is-active{box-shadow:0 0 0 4px #fff, 0 0 0 6px currentColor}
+.dlv-zone.is-active{box-shadow:0 0 0 3px #fff, 0 0 0 5px currentColor}
 .dlv-zone[disabled]{opacity:.35;cursor:not-allowed}
 .dlv-zone[disabled]:hover{transform:none}
 
@@ -56,30 +65,48 @@
 .dlv-z-blue  {background:#3A9DD8;color:#3A9DD8}
 .dlv-z-red   {background:#D2363C;color:#D2363C}
 
-.dlv-cost{margin-top:8px;text-align:center}
-.dlv-cost .lbl{font-family:var(--text);font-weight:400;color:var(--pink);font-size:13px;letter-spacing:.5px}
-.dlv-cost .val{font-family:var(--display);font-weight:900;color:var(--pink);font-size:42px;line-height:1;margin-top:2px}
+/* «стоимость доставки» — лейбл Beast pink 20px (как .total-meta),
+   значение Beast red 60px (как .total-value на мобиле). */
+.dlv-cost{margin-top:6px;text-align:center;display:flex;flex-direction:column;gap:2px;align-items:center}
+.dlv-cost .lbl{
+  font-family:var(--display);font-weight:900;color:var(--pink);
+  font-size:20px;line-height:1;letter-spacing:.2px;text-transform:lowercase;
+}
+.dlv-cost .lbl::first-letter{text-transform:uppercase}
+.dlv-cost .val{
+  font-family:var(--display);font-weight:900;color:var(--red);
+  font-size:60px;line-height:1;letter-spacing:-1px;white-space:nowrap;
+}
 
-.dlv-total{text-align:center;margin-top:2px}
-.dlv-total .lbl{font-family:var(--text);font-weight:400;color:var(--pink);font-size:13px;letter-spacing:.5px}
-.dlv-total .val-row{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:4px}
+/* «итоговая стоимость» — лейбл такой же, но крупная цифра 76 с искрами,
+   1-в-1 как .total-wrap в калькуляторе. */
+.dlv-total{text-align:center;margin-top:4px;display:flex;flex-direction:column;gap:4px;align-items:center}
+.dlv-total .lbl{
+  font-family:var(--display);font-weight:900;color:var(--pink);
+  font-size:20px;line-height:1;letter-spacing:.2px;text-transform:lowercase;
+}
+.dlv-total .lbl::first-letter{text-transform:uppercase}
+.dlv-total .val-row{display:flex;align-items:center;justify-content:center;gap:14px}
 .dlv-total .sparkle{width:22px;height:22px;color:var(--red);display:inline-block;flex-shrink:0}
 .dlv-total .sparkle svg{width:100%;height:100%;fill:currentColor;display:block}
 .dlv-total .val{
   font-family:var(--display);font-weight:900;
-  color:var(--red);font-size:54px;line-height:1;letter-spacing:-1px;white-space:nowrap;
+  color:var(--red);font-size:76px;line-height:1;letter-spacing:-1px;white-space:nowrap;
 }
 
+/* «продолжить заказ с администратором» — такой же стиль как .next-btn,
+   только текст в две строки. */
 .dlv-cta{
   background:transparent;border:0;
   font-family:var(--display);font-weight:900;
-  color:var(--pink);font-size:22px;line-height:1.15;
+  color:var(--pink);font-size:24px;line-height:1.1;
   text-transform:lowercase;text-align:center;
-  padding:12px 8px 4px;letter-spacing:.2px;
-  transition:opacity .15s ease;
+  padding:6px 8px 0;letter-spacing:.2px;
+  transition:opacity .15s ease, color .15s ease;
   cursor:url('../assets/cursor.svg') 8 8, pointer;
 }
-.dlv-cta:hover{opacity:.78}
+.dlv-cta::first-letter{text-transform:uppercase}
+.dlv-cta:hover{color:var(--rose)}
 .dlv-cta[disabled]{opacity:.45;cursor:not-allowed}
 
 .dlv-toast{
@@ -91,9 +118,11 @@
 }
 .dlv-toast.show{opacity:1}
 
-@media (max-width:380px){
-  .dlv-cost .val{font-size:34px}
-  .dlv-total .val{font-size:44px}
-  .dlv-zones{grid-template-columns:repeat(3,52px);gap:14px}
-  .dlv-zone{width:52px;height:52px;font-size:20px}
+@media (max-width:420px){
+  .dlv-zone-label{font-size:24px}
+  .dlv-zones{gap:8px;max-width:340px}
+  .dlv-zone{font-size:18px}
+  .dlv-cost .val{font-size:48px}
+  .dlv-total .val{font-size:60px}
+  .dlv-cta{font-size:20px}
 }
