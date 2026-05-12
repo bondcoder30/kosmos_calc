@@ -103,10 +103,7 @@
     animation:cherryIn .55s ease-out forwards;
     animation-delay:var(--delay, 0s);
     pointer-events:none;
-    z-index:1;
   }
-  /* жёлтые вишни цифр — поверх красного полотна */
-  .cherry.is-on{z-index:2}
   .cherry__rot{
     width:100%;height:100%;
     transform:rotate(var(--rot, 0deg));
@@ -153,9 +150,7 @@
 
 <script>
 /* =========================================================
-   Параметры, которые легко крутить вдвоём.
-   Концепция: всё полотно заполнено красными вишнями,
-   среди них жёлтыми «проступают» цифры 404.
+   Параметры, которые легко крутить вдвоём:
    ========================================================= */
 const CFG = {
   text:      '404',
@@ -165,20 +160,16 @@ const CFG = {
   cherryW:   22,   // ширина одной вишни, px
   cherryH:   42,   // высота (с черенком)
   rotMax:    14,   // макс. угол наклона стебля, ±°
-  alpha:     90,   // порог прозрачности пикселя «внутри цифры» (0..255)
-  colorBg:   '#D2373C', // фон: красные вишни
-  colorOn:   '#F4C430', // «горящие» вишни цифры: жёлто-медовые
+  alpha:     90,   // порог прозрачности пикселя из canvas (0..255)
   inDelayPerCol: 0.010, // волна появления слева-направо, сек/колонка
-  inJitter:  0.30  // случайный разброс задержки появления
+  inJitter:  0.25  // случайный разброс задержки появления
 };
 
-/* SVG вишни — твой исходник, цвет плода задаётся параметром */
-function cherrySVG(color){
-  return `<svg viewBox="0 0 19 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M8.7963 35.889C13.6544 35.889 17.5926 31.9507 17.5926 27.0927C17.5926 22.2346 13.6544 18.2964 8.7963 18.2964C3.93824 18.2964 0 22.2346 0 27.0927C0 31.9507 3.93824 35.889 8.7963 35.889Z" fill="${color}"/>
-    <path d="M10.5356 25.3333L9.14795 24.7848L17.6121 0L18.9998 0.548568L10.5356 25.3333Z" fill="#442216"/>
-  </svg>`;
-}
+/* SVG вишни — это твой исходник 1:1 */
+const CHERRY_SVG = `<svg viewBox="0 0 19 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M8.7963 35.889C13.6544 35.889 17.5926 31.9507 17.5926 27.0927C17.5926 22.2346 13.6544 18.2964 8.7963 18.2964C3.93824 18.2964 0 22.2346 0 27.0927C0 31.9507 3.93824 35.889 8.7963 35.889Z" fill="#D2373C"/>
+  <path d="M10.5356 25.3333L9.14795 24.7848L17.6121 0L18.9998 0.548568L10.5356 25.3333Z" fill="#442216"/>
+</svg>`;
 
 async function build(){
   const stage = document.getElementById('stage');
@@ -226,31 +217,42 @@ async function build(){
     ctx.fillText(line, W/2, lineH * (i + 0.5));
   });
 
-  // снимаем альфу маски «404»
+  // снимаем альфу
   const data = ctx.getImageData(0, 0, W*dpr, H*dpr).data;
 
-  // расставляем вишни ПО ВСЕМУ полотну.
-  // Цвет: если пиксель внутри цифры → жёлтая, иначе красная.
+  // bbox колонок — чтобы анимация шла волной слева-направо
+  let minX = Infinity, maxX = -Infinity;
+  for (let y = 0; y < H; y += CFG.stepY){
+    for (let x = 0; x < W; x += CFG.stepX){
+      const px = ((y*dpr|0) * (W*dpr) + (x*dpr|0)) * 4;
+      if (data[px + 3] > CFG.alpha){
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+      }
+    }
+  }
+  if (!isFinite(minX)) { minX = 0; maxX = W; }
+  const span = Math.max(1, maxX - minX);
+
+  // расставляем вишни только внутри контура «404»
   const offsetX = CFG.hex ? CFG.stepX/2 : 0;
   for (let y = CFG.stepY/2; y < H; y += CFG.stepY){
     const row    = Math.floor(y / CFG.stepY);
     const rowOff = (CFG.hex && (row % 2)) ? offsetX : 0;
     for (let x = rowOff; x < W; x += CFG.stepX){
-      // лёгкое дрожание позиции
       const jx = (Math.random() - 0.5) * 4;
       const jy = (Math.random() - 0.5) * 3;
       const sx = Math.max(0, Math.min(W-1, x + jx));
       const sy = Math.max(0, Math.min(H-1, y + jy));
       const px = ((sy*dpr|0) * (W*dpr) + (sx*dpr|0)) * 4;
-      const isOn = data[px + 3] > CFG.alpha;
-      const color = isOn ? CFG.colorOn : CFG.colorBg;
+      if (data[px + 3] <= CFG.alpha) continue;
 
       const rot   = ((Math.random()*2 - 1) * CFG.rotMax).toFixed(1);
-      const delay = ((sx / W) * (CFG.text.length * 0.25)
+      const delay = (((sx - minX)/span) * (CFG.text.length * 0.25)
                      + Math.random() * CFG.inJitter).toFixed(3);
 
       const el = document.createElement('div');
-      el.className = 'cherry' + (isOn ? ' is-on' : '');
+      el.className = 'cherry';
       el.style.left  = (sx - CFG.cherryW/2)      + 'px';
       el.style.top   = (sy - CFG.cherryH * 0.72) + 'px';
       el.style.setProperty('--cw',    CFG.cherryW + 'px');
@@ -258,7 +260,7 @@ async function build(){
       el.style.setProperty('--rot',   rot + 'deg');
       el.style.setProperty('--delay', delay + 's');
       el.innerHTML =
-        `<div class="cherry__rot"><div class="cherry__bob">${cherrySVG(color)}</div></div>`;
+        `<div class="cherry__rot"><div class="cherry__bob">${CHERRY_SVG}</div></div>`;
       stage.appendChild(el);
     }
   }
