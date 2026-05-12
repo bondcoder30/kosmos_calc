@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>fairy cake — kosmos</title>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body class="mob-page">
+
+<!-- меню «К» в углу -->
+<button class="menu-btn" id="menu-toggle" aria-label="меню" type="button">
+  <svg viewBox="0 0 54 65" xmlns="http://www.w3.org/2000/svg">
+    <path d="M21.5183 26.4696C21.6112 26.4696 21.7061 26.4146 21.7357 26.3215C22.5312 23.2215 24.6898 15.7815 26.055 13.0814C27.8169 9.58359 30.7331 4.22365 35.8564 2.85457C44.0267 0.670814 49.705 4.96003 50.952 9.56666C51.9818 13.3692 50.0173 17.6881 47.5295 20.1067C45.0417 22.5317 37.9074 25.8348 32.9023 28.3847C27.397 31.1863 24.8164 29.8786 30.9694 31.4275C38.0108 33.1966 47.3818 32.5998 52.2856 43.9863C53.7437 47.3825 53.9146 52.9371 52.3553 56.4202C49.5087 62.8127 39.4668 67.9759 31.1003 61.45C26.7176 58.0305 24.2931 51.7712 23.4132 45.8018C23.0165 43.1568 22.3286 37.6635 22.1345 36.1611C22.1113 35.9897 21.9467 35.8797 21.7757 35.9114H21.7378C21.5901 35.9432 21.4951 36.0765 21.5035 36.2246C21.7209 38.7512 21.7694 40.262 21.9002 42.3273C22.1429 45.9648 22.6324 49.5811 22.835 53.2186C22.9047 54.5644 22.6557 56.0117 22.2336 57.311C19.8935 64.5881 11.9722 66.2619 6.8025 60.629C3.83149 57.3893 2.10965 53.5085 1.39222 49.2531C-0.93944 35.3951 -0.667231 21.7339 4.72195 8.51076C5.30645 7.06338 5.89095 5.56945 6.81939 4.32521C8.65939 1.87695 11.3266 -0.376626 14.9833 0.0529308C18.5156 0.467676 20.6912 2.71279 21.5099 5.93764C22.0627 8.14468 21.9066 10.5549 21.877 12.8783C21.8538 14.3955 21.4318 24.1293 21.2145 26.2348C21.206 26.3511 21.2841 26.4464 21.3938 26.4527C21.4318 26.4527 21.4803 26.4527 21.5183 26.4612H21.5099L21.5183 26.4696Z"/>
+  </svg>
+  <span class="menu-label">меню</span>
+</button>
+<ul class="menu-list" id="menu-list">
+  <li><a href="../index.html">каталог</a></li>
+  <li><a href="#">доставка</a></li>
+  <li><a href="#">о нас</a></li>
+</ul>
+
+<!-- (1) Карусель фото — листается свайпом. cover уезжает в конец, чтобы
+     при первом открытии страницы пользователь видел не повтор обложки,
+     а уже срез/деталь торта. -->
+<section class="mob-photos" id="mob-photos" aria-label="фото торта">
+  <img src="../../photos/fairy-cake/slice-1.jpg" alt="fairy cake — деталь" loading="eager">
+  <img src="../../photos/fairy-cake/slice-2.jpg" alt="fairy cake — деталь" loading="lazy">
+  <img src="../../photos/fairy-cake/slice-3.jpg" alt="fairy cake — деталь" loading="lazy">
+  <img src="../../photos/fairy-cake/cover.jpg"   alt="fairy cake — обложка" loading="lazy">
+</section>
+
+<!-- (2) Заголовок и описание -->
+<header class="mob-head">
+  <h1 class="cake-title">fairy cake</h1>
+  <p class="cake-desc">По-настоящему сказочный большой торт, как из мультика. Мечта детства!</p>
+  <p class="cake-sub">Для сохранения сказочного объёма при небольшом весе возможно использование фальш-ярусов.</p>
+</header>
+
+<!-- (3) «Что внутри?» -->
+<div class="mob-fill-head">
+  <h2 class="mob-section-title">Что внутри?</h2>
+  <p class="mob-section-hint">листайте вправо — нажмите на начинку, чтобы узнать больше</p>
+</div>
+
+<!-- (4) Карусель начинок — рендерится из data.js, листается горизонтально -->
+<section class="mob-fillings" id="mob-fillings" data-fillings="BASE" aria-label="начинки"></section>
+
+<!-- (5) Калькулятор -->
+<iframe class="mob-calc-frame"
+        src="../../../calculator/cakes-mobile/tiered/fairy-cake.html"
+        title="калькулятор fairy cake"></iframe>
+
+<!-- (6) Доставка с итоговой стоимостью -->
+<iframe class="mob-delivery-frame" id="mob-delivery"
+        src="../../../calculator/delivery/index.html"
+        title="доставка"></iframe>
+
+<script src="../../fillings/data.js"></script>
+<script>
+  /* ===== меню «К» ===== */
+  const menuBtn  = document.getElementById('menu-toggle');
+  const menuList = document.getElementById('menu-list');
+  menuBtn.addEventListener('click', (e) => { e.stopPropagation(); menuList.classList.toggle('is-open'); });
+  document.addEventListener('click', (e) => {
+    if (!menuList.contains(e.target) && e.target !== menuBtn && !menuBtn.contains(e.target)) menuList.classList.remove('is-open');
+  });
+
+  /* ===== попапы начинок (та же логика, FIFO=3) ===== */
+  const SPARKLE = '<svg viewBox="0 0 100 100"><path d="M50 4 C52 38, 62 48, 96 50 C62 52, 52 62, 50 96 C48 62, 38 52, 4 50 C38 48, 48 38, 50 4 Z"/></svg>';
+  const MAX_OPEN = 3;
+  const openStack = [];
+  const CLASS_SLUG = { 'космос база':'base','космос классика':'classic','космос люкс':'lux' };
+
+  function buildBubble(name){
+    const f = (window.KOSMOS_FILLINGS || {})[name];
+    if (!f) return null;
+    const bubble = document.createElement('div');
+    bubble.className = 'filling-bubble';
+    bubble.insertAdjacentHTML('beforeend',
+      `<span class="spark left"  aria-hidden="true">${SPARKLE}</span>` +
+      `<span class="spark right" aria-hidden="true">${SPARKLE}</span>`);
+    const h3 = document.createElement('h3'); h3.textContent = name; bubble.appendChild(h3);
+    const desc = document.createElement('p'); desc.className = 'desc'; desc.textContent = f.desc; bubble.appendChild(desc);
+    const slug = CLASS_SLUG[f.cls];
+    if (slug){
+      const cls = document.createElement('img');
+      cls.className = 'bb-class';
+      cls.src = `../../assets/class-${slug}.svg`;
+      cls.alt = f.cls;
+      bubble.appendChild(cls);
+    }
+    const price = document.createElement('p'); price.className = 'bb-price'; price.textContent = f.price; bubble.appendChild(price);
+    return bubble;
+  }
+  function closeWrap(wrap){
+    wrap.classList.remove('is-open');
+    const b = wrap.querySelector('.filling-bubble');
+    if (b) b.remove();
+    const i = openStack.indexOf(wrap);
+    if (i !== -1) openStack.splice(i, 1);
+  }
+  function openWrap(wrap, name){
+    if (wrap.classList.contains('is-open')) return;
+    if (openStack.length >= MAX_OPEN) closeWrap(openStack[0]);
+    const bubble = buildBubble(name);
+    if (!bubble) return;
+    wrap.appendChild(bubble);
+    wrap.classList.add('is-open');
+    openStack.push(wrap);
+  }
+
+  function resolveFillings(raw){
+    if (!raw) return [];
+    const sets = window.KOSMOS_FILLING_SETS || {};
+    const list = sets[raw] ? sets[raw] : raw.split(',').map(s => s.trim()).filter(Boolean);
+    return typeof window.sortByCanonical === 'function' ? window.sortByCanonical(list) : list;
+  }
+  function buildSlice(name){
+    const f = (window.KOSMOS_FILLINGS || {})[name];
+    const wrap = document.createElement('div');
+    wrap.className = 'slice-wrap';
+    wrap.dataset.filling = name;
+    const img = document.createElement('img');
+    img.className = 'slice'; img.alt = name; img.loading = 'lazy';
+    img.src = f && f.photo
+      ? `../../fillings/photos/${f.photo}`
+      : '../../photos/fairy-cake/slice-1.jpg';
+    wrap.appendChild(img);
+    const dot = document.createElement('button');
+    dot.type = 'button'; dot.className = 'info-dot';
+    dot.setAttribute('aria-label', name + ' — описание');
+    dot.innerHTML = SPARKLE;
+    wrap.appendChild(dot);
+    dot.addEventListener('click', () => openWrap(wrap, name));
+    return wrap;
+  }
+
+  const col = document.getElementById('mob-fillings');
+  resolveFillings(col.dataset.fillings).forEach(name => col.appendChild(buildSlice(name)));
+
+  /* ===== «далее» из калькулятора → плавный скролл к блоку доставки ===== */
+  const dlv = document.getElementById('mob-delivery');
+  window.addEventListener('message', (e) => {
+    const d = e.data;
+    if (d && typeof d === 'object' && d.type === 'kosmos-next'){
+      dlv.scrollIntoView({behavior:'smooth', block:'start'});
+    }
+  });
+</script>
+
+</body>
+</html>

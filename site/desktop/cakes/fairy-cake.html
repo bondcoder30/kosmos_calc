@@ -2,13 +2,28 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=1280">
 <title>fairy cake — kosmos</title>
-<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../../style.css">
+<style>
+  /* десктоп-вариант: жёстко 3 колонки, без мобильного fallback */
+  @media (max-width:900px){
+    .cake-page{grid-template-columns:1fr 1fr 1fr;grid-template-rows:none}
+    .cake-col{height:100%;overflow-y:auto}
+    .col-info{padding:24px 22px 24px}
+    .col-info .cake-title{font-size:56px}
+    .col-third{overflow:hidden;height:100%}
+    .col-third .col-fillings,.col-third .col-delivery{position:absolute;inset:0;height:auto;overflow-y:auto;transition:transform .4s ease}
+    .col-third .col-delivery{display:flex;transform:translateX(100%)}
+    .cake-page.is-delivery .col-third .col-delivery{transform:translateX(0)}
+    .cake-page.is-delivery .col-third .col-fillings{display:block;transform:translateX(-20%);opacity:.45}
+    .delivery-back{position:absolute;width:64px;height:64px}
+    .delivery-back svg{width:42px;height:42px}
+  }
+</style>
 </head>
 <body>
 
-<!-- меню «К» -->
 <button class="menu-btn" id="menu-toggle" aria-label="меню" type="button">
   <svg viewBox="0 0 54 65" xmlns="http://www.w3.org/2000/svg">
     <path d="M21.5183 26.4696C21.6112 26.4696 21.7061 26.4146 21.7357 26.3215C22.5312 23.2215 24.6898 15.7815 26.055 13.0814C27.8169 9.58359 30.7331 4.22365 35.8564 2.85457C44.0267 0.670814 49.705 4.96003 50.952 9.56666C51.9818 13.3692 50.0173 17.6881 47.5295 20.1067C45.0417 22.5317 37.9074 25.8348 32.9023 28.3847C27.397 31.1863 24.8164 29.8786 30.9694 31.4275C38.0108 33.1966 47.3818 32.5998 52.2856 43.9863C53.7437 47.3825 53.9146 52.9371 52.3553 56.4202C49.5087 62.8127 39.4668 67.9759 31.1003 61.45C26.7176 58.0305 24.2931 51.7712 23.4132 45.8018C23.0165 43.1568 22.3286 37.6635 22.1345 36.1611C22.1113 35.9897 21.9467 35.8797 21.7757 35.9114H21.7378C21.5901 35.9432 21.4951 36.0765 21.5035 36.2246C21.7209 38.7512 21.7694 40.262 21.9002 42.3273C22.1429 45.9648 22.6324 49.5811 22.835 53.2186C22.9047 54.5644 22.6557 56.0117 22.2336 57.311C19.8935 64.5881 11.9722 66.2619 6.8025 60.629C3.83149 57.3893 2.10965 53.5085 1.39222 49.2531C-0.93944 35.3951 -0.667231 21.7339 4.72195 8.51076C5.30645 7.06338 5.89095 5.56945 6.81939 4.32521C8.65939 1.87695 11.3266 -0.376626 14.9833 0.0529308C18.5156 0.467676 20.6912 2.71279 21.5099 5.93764C22.0627 8.14468 21.9066 10.5549 21.877 12.8783C21.8538 14.3955 21.4318 24.1293 21.2145 26.2348C21.206 26.3511 21.2841 26.4464 21.3938 26.4527C21.4318 26.4527 21.4803 26.4527 21.5183 26.4612H21.5099L21.5183 26.4696Z"/>
@@ -21,121 +36,86 @@
   <li><a href="#">о нас</a></li>
 </ul>
 
-<!-- три скроллящиеся колонки -->
 <div class="cake-page">
 
-  <!-- (1) ФОТО ТОРТА — несколько фоток подряд по высоте -->
   <section class="cake-col col-photo" aria-label="фото торта">
-    <img class="photo" src="../photos/fairy-cake/cover.jpg"  alt="fairy cake">
-    <img class="photo" src="../photos/fairy-cake/slice-1.jpg" alt="fairy cake — деталь">
-    <img class="photo" src="../photos/fairy-cake/slice-2.jpg" alt="fairy cake — деталь">
-    <img class="photo" src="../photos/fairy-cake/slice-3.jpg" alt="fairy cake — деталь">
+    <img class="photo" src="../../photos/fairy-cake/cover.jpg"  alt="fairy cake">
+    <img class="photo" src="../../photos/fairy-cake/slice-1.jpg" alt="fairy cake — деталь">
+    <img class="photo" src="../../photos/fairy-cake/slice-2.jpg" alt="fairy cake — деталь">
+    <img class="photo" src="../../photos/fairy-cake/slice-3.jpg" alt="fairy cake — деталь">
   </section>
 
-  <!-- (2) ОПИСАНИЕ + КАЛЬКУЛЯТОР -->
   <section class="cake-col col-info" aria-label="параметры торта">
     <h1 class="cake-title">fairy cake</h1>
     <p class="cake-desc">По-настоящему сказочный большой торт, как из мультика. Мечта детства!</p>
     <p class="cake-sub">Для сохранения сказочного объёма при небольшом весе возможно использование фальш-ярусов.</p>
     <iframe class="calc-frame"
-            src="../../calculator/cakes-mobile/tiered/fairy-cake.html"
+            src="../../../calculator/cakes-mobile/tiered/fairy-cake.html"
             title="калькулятор fairy cake"></iframe>
   </section>
 
-  <!-- (3) ТРЕТЬЯ КОЛОНКА — «колбаса» начинок + поверх (по нажатию «далее»
-       в калькуляторе) выезжает блок доставки. Возврат к начинкам —
-       по стрелке «назад» в нижнем левом углу. -->
   <section class="cake-col col-third" aria-label="третья колонка">
-
     <div class="col-fillings" id="fillings-col" data-fillings="BASE"></div>
-
     <div class="col-delivery" id="delivery-col" aria-hidden="true">
-      <button class="delivery-back" id="delivery-back"
-              type="button" aria-label="назад к начинкам">
+      <button class="delivery-back" id="delivery-back" type="button" aria-label="назад к начинкам">
         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path d="M14.7 4.3a1 1 0 0 1 0 1.4L9.4 11H20a1 1 0 1 1 0 2H9.4l5.3 5.3a1 1 0 1 1-1.4 1.4l-7-7a1 1 0 0 1 0-1.4l7-7a1 1 0 0 1 1.4 0Z"/>
         </svg>
       </button>
       <iframe class="delivery-frame"
-              src="../../calculator/delivery/index.html"
+              src="../../../calculator/delivery/index.html"
               title="доставка"></iframe>
     </div>
-
   </section>
 
 </div>
 
-<script src="../fillings/data.js"></script>
+<script src="../../fillings/data.js"></script>
 <script>
-  /* ===== меню «К» ===== */
   const menuBtn  = document.getElementById('menu-toggle');
   const menuList = document.getElementById('menu-list');
-  menuBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    menuList.classList.toggle('is-open');
-  });
+  menuBtn.addEventListener('click', (e) => { e.stopPropagation(); menuList.classList.toggle('is-open'); });
   document.addEventListener('click', (e) => {
-    if (!menuList.contains(e.target) && e.target !== menuBtn && !menuBtn.contains(e.target)) {
-      menuList.classList.remove('is-open');
-    }
+    if (!menuList.contains(e.target) && e.target !== menuBtn && !menuBtn.contains(e.target)) menuList.classList.remove('is-open');
   });
 
-  /* ===== попапы начинок =====
-     Каждый slice-wrap — независимый. data-filling = русское имя начинки
-     (1-в-1 как в калькуляторе). Тексты берутся из /fillings/data.js.
-     При клике на искру строится круглый «бабл» строго в границах среза.
-     Крестика нет: можно открыть до 3-х подряд; при попытке открыть
-     четвёртую — самая первая открытая автоматически закрывается (FIFO).
-  */
+  /* ===== попапы начинок (FIFO=3) — общая логика ===== */
   const SPARKLE = '<svg viewBox="0 0 100 100"><path d="M50 4 C52 38, 62 48, 96 50 C62 52, 52 62, 50 96 C48 62, 38 52, 4 50 C38 48, 48 38, 50 4 Z"/></svg>';
   const MAX_OPEN = 3;
-  const openStack = [];  // массив открытых slice-wrap'ов в порядке открытия
-
-  /* какой svg «космос база / классика / люкс» показывать для данного cls */
+  const openStack = [];
   const CLASS_SLUG = {
-    'космос база':      'base',
-    'космос классика':  'classic',
-    'космос люкс':      'lux'
+    'космос база':'base', 'космос классика':'classic', 'космос люкс':'lux'
   };
 
   function buildBubble(name){
     const f = (window.KOSMOS_FILLINGS || {})[name];
-    if (!f){ console.warn('Нет данных по начинке:', name); return null; }
-
+    if (!f) return null;
     const bubble = document.createElement('div');
     bubble.className = 'filling-bubble';
-
     bubble.insertAdjacentHTML('beforeend',
       `<span class="spark left"  aria-hidden="true">${SPARKLE}</span>` +
       `<span class="spark right" aria-hidden="true">${SPARKLE}</span>`);
-
     const h3 = document.createElement('h3');
     h3.textContent = name;
     bubble.appendChild(h3);
-
     const desc = document.createElement('p');
     desc.className = 'desc';
     desc.textContent = f.desc;
     bubble.appendChild(desc);
-
     const slug = CLASS_SLUG[f.cls];
     if (slug){
       const cls = document.createElement('img');
       cls.className = 'bb-class';
-      cls.src = `../assets/class-${slug}.svg`;
+      cls.src = `../../assets/class-${slug}.svg`;
       cls.alt = f.cls;
       bubble.appendChild(cls);
     }
-
     const price = document.createElement('p');
     price.className = 'bb-price';
     price.textContent = f.price;
     bubble.appendChild(price);
-
     return bubble;
   }
-
-  /* закрыть попап у конкретного среза */
   function closeWrap(wrap){
     wrap.classList.remove('is-open');
     const b = wrap.querySelector('.filling-bubble');
@@ -143,13 +123,9 @@
     const i = openStack.indexOf(wrap);
     if (i !== -1) openStack.splice(i, 1);
   }
-
-  /* открыть попап; если уже 3 открыто — закрыть самый старый (FIFO) */
   function openWrap(wrap, name){
     if (wrap.classList.contains('is-open')) return;
-    if (openStack.length >= MAX_OPEN){
-      closeWrap(openStack[0]);
-    }
+    if (openStack.length >= MAX_OPEN) closeWrap(openStack[0]);
     const bubble = buildBubble(name);
     if (!bubble) return;
     wrap.appendChild(bubble);
@@ -157,72 +133,49 @@
     openStack.push(wrap);
   }
 
-  /* ===== строим «колбасу» начинок из data-fillings =====
-     значение data-fillings — либо имя набора (BASE / PLUS_CHEESECAKE / ...),
-     либо явный список через запятую: "ванильный с вишней,морковный,..." */
   function resolveFillings(raw){
     if (!raw) return [];
     const sets = window.KOSMOS_FILLING_SETS || {};
-    const list = sets[raw]
-      ? sets[raw]
-      : raw.split(',').map(s => s.trim()).filter(Boolean);
-    return typeof window.sortByCanonical === 'function'
-      ? window.sortByCanonical(list)
-      : list;
+    const list = sets[raw] ? sets[raw] : raw.split(',').map(s => s.trim()).filter(Boolean);
+    return typeof window.sortByCanonical === 'function' ? window.sortByCanonical(list) : list;
   }
-
   function buildSlice(name){
     const f = (window.KOSMOS_FILLINGS || {})[name];
     const wrap = document.createElement('div');
     wrap.className = 'slice-wrap';
     wrap.dataset.filling = name;
-
     const img = document.createElement('img');
-    img.className = 'slice';
-    img.alt = name;
-    img.loading = 'lazy';
+    img.className = 'slice'; img.alt = name; img.loading = 'lazy';
     img.src = f && f.photo
-      ? `../fillings/photos/${f.photo}`
-      : '../photos/fairy-cake/slice-1.jpg';
+      ? `../../fillings/photos/${f.photo}`
+      : '../../photos/fairy-cake/slice-1.jpg';
     wrap.appendChild(img);
-
     const dot = document.createElement('button');
-    dot.type = 'button';
-    dot.className = 'info-dot';
+    dot.type = 'button'; dot.className = 'info-dot';
     dot.setAttribute('aria-label', name + ' — описание');
     dot.innerHTML = SPARKLE;
     wrap.appendChild(dot);
-
     dot.addEventListener('click', () => openWrap(wrap, name));
-
     return wrap;
   }
 
   const col = document.getElementById('fillings-col');
-  const list = resolveFillings(col.dataset.fillings);
-  list.forEach(name => col.appendChild(buildSlice(name)));
+  resolveFillings(col.dataset.fillings).forEach(name => col.appendChild(buildSlice(name)));
 
-  /* ===== переключение третьей колонки: начинки <-> доставка =====
-     - калькулятор шлёт postMessage { type:'kosmos-next' } при клике
-       на «далее»: выезжает блок доставки поверх начинок;
-     - стрелка в нижнем левом углу возвращает обратно к начинкам. */
+  /* ===== переключение «начинки <-> доставка» ===== */
   const page = document.querySelector('.cake-page');
   const deliveryCol = document.getElementById('delivery-col');
-
-  function openDelivery(){
-    page.classList.add('is-delivery');
-    deliveryCol.setAttribute('aria-hidden','false');
-  }
-  function closeDelivery(){
-    page.classList.remove('is-delivery');
-    deliveryCol.setAttribute('aria-hidden','true');
-  }
-
   window.addEventListener('message', (e) => {
     const d = e.data;
-    if (d && typeof d === 'object' && d.type === 'kosmos-next') openDelivery();
+    if (d && typeof d === 'object' && d.type === 'kosmos-next'){
+      page.classList.add('is-delivery');
+      deliveryCol.setAttribute('aria-hidden','false');
+    }
   });
-  document.getElementById('delivery-back').addEventListener('click', closeDelivery);
+  document.getElementById('delivery-back').addEventListener('click', () => {
+    page.classList.remove('is-delivery');
+    deliveryCol.setAttribute('aria-hidden','true');
+  });
 </script>
 
 </body>
