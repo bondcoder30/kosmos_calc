@@ -228,12 +228,10 @@ body.mobile .calc-scroll{height:auto;overflow:visible;padding:18px 18px 22px}
 .csel__opt:hover{background:var(--pink);color:var(--red)}
 .csel__opt.is-selected{color:var(--red);font-weight:600}
 
-/* ============ TOTAL (чёрная плашка с искрами по бокам и крупной красной ценой) ============ */
+/* ============ TOTAL (искры по бокам и крупная красная цена, без чёрной плашки) ============ */
 .total-wrap{
   margin-top:24px;
-  background:#0e0e0e;
-  border-radius:20px;
-  padding:24px 18px;
+  padding:18px 0 6px;
   display:flex;align-items:center;justify-content:center;gap:14px;
 }
 .total-wrap .sparkle{

@@ -29,7 +29,7 @@ body{background:var(--bg);padding:0;margin:0}
   margin:0 0 6px;
   font-family:var(--display);font-weight:900;
   font-size:30px;line-height:1;
-  text-align:center;color:#111;
+  text-align:center;color:var(--pink);
   letter-spacing:-.5px;
   text-transform:lowercase;
 }
@@ -45,7 +45,7 @@ body{background:var(--bg);padding:0;margin:0}
   margin-top:8px;
   text-align:center;
   font-family:var(--display);font-weight:900;
-  color:var(--red);font-size:20px;text-transform:lowercase;
+  color:var(--pink);font-size:20px;text-transform:lowercase;
 }
 
 .zones{
@@ -83,18 +83,18 @@ body{background:var(--bg);padding:0;margin:0}
 }
 .dlv-cost .lbl{
   font-family:var(--text);font-weight:400;
-  color:var(--red);font-size:13px;letter-spacing:.5px;
+  color:var(--pink);font-size:13px;letter-spacing:.5px;
 }
 .dlv-cost .val{
   font-family:var(--display);font-weight:900;
-  color:var(--red);font-size:44px;line-height:1;
+  color:var(--pink);font-size:44px;line-height:1;
   margin-top:2px;
 }
 
 .dlv-total{text-align:center;margin-top:2px}
 .dlv-total .lbl{
   font-family:var(--text);font-weight:400;
-  color:var(--red);font-size:13px;letter-spacing:.5px;
+  color:var(--pink);font-size:13px;letter-spacing:.5px;
 }
 .dlv-total .val-row{
   display:flex;align-items:center;justify-content:center;gap:14px;
@@ -113,7 +113,7 @@ body{background:var(--bg);padding:0;margin:0}
 .dlv-cta{
   background:transparent;border:0;
   font-family:var(--display);font-weight:900;
-  color:var(--red);font-size:24px;line-height:1.15;
+  color:var(--pink);font-size:24px;line-height:1.15;
   text-transform:lowercase;text-align:center;
   padding:14px 8px 4px;
   letter-spacing:.2px;
@@ -220,9 +220,13 @@ body{background:var(--bg);padding:0;margin:0}
   function getParams(){
     var p = new URLSearchParams(location.search);
     return {
-      total : parseInt(p.get('total'),  10) || 0,
-      cake  : (p.get('cake')  || '').trim(),
-      tiered: p.get('tiered') === '1' || p.get('tiered') === 'true'
+      total  : parseInt(p.get('total'),  10) || 0,
+      cake   : (p.get('cake')   || '').trim(),
+      weight : (p.get('weight') || '').trim(),  // кг
+      tiers  : (p.get('tiers')  || '').trim(),  // ярусы (для ярусных)
+      pieces : (p.get('pieces') || '').trim(),  // штук/порций (для фиксов)
+      filling: (p.get('filling')|| '').trim(),  // начинка (опц.)
+      tiered : p.get('tiered') === '1' || p.get('tiered') === 'true'
     };
   }
 
@@ -282,8 +286,11 @@ body{background:var(--bg);padding:0;margin:0}
     var p = state.params;
     var lines = [];
     lines.push('Здравствуйте! Хочу оформить заказ на торт.');
-    if (p.cake) lines.push('Торт: ' + p.cake);
-    lines.push('Стоимость торта: ' + fmtRub(p.total));
+    if (p.cake)    lines.push('Торт: ' + p.cake);
+    if (p.weight)  lines.push('Кг: ' + p.weight);
+    if (p.tiers)   lines.push('Ярусов: ' + p.tiers);
+    if (p.pieces)  lines.push('Порций: ' + p.pieces);
+    if (p.filling) lines.push('Начинка: ' + p.filling);
     if (state.pickup){
       lines.push('Доставка: самовывоз (бесплатно)');
     } else {
@@ -315,13 +322,17 @@ body{background:var(--bg);padding:0;margin:0}
     setTimeout(function(){ window.open(TELEGRAM_URL, '_blank', 'noopener'); }, 400);
   });
 
-  // Если в iframe не передан total — слушаем postMessage из родителя
+  // postMessage из родительской страницы (когда блок открывают модалкой)
   window.addEventListener('message', function(e){
     if (!e.data || typeof e.data !== 'object') return;
     if (e.data.type !== 'kosmos-cake') return;
-    state.params.total  = parseInt(e.data.total,  10) || 0;
-    state.params.cake   = (e.data.cake  || '').trim();
-    state.params.tiered = !!e.data.tiered;
+    state.params.total   = parseInt(e.data.total, 10) || 0;
+    state.params.cake    = (e.data.cake    || '').toString().trim();
+    state.params.weight  = (e.data.weight  || '').toString().trim();
+    state.params.tiers   = (e.data.tiers   || '').toString().trim();
+    state.params.pieces  = (e.data.pieces  || '').toString().trim();
+    state.params.filling = (e.data.filling || '').toString().trim();
+    state.params.tiered  = !!e.data.tiered;
     if (state.params.tiered){
       var p = $zones.querySelector('[data-key="purple"]');
       if (p) p.setAttribute('disabled','disabled');

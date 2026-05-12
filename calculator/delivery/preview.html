@@ -58,13 +58,13 @@
   <div class="card">
     <header>
       <span class="tag">тест 1</span>
-      <span class="name">плоский торт «Дарси», 16 395р</span>
-      <a class="open" href="index.html?total=16395&cake=Дарси&tiered=0" target="_blank">↗</a>
+      <span class="name">плоский торт «Дарси», 1.5 кг — 16 395р</span>
+      <a class="open" href="index.html?total=16395&cake=Дарси&weight=1.5&filling=Морковный&tiered=0" target="_blank">↗</a>
     </header>
-    <div class="frame-wrap"><iframe class="dlv" src="index.html?total=16395&cake=Дарси&tiered=0" loading="lazy"></iframe></div>
+    <div class="frame-wrap"><iframe class="dlv" src="index.html?total=16395&cake=Дарси&weight=1.5&filling=Морковный&tiered=0" loading="lazy"></iframe></div>
     <div class="snippet">
-      <label>Сниппет для вёрстки (плоский торт)</label>
-      <textarea readonly id="s1"><iframe src="https://ab-aacoop.github.io/kosmos_calc/calculator/delivery/index.html?total=16395&cake=Дарси&tiered=0" width="520" height="1100" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <label>Сниппет для вёрстки (плоский / ярусный торт — передаются кг и/или ярусы)</label>
+      <textarea readonly id="s1"><iframe src="https://ab-aacoop.github.io/kosmos_calc/calculator/delivery/index.html?total=16395&cake=Дарси&weight=1.5&filling=Морковный&tiered=0" width="520" height="1100" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
       <div class="row">
         <button data-target="s1">Скопировать сниппет</button>
         <span class="ok" data-ok="s1">скопировано ✓</span>
@@ -75,13 +75,13 @@
   <div class="card">
     <header>
       <span class="tag">тест 2</span>
-      <span class="name">ярусный «Белль», 30 000р (фиолет. недоступен)</span>
-      <a class="open" href="index.html?total=30000&cake=Белль&tiered=1" target="_blank">↗</a>
+      <span class="name">ярусный «Белль», 6 кг, 6 ярусов — 36 000р (самовывоз скрыт)</span>
+      <a class="open" href="index.html?total=36000&cake=Белль&weight=6&tiers=6&tiered=1" target="_blank">↗</a>
     </header>
-    <div class="frame-wrap"><iframe class="dlv" src="index.html?total=30000&cake=Белль&tiered=1" loading="lazy"></iframe></div>
+    <div class="frame-wrap"><iframe class="dlv" src="index.html?total=36000&cake=Белль&weight=6&tiers=6&tiered=1" loading="lazy"></iframe></div>
     <div class="snippet">
-      <label>Сниппет для вёрстки (ярусный торт)</label>
-      <textarea readonly id="s2"><iframe src="https://ab-aacoop.github.io/kosmos_calc/calculator/delivery/index.html?total=30000&cake=Белль&tiered=1" width="520" height="1100" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <label>Сниппет для вёрстки (ярусный торт — кг + ярусы)</label>
+      <textarea readonly id="s2"><iframe src="https://ab-aacoop.github.io/kosmos_calc/calculator/delivery/index.html?total=36000&cake=Белль&weight=6&tiers=6&tiered=1" width="520" height="1100" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
       <div class="row">
         <button data-target="s2">Скопировать сниппет</button>
         <span class="ok" data-ok="s2">скопировано ✓</span>
@@ -92,20 +92,24 @@
   <div class="card">
     <header>
       <span class="tag">шаблон</span>
-      <span class="name">общий сниппет (без параметров, total прокидывается из родителя)</span>
+      <span class="name">общий сниппет (параметры передаются из родителя через postMessage)</span>
     </header>
     <div class="frame-wrap"><iframe class="dlv" src="index.html" loading="lazy"></iframe></div>
     <div class="snippet">
-      <label>Универсальный сниппет — параметры можно подмешивать на лету через postMessage</label>
+      <label>Универсальный сниппет — кг/ярусы/начинку шлёт родительская страница (модалка/оверлей)</label>
       <textarea readonly id="s3"><iframe id="kosmos-delivery" src="https://ab-aacoop.github.io/kosmos_calc/calculator/delivery/index.html" width="520" height="1100" frameborder="0" style="border:0;max-width:100%"></iframe>
 <script>
-  // когда у вас известны цифры — отправьте их во фрейм:
+  // когда у вас известны цифры из калькулятора — отправьте их во фрейм:
   document.getElementById('kosmos-delivery').addEventListener('load', function(){
     this.contentWindow.postMessage({
-      type:'kosmos-cake',
-      total:  18395,           // итог из калькулятора торта
-      cake:   'Название торта',
-      tiered: false            // true для ярусных
+      type:   'kosmos-cake',
+      total:  18395,        // итог из калькулятора торта
+      cake:   'Дарси',      // название торта
+      weight: '1.5',        // кг
+      tiers:  '',           // ярусов (для ярусных)
+      pieces: '',           // порций (для фиксов 2.5/3.5кг)
+      filling:'Морковный',  // начинка (опционально)
+      tiered: false         // true → блокирует «самовывоз»
     }, '*');
   });
 </script></textarea>
