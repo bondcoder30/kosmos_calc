@@ -144,9 +144,18 @@ function nextBtnHTML(){
   return `
     <div class="send-row">
       <button id="send" class="next-btn" type="button">
-        <span class="sparkle">${SVG_SPARKLE}</span>
         <span>далее</span>
       </button>
+    </div>
+  `;
+}
+
+function totalHTML(total){
+  return `
+    <div class="total-wrap">
+      <span class="sparkle">${SVG_SPARKLE}</span>
+      <div class="total-value">${fmtMoney(total)}</div>
+      <span class="sparkle">${SVG_SPARKLE}</span>
     </div>
   `;
 }
@@ -206,10 +215,7 @@ window.renderTieredCake = function(cake){
       </div>
       <div class="hint">От ${cake.minTiers} ярус${cake.minTiers===1?'а':'ов'}. От ${fmtWeight(cake.minWeight)} кг.${cake.note?'<br>'+cake.note:''}</div>
       <div class="hint hint--big">Стоимость начинки в ярусных тортах фиксированная — 3&nbsp;200&nbsp;р/кг.</div>
-      <div class="total-wrap">
-        <div class="total-label">итоговая стоимость</div>
-        <div class="total-value">${fmtMoney(r.total)}</div>
-      </div>
+      ${totalHTML(r.total)}
       ${nextBtnHTML()}
     `;
 
@@ -269,10 +275,7 @@ window.renderFixedCake = function(cake){
           ${cake.fillings.map(f=>`<option ${f===state.filling?'selected':''}>${f}</option>`).join('')}
         </select>
       </div>
-      <div class="total-wrap">
-        <div class="total-label">итоговая стоимость</div>
-        <div class="total-value">${fmtMoney(r.total)}</div>
-      </div>
+      ${totalHTML(r.total)}
       ${nextBtnHTML()}
     `;
     root.querySelectorAll('.fixed-row[data-w]').forEach(row => {
@@ -332,10 +335,7 @@ window.renderWeightCake = function(cake){
           ${cake.fillings.map(f=>`<option ${f===state.filling?'selected':''}>${f}</option>`).join('')}
         </select>
       </div>
-      <div class="total-wrap">
-        <div class="total-label">итоговая стоимость</div>
-        <div class="total-value">${fmtMoney(r.total)}</div>
-      </div>
+      ${totalHTML(r.total)}
       ${nextBtnHTML()}
     `;
     root.querySelectorAll('button[data-act]').forEach(b => {

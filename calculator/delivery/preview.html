@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Блок доставки — превью</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:#eaeaea;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#222}
+  body{padding:24px}
+  h1{margin:0 0 6px;font-size:22px}
+  p.lead{margin:0 0 16px;color:#555;font-size:14px;max-width:760px}
+
+  .grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));align-items:start}
+  .card{background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);display:flex;flex-direction:column}
+  .card header{padding:10px 14px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:10px;font-size:12px}
+  .card .tag{padding:2px 8px;background:#d83448;color:#fff;border-radius:999px;font-size:10px;text-transform:uppercase;letter-spacing:.3px}
+  .card .name{font-weight:600;flex:1}
+  .card a.open{color:#999;text-decoration:none;font-size:14px}
+  .card a.open:hover{color:#d83448}
+
+  .frame-wrap{aspect-ratio:520/1100;width:100%;background:#cfcfcf}
+  iframe.dlv{display:block;width:100%;height:100%;border:0}
+
+  .snippet{padding:12px 14px;border-top:1px solid #eee;display:flex;flex-direction:column;gap:8px;background:#fafafa}
+  .snippet label{font-size:11px;color:#777;text-transform:uppercase;letter-spacing:.5px}
+  .snippet textarea{
+    width:100%;min-height:62px;resize:vertical;
+    font-family:Menlo,Consolas,monospace;font-size:11.5px;line-height:1.4;
+    border:1px solid #ddd;border-radius:6px;padding:8px;background:#fff;color:#333;
+  }
+  .snippet .row{display:flex;gap:8px;align-items:center}
+  .snippet button{
+    background:#d83448;color:#fff;border:0;border-radius:6px;
+    padding:7px 14px;font-size:12px;cursor:pointer;font-weight:600;
+  }
+  .snippet button:hover{background:#b22937}
+  .snippet .ok{font-size:11px;color:#3b9b4f;opacity:0;transition:opacity .25s}
+  .snippet .ok.show{opacity:1}
+</style>
+</head>
+<body>
+<h1>Блок доставки — превью</h1>
+<p class="lead">
+  Один общий iframe-виджет на все торты. Принимает параметры через URL:
+  <code>?total=ЧИСЛО&amp;cake=НАЗВАНИЕ&amp;tiered=0|1</code>.
+  Поведение:
+</p>
+<ul style="margin:0 0 18px;padding-left:20px;color:#555;font-size:13px;max-width:760px">
+  <li>В <b>родительской странице</b> кнопка «далее» вашей вёрстки открывает этот блок (модалкой/оверлеем) и подставляет <code>total/cake/tiered</code>.</li>
+  <li>Альтернатива — <b>postMessage</b>: <code>iframe.contentWindow.postMessage({type:'kosmos-cake', total:18395, cake:'Дарси', tiered:false}, '*')</code>.</li>
+  <li>Фиолетовый кружок «самовывоз» автоматически блокируется, если <code>tiered=1</code>.</li>
+  <li>«Продолжить заказ с администратором» копирует текст заказа в буфер и открывает <a href="https://t.me/kosmoscake" target="_blank">@kosmoscake</a>.</li>
+</ul>
+
+<div class="grid">
+
+  <div class="card">
+    <header>
+      <span class="tag">тест 1</span>
+      <span class="name">плоский торт «Дарси», 16 395р</span>
+      <a class="open" href="index.html?total=16395&cake=Дарси&tiered=0" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe class="dlv" src="index.html?total=16395&cake=Дарси&tiered=0" loading="lazy"></iframe></div>
+    <div class="snippet">
+      <label>Сниппет для вёрстки (плоский торт)</label>
+      <textarea readonly id="s1"><iframe src="https://ab-aacoop.github.io/kosmos_calc/calculator/delivery/index.html?total=16395&cake=Дарси&tiered=0" width="520" height="1100" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="row">
+        <button data-target="s1">Скопировать сниппет</button>
+        <span class="ok" data-ok="s1">скопировано ✓</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <header>
+      <span class="tag">тест 2</span>
+      <span class="name">ярусный «Белль», 30 000р (фиолет. недоступен)</span>
+      <a class="open" href="index.html?total=30000&cake=Белль&tiered=1" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe class="dlv" src="index.html?total=30000&cake=Белль&tiered=1" loading="lazy"></iframe></div>
+    <div class="snippet">
+      <label>Сниппет для вёрстки (ярусный торт)</label>
+      <textarea readonly id="s2"><iframe src="https://ab-aacoop.github.io/kosmos_calc/calculator/delivery/index.html?total=30000&cake=Белль&tiered=1" width="520" height="1100" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="row">
+        <button data-target="s2">Скопировать сниппет</button>
+        <span class="ok" data-ok="s2">скопировано ✓</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <header>
+      <span class="tag">шаблон</span>
+      <span class="name">общий сниппет (без параметров, total прокидывается из родителя)</span>
+    </header>
+    <div class="frame-wrap"><iframe class="dlv" src="index.html" loading="lazy"></iframe></div>
+    <div class="snippet">
+      <label>Универсальный сниппет — параметры можно подмешивать на лету через postMessage</label>
+      <textarea readonly id="s3"><iframe id="kosmos-delivery" src="https://ab-aacoop.github.io/kosmos_calc/calculator/delivery/index.html" width="520" height="1100" frameborder="0" style="border:0;max-width:100%"></iframe>
+<script>
+  // когда у вас известны цифры — отправьте их во фрейм:
+  document.getElementById('kosmos-delivery').addEventListener('load', function(){
+    this.contentWindow.postMessage({
+      type:'kosmos-cake',
+      total:  18395,           // итог из калькулятора торта
+      cake:   'Название торта',
+      tiered: false            // true для ярусных
+    }, '*');
+  });
+</script></textarea>
+      <div class="row">
+        <button data-target="s3">Скопировать сниппет</button>
+        <span class="ok" data-ok="s3">скопировано ✓</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+document.addEventListener('click', function(e){
+  var b = e.target.closest('button[data-target]');
+  if (!b) return;
+  var id = b.dataset.target;
+  var ta = document.getElementById(id);
+  if (!ta) return;
+  ta.select();
+  ta.setSelectionRange(0, ta.value.length);
+  var ok = false;
+  try { ok = document.execCommand('copy'); } catch(_){}
+  if (!ok && navigator.clipboard){
+    navigator.clipboard.writeText(ta.value).then(function(){ showOk(id); });
+    return;
+  }
+  if (ok) showOk(id);
+});
+function showOk(id){
+  var ok = document.querySelector('[data-ok="'+id+'"]');
+  if (!ok) return;
+  ok.classList.add('show');
+  setTimeout(function(){ ok.classList.remove('show'); }, 1800);
+}
+</script>
+</body>
+</html>

@@ -331,30 +331,49 @@ def cake_template(cake, mobile=False):
 # ----------------------------------------------------------------
 #  ПРЕВЬЮ-СТРАНИЦА
 # ----------------------------------------------------------------
+BASE_URL   = 'https://ab-aacoop.github.io/kosmos_calc/calculator/cakes'
+BASE_URL_M = 'https://ab-aacoop.github.io/kosmos_calc/calculator/cakes-mobile'
+
 def preview_page(cakes, mobile=False):
     aspect = '360/620' if mobile else '380/760'
+    iframe_w, iframe_h = (360, 620) if mobile else (380, 760)
+    base = BASE_URL_M if mobile else BASE_URL
     h1 = 'Все торты — мобильные превью' if mobile else 'Все торты — десктоп превью'
     lead = (
         'Мобильные версии: без заголовков, фикс-высота, в ярусных тортах поля начинок скрыты '
         '(стоимость начинки 3 200р/кг фиксированная). Этот блок встаёт под уже свёрстанный заголовок.'
         if mobile else
         'Каждая карточка — отдельный готовый файл-калькулятор для своего торта. '
-        'Iframe-ссылку на каждый можно вставлять в Readymag/Tilda как HTML-виджет. Кликни ↗, чтобы открыть в новой вкладке.'
+        'Жми «Копировать сниппет» и вставляй в Readymag/Tilda как HTML-виджет. Кнопку «далее» добавит сайт — '
+        'она будет открывать <a href="../delivery/preview.html">блок доставки</a>.'
     )
     title = 'Kosmos — мобильные калькуляторы' if mobile else 'Kosmos — все калькуляторы'
 
     cards = []
-    for c in cakes:
+    for i, c in enumerate(cakes):
         path = f"{c['type']}/{c['id']}.html"
+        full_url = f"{base}/{path}"
+        snippet = f'<iframe src="{full_url}" width="{iframe_w}" height="{iframe_h}" frameborder="0" style="border:0;max-width:100%"></iframe>'
+        sid = f"snip{i}"
         cards.append(f"""
     <div class="card">
       <header>
         <span class="type">{c['type']}</span>
         <span class="name">{c['name']}</span>
-        <a href="{path}" target="_blank">↗</a>
+        <a class="open" href="{path}" target="_blank" title="открыть в новой вкладке">↗</a>
       </header>
       <div class="frame-wrap"><iframe src="{path}" loading="lazy" title="{c['name']}"></iframe></div>
+      <div class="snip">
+        <textarea readonly id="{sid}">{snippet}</textarea>
+        <div class="snip-row">
+          <button type="button" data-copy="{sid}">копировать сниппет</button>
+          <span class="ok" data-ok="{sid}">✓ скопировано</span>
+        </div>
+      </div>
     </div>""")
+
+    delivery_test_link = '../delivery/preview.html'
+
     return f"""<!doctype html>
 <html lang="ru">
 <head>
@@ -366,24 +385,76 @@ def preview_page(cakes, mobile=False):
   html,body{{margin:0;padding:0;background:#eaeaea;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#222}}
   body{{padding:24px}}
   h1{{margin:0 0 6px;font-size:22px}}
-  p.lead{{margin:0 0 18px;color:#555;font-size:14px;max-width:760px}}
+  p.lead{{margin:0 0 14px;color:#555;font-size:14px;max-width:760px}}
+  p.lead a{{color:#d83448}}
+  .topbar{{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 18px}}
+  .topbar a{{
+    text-decoration:none;background:#fff;border:1px solid #ddd;padding:7px 12px;
+    border-radius:6px;color:#222;font-size:13px;font-weight:500;
+  }}
+  .topbar a.primary{{background:#d83448;color:#fff;border-color:#d83448}}
+  .topbar a:hover{{filter:brightness(0.95)}}
   .grid{{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));align-items:start}}
   .card{{display:flex;flex-direction:column;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08)}}
   .card header{{padding:8px 14px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:10px;font-size:12px}}
   .card .type{{padding:2px 8px;background:#d83448;color:#fff;border-radius:999px;font-size:10px;text-transform:uppercase;letter-spacing:.3px}}
   .card .name{{font-weight:600;flex:1}}
-  .card a{{color:#999;text-decoration:none;font-size:14px}}
-  .card a:hover{{color:#d83448}}
+  .card a.open{{color:#999;text-decoration:none;font-size:14px}}
+  .card a.open:hover{{color:#d83448}}
   .frame-wrap{{aspect-ratio:{aspect};width:100%;background:#cfcfcf}}
-  iframe{{display:block;width:100%;height:100%;border:0}}
+  .frame-wrap iframe{{display:block;width:100%;height:100%;border:0}}
+
+  .snip{{padding:10px 12px;border-top:1px solid #eee;background:#fafafa;display:flex;flex-direction:column;gap:6px}}
+  .snip textarea{{
+    width:100%;min-height:48px;resize:vertical;
+    font-family:Menlo,Consolas,monospace;font-size:11px;line-height:1.4;
+    border:1px solid #ddd;border-radius:5px;padding:6px;background:#fff;color:#333;
+  }}
+  .snip-row{{display:flex;gap:8px;align-items:center}}
+  .snip button{{
+    background:#d83448;color:#fff;border:0;border-radius:5px;padding:6px 12px;
+    font-size:12px;cursor:pointer;font-weight:600;
+  }}
+  .snip button:hover{{background:#b22937}}
+  .snip .ok{{font-size:11px;color:#3b9b4f;opacity:0;transition:opacity .25s}}
+  .snip .ok.show{{opacity:1}}
 </style>
 </head>
 <body>
 <h1>{h1}</h1>
 <p class="lead">{lead}</p>
+<div class="topbar">
+  <a class="primary" href="{delivery_test_link}">↗ блок доставки (превью + сниппеты)</a>
+  <a href="{'../cakes/' if mobile else '../cakes-mobile/'}">↗ {'десктоп-версии' if mobile else 'мобильные версии'}</a>
+  <a href="../">↗ на главную</a>
+</div>
 <div class="grid">
 {''.join(cards)}
 </div>
+<script>
+document.addEventListener('click', function(e){{
+  var b = e.target.closest('button[data-copy]');
+  if (!b) return;
+  var id = b.dataset.copy;
+  var ta = document.getElementById(id);
+  if (!ta) return;
+  ta.select();
+  ta.setSelectionRange(0, ta.value.length);
+  var ok = false;
+  try {{ ok = document.execCommand('copy'); }} catch(_){{}}
+  if (!ok && navigator.clipboard){{
+    navigator.clipboard.writeText(ta.value).then(function(){{ flash(id); }});
+    return;
+  }}
+  if (ok) flash(id);
+}});
+function flash(id){{
+  var el = document.querySelector('[data-ok="'+id+'"]');
+  if (!el) return;
+  el.classList.add('show');
+  setTimeout(function(){{ el.classList.remove('show'); }}, 1800);
+}}
+</script>
 </body>
 </html>
 """

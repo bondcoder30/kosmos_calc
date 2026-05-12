@@ -44,6 +44,10 @@ html,body{
   margin:0;padding:0;height:100%;
   background:var(--bg);
   font-family:var(--text);color:#1a1a1a;
+  cursor:url('assets/cursor.svg') 8 8, auto;
+}
+button, select, .csel__trigger, .csel__opt, .radio-big, .fixed-row, .next-btn, .stepper .step-btn{
+  cursor:url('assets/cursor.svg') 8 8, pointer;
 }
 
 /* ============ FRAME ============ */
@@ -224,17 +228,31 @@ body.mobile .calc-scroll{height:auto;overflow:visible;padding:18px 18px 22px}
 .csel__opt:hover{background:var(--pink);color:var(--red)}
 .csel__opt.is-selected{color:var(--red);font-weight:600}
 
-/* ============ TOTAL ============ */
-.total-wrap{margin-top:24px;text-align:center}
-.total-label{
-  font-family:var(--text);font-weight:400;
-  color:var(--red);font-size:12px;
-  letter-spacing:1px;margin-bottom:6px;
+/* ============ TOTAL (чёрная плашка с искрами по бокам и крупной красной ценой) ============ */
+.total-wrap{
+  margin-top:24px;
+  background:#0e0e0e;
+  border-radius:20px;
+  padding:24px 18px;
+  display:flex;align-items:center;justify-content:center;gap:14px;
 }
+.total-wrap .sparkle{
+  display:inline-block;
+  width:22px;height:22px;color:var(--red);flex-shrink:0;
+}
+.total-wrap .sparkle svg{width:100%;height:100%;fill:currentColor;display:block}
 .total-value{
   font-family:var(--display);font-weight:900;
   color:var(--red);font-size:64px;line-height:1;letter-spacing:-1px;
+  white-space:nowrap;
 }
+/* старая подпись «итоговая стоимость» больше не показывается */
+.total-label{display:none}
+
+/* «далее» в макетах больше не показываем — на сайте свою кнопку,
+   которая открывает блок доставки (см. /delivery/). Чтобы вернуть —
+   просто удалите/закомментируйте эту строку. */
+.send-row{display:none}
 
 /* ============ NEXT BUTTON («далее» розовым жирным + искорка) ============ */
 .send-row{margin-top:22px;display:flex;justify-content:center}
