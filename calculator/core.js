@@ -70,6 +70,35 @@ const SVG_PLUS    = '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/sv
 const SVG_SPARKLE = '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M50 4 C52 38, 62 48, 96 50 C62 52, 52 62, 50 96 C48 62, 38 52, 4 50 C38 48, 48 38, 50 4 Z"/></svg>';
 
 /* ================================================================
+   КЛАССЫ НАЧИНОК (символы «космос база / классик / люкс»)
+   Класс определяется по цене начинки:
+     2800р/кг → база, 3000р/кг → классик, 3600р/кг → люкс.
+   Картинки лежат рядом с core.js: assets/class-base.svg / class-classic.svg / class-lux.svg.
+   ВАЖНО (на случай если перепутаны имена файлов):
+     если визуально в плоском калькуляторе под ценой появляется не та надпись —
+     просто переименуйте файлы в папке assets/ местами.
+     В ярусных тортах показываются все три рядом — там подсказка статичная.
+   ================================================================ */
+const CLASS_ORDER = ['base', 'classic', 'lux'];
+
+function fillingClass(filling){
+  const p = (window.FILLING_PRICES && FILLING_PRICES[filling]) || 0;
+  if (p >= 3500) return 'lux';
+  if (p >= 3000) return 'classic';
+  return 'base';
+}
+
+function classBadge(cls){
+  return `<div class="fill-class"><div class="fill-class__ico is-${cls}" aria-label="класс начинки: ${cls}"></div></div>`;
+}
+
+function classBadgeAll(){
+  return `<div class="fill-class fill-class--all">
+    ${CLASS_ORDER.map(c => `<div class="fill-class__ico is-${c}" aria-label="класс начинки: ${c}"></div>`).join('')}
+  </div>`;
+}
+
+/* ================================================================
    ЗАГОЛОВОК: каждое слово на отдельной строке + автоматический подбор размера
    так, чтобы каждое слово растягивалось почти на всю ширину контейнера.
    ================================================================ */
@@ -243,6 +272,7 @@ window.renderTieredCake = function(cake){
       <div class="hint">От ${cake.minTiers} ярус${cake.minTiers===1?'а':'ов'}. От ${fmtWeight(cake.minWeight)} кг.${cake.note?'<br>'+cake.note:''}</div>
       <div class="hint hint--big">Стоимость начинки в ярусных тортах фиксированная — 3&nbsp;200&nbsp;р/кг.</div>
       ${totalHTML(r.total)}
+      ${classBadgeAll()}
       ${nextBtnHTML()}
     `;
 
@@ -308,6 +338,7 @@ window.renderFixedCake = function(cake){
         </select>
       </div>
       ${totalHTML(r.total)}
+      ${classBadge(fillingClass(state.filling))}
       ${nextBtnHTML()}
     `;
     root.querySelectorAll('.fixed-row[data-w]').forEach(row => {
@@ -373,6 +404,7 @@ window.renderWeightCake = function(cake){
         </select>
       </div>
       ${totalHTML(r.total)}
+      ${classBadge(fillingClass(state.filling))}
       ${nextBtnHTML()}
     `;
     root.querySelectorAll('button[data-act]').forEach(b => {

@@ -247,6 +247,37 @@ body.mobile .calc-scroll{height:auto;overflow:visible;padding:18px 18px 22px}
 /* старая подпись «итоговая стоимость» больше не показывается */
 .total-label{display:none}
 
+/* ============ КЛАСС НАЧИНКИ (космос база/классик/люкс) ============
+   - в плоских/фикс калькуляторах под ценой появляется один символ,
+     соответствующий цене выбранной начинки;
+   - в ярусных тортах после цены идёт строка из всех трёх символов
+     одинакового размера (декор/легенда классов).
+   Картинки берутся из assets/class-base.svg / class-classic.svg / class-lux.svg.
+*/
+.fill-class{
+  display:flex;align-items:center;justify-content:center;gap:18px;
+  margin:14px auto 4px;
+  width:100%;
+}
+.fill-class__ico{
+  flex:0 0 auto;
+  width:180px;height:60px;
+  background:no-repeat center / contain;
+}
+.fill-class__ico.is-base   {background-image:url('assets/class-base.svg')}
+.fill-class__ico.is-classic{background-image:url('assets/class-classic.svg')}
+.fill-class__ico.is-lux    {background-image:url('assets/class-lux.svg')}
+
+/* В ярусных — три рядом, чуть мельче чтобы умещались в одну линию */
+.fill-class--all{gap:12px;margin-top:18px}
+.fill-class--all .fill-class__ico{width:110px;height:48px}
+
+@media (max-width:420px){
+  .fill-class__ico{width:140px;height:48px}
+  .fill-class--all{gap:8px}
+  .fill-class--all .fill-class__ico{width:90px;height:40px}
+}
+
 /* «далее» в макетах больше не показываем — на сайте свою кнопку,
    которая открывает блок доставки (см. /delivery/). Чтобы вернуть —
    просто удалите/закомментируйте эту строку. */
