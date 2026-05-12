@@ -1,0 +1,99 @@
+/* ============================================================
+   Стили блока «Доставка» (универсальный)
+   Используется и в отдельном iframe (delivery/index.html),
+   и встроенным в мобильные «полные» страницы (cakes-mobile-full/).
+   ============================================================ */
+
+.dlv-frame{
+  max-width:520px;margin:0 auto;padding:20px 22px 28px;
+  display:flex;flex-direction:column;gap:14px;align-items:stretch;
+  background:var(--bg);
+}
+
+/* «Мы бережно доставляем…» — обычный мелкий красный текст */
+.dlv-title{
+  margin:0;
+  font-family:var(--text);font-weight:400;
+  font-size:13px;line-height:1.45;letter-spacing:.2px;
+  text-align:center;color:var(--red);
+}
+
+.dlv-map{
+  width:100%;
+  aspect-ratio: 360 / 320;
+  background:#dcdcdc;border-radius:8px;overflow:hidden;
+}
+.dlv-map iframe{display:block;width:100%;height:100%;border:0}
+
+.dlv-zone-label{
+  margin-top:6px;text-align:center;
+  font-family:var(--display);font-weight:900;
+  color:var(--pink);font-size:20px;text-transform:lowercase;
+}
+
+.dlv-zones{
+  display:grid;grid-template-columns:repeat(3, 60px);
+  gap:18px;justify-content:center;margin:0 auto;
+}
+.dlv-zone{
+  width:60px;height:60px;border-radius:50%;
+  border:0;outline:0;padding:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--display);color:#fff;font-size:24px;
+  position:relative;
+  transition:transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+  box-shadow:0 0 0 0 transparent;
+}
+.dlv-zone:hover{transform:scale(1.06)}
+.dlv-zone.is-active{box-shadow:0 0 0 4px #fff, 0 0 0 6px currentColor}
+.dlv-zone[disabled]{opacity:.35;cursor:not-allowed}
+.dlv-zone[disabled]:hover{transform:none}
+
+.dlv-z-orange{background:#E89A2E;color:#E89A2E}
+.dlv-z-green {background:#3FA94E;color:#3FA94E}
+.dlv-z-purple{background:#9558C9;color:#9558C9}
+.dlv-z-brown {background:#A98968;color:#A98968}
+.dlv-z-blue  {background:#3A9DD8;color:#3A9DD8}
+.dlv-z-red   {background:#D2363C;color:#D2363C}
+
+.dlv-cost{margin-top:8px;text-align:center}
+.dlv-cost .lbl{font-family:var(--text);font-weight:400;color:var(--pink);font-size:13px;letter-spacing:.5px}
+.dlv-cost .val{font-family:var(--display);font-weight:900;color:var(--pink);font-size:42px;line-height:1;margin-top:2px}
+
+.dlv-total{text-align:center;margin-top:2px}
+.dlv-total .lbl{font-family:var(--text);font-weight:400;color:var(--pink);font-size:13px;letter-spacing:.5px}
+.dlv-total .val-row{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:4px}
+.dlv-total .sparkle{width:22px;height:22px;color:var(--red);display:inline-block;flex-shrink:0}
+.dlv-total .sparkle svg{width:100%;height:100%;fill:currentColor;display:block}
+.dlv-total .val{
+  font-family:var(--display);font-weight:900;
+  color:var(--red);font-size:54px;line-height:1;letter-spacing:-1px;white-space:nowrap;
+}
+
+.dlv-cta{
+  background:transparent;border:0;
+  font-family:var(--display);font-weight:900;
+  color:var(--pink);font-size:22px;line-height:1.15;
+  text-transform:lowercase;text-align:center;
+  padding:12px 8px 4px;letter-spacing:.2px;
+  transition:opacity .15s ease;
+  cursor:url('../assets/cursor.svg') 8 8, pointer;
+}
+.dlv-cta:hover{opacity:.78}
+.dlv-cta[disabled]{opacity:.45;cursor:not-allowed}
+
+.dlv-toast{
+  position:fixed;left:50%;bottom:24px;transform:translateX(-50%);
+  background:#0e0e0e;color:#fff;border-radius:8px;
+  padding:10px 16px;font-family:var(--text);font-size:13px;
+  opacity:0;pointer-events:none;transition:opacity .25s ease;
+  max-width:90vw;text-align:center;z-index:9999;
+}
+.dlv-toast.show{opacity:1}
+
+@media (max-width:380px){
+  .dlv-cost .val{font-size:34px}
+  .dlv-total .val{font-size:44px}
+  .dlv-zones{grid-template-columns:repeat(3,52px);gap:14px}
+  .dlv-zone{width:52px;height:52px;font-size:20px}
+}

@@ -36,6 +36,33 @@ window.sendOrder = (payload) => {
 };
 
 /* ================================================================
+   broadcastCake — на каждом изменении калькулятора шлёт текущие
+   данные торта во все возможные каналы. Их слушает блок «Доставка».
+
+   Каналы:
+     1) CustomEvent 'kosmos-cake' на window — если калькулятор и доставка
+        живут на ОДНОЙ странице (мобильная объединённая версия).
+     2) BroadcastChannel('kosmos-cake') — между двумя iframe-ами на одном
+        origin (типичный случай Tilda/Readymag: калькулятор-iframe и
+        блок-доставки-iframe на одной странице сайта).
+     3) window.parent.postMessage — на случай, если родительская страница
+        сама ловит и роняет в доставку.
+
+   Payload:
+     { type:'kosmos-cake', total, cake, weight, tiers, pieces, filling, tiered }
+   ================================================================ */
+window.__kosmosBC = null;
+window.broadcastCake = function(payload){
+  payload = Object.assign({ type:'kosmos-cake' }, payload || {});
+  try { window.dispatchEvent(new CustomEvent('kosmos-cake', { detail: payload })); } catch(_){}
+  try {
+    if (!window.__kosmosBC) window.__kosmosBC = new BroadcastChannel('kosmos-cake');
+    window.__kosmosBC.postMessage(payload);
+  } catch(_){}
+  try { if (window.parent && window.parent !== window) window.parent.postMessage(payload, '*'); } catch(_){}
+};
+
+/* ================================================================
    SVG-ИКОНКИ (инлайн)
    ================================================================ */
 const SVG_MINUS   = '<svg viewBox="0 0 100 30" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="30" rx="15"/></svg>';
@@ -235,6 +262,11 @@ window.renderTieredCake = function(cake){
         decor:r.decor, fillingCost:r.filling, total:r.total
       });
     };
+    broadcastCake({
+      cake: cake.name, total: r.total,
+      weight: fmtWeight(state.weight), tiers: state.tiers,
+      tiered: true
+    });
     postDraw(root);
   }
 
@@ -288,6 +320,11 @@ window.renderFixedCake = function(cake){
         decor:r.decor, fillingCost:r.filling, total:r.total
       });
     };
+    broadcastCake({
+      cake: cake.name, total: r.total,
+      weight: fmtWeight(state.weight), filling: state.filling,
+      tiered: false
+    });
     postDraw(root);
   }
   draw();
@@ -353,6 +390,11 @@ window.renderWeightCake = function(cake){
         decor:r.decor, fillingCost:r.filling, total:r.total
       });
     };
+    broadcastCake({
+      cake: cake.name, total: r.total,
+      weight: fmtWeight(state.weight), filling: state.filling,
+      tiered: false
+    });
     postDraw(root);
   }
   draw();

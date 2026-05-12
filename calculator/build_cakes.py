@@ -23,6 +23,7 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 ROOT   = Path(__file__).parent
 OUT    = ROOT / "cakes"
 OUT_M  = ROOT / "cakes-mobile"
+OUT_MF = ROOT / "cakes-mobile-full"  # мобилка-«всё-в-одном»: калькулятор + доставка
 
 # ----------------------------------------------------------------
 #  ВСЕ ТОРТЫ. Описания взяты из «Вся инфа по тортикам.docx».
@@ -271,7 +272,13 @@ CAKES = [
 # ----------------------------------------------------------------
 #  ШАБЛОН СТРАНИЦЫ ТОРТА
 # ----------------------------------------------------------------
-def cake_template(cake, mobile=False):
+def cake_template(cake, mobile=False, full=False):
+    """
+    mobile=False, full=False — десктоп (cakes/)
+    mobile=True,  full=False — мобилка (cakes-mobile/), без доставки
+    mobile=True,  full=True  — мобилка-объединённая (cakes-mobile-full/),
+                               калькулятор + блок «Доставка» друг под другом.
+    """
     # JS-объект с данными торта
     fillings = f"FILLING_SETS.{cake['fillings']}"
     if cake['type'] == 'tiered':
@@ -308,6 +315,19 @@ def cake_template(cake, mobile=False):
 
     body_class = ' class="mobile"' if mobile else ''
 
+    # Для full-мобилки добавляем блок «Доставка» прямо под калькулятором
+    delivery_part = ''
+    extra_styles = ''
+    if full:
+        delivery_part = (
+            '<div id="dlv-root"></div>\n'
+            '<script src="../../delivery/delivery.js"></script>\n'
+            '<script>Kosmos.mountDelivery(document.getElementById("dlv-root"));</script>\n'
+        )
+        extra_styles = '<link rel="stylesheet" href="../../delivery/delivery.css">\n'
+        # full-мобилка не должна иметь скролла внутри отдельной секции — пусть растёт по контенту
+        extra_styles += '<style>body.mobile .calc-frame{height:auto;overflow:visible}.calc-scroll{padding-bottom:8px}</style>\n'
+
     return f"""<!doctype html>
 <html lang="ru">
 <head>
@@ -315,12 +335,12 @@ def cake_template(cake, mobile=False):
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>{cake['name']} — калькулятор</title>
 <link rel="stylesheet" href="../../style.css">
-</head>
+{extra_styles}</head>
 <body{body_class}>
 <div class="calc-frame">
   <div class="calc-scroll" id="root"></div>
 </div>
-<script src="../../core.js"></script>
+{delivery_part}<script src="../../core.js"></script>
 <script>
 {render}({data_js});
 </script>
@@ -331,23 +351,45 @@ def cake_template(cake, mobile=False):
 # ----------------------------------------------------------------
 #  ПРЕВЬЮ-СТРАНИЦА
 # ----------------------------------------------------------------
-BASE_URL   = 'https://ab-aacoop.github.io/kosmos_calc/calculator/cakes'
-BASE_URL_M = 'https://ab-aacoop.github.io/kosmos_calc/calculator/cakes-mobile'
+BASE_URL    = 'https://ab-aacoop.github.io/kosmos_calc/calculator/cakes'
+BASE_URL_M  = 'https://ab-aacoop.github.io/kosmos_calc/calculator/cakes-mobile'
+BASE_URL_MF = 'https://ab-aacoop.github.io/kosmos_calc/calculator/cakes-mobile-full'
 
-def preview_page(cakes, mobile=False):
-    aspect = '360/620' if mobile else '380/760'
-    iframe_w, iframe_h = (360, 620) if mobile else (380, 760)
-    base = BASE_URL_M if mobile else BASE_URL
-    h1 = 'Все торты — мобильные превью' if mobile else 'Все торты — десктоп превью'
-    lead = (
-        'Мобильные версии: без заголовков, фикс-высота, в ярусных тортах поля начинок скрыты '
-        '(стоимость начинки 3 200р/кг фиксированная). Этот блок встаёт под уже свёрстанный заголовок.'
-        if mobile else
-        'Каждая карточка — отдельный готовый файл-калькулятор для своего торта. '
-        'Жми «Копировать сниппет» и вставляй в Readymag/Tilda как HTML-виджет. Кнопку «далее» добавит сайт — '
-        'она будет открывать <a href="../delivery/preview.html">блок доставки</a>.'
-    )
-    title = 'Kosmos — мобильные калькуляторы' if mobile else 'Kosmos — все калькуляторы'
+def preview_page(cakes, mobile=False, full=False):
+    if full:
+        aspect = '360/1500'
+        iframe_w, iframe_h = 360, 1500
+        base = BASE_URL_MF
+        h1 = 'Все торты — мобилка «всё-в-одном» (калькулятор + доставка)'
+        lead = (
+            'Один iframe — внутри и калькулятор торта, и блок «Доставка» друг под другом. '
+            'Идеально для мобилки сайта: одной вставкой получаем готовую секцию. '
+            'Итоговая сумма автоматически меняется при настройке торта. '
+            'Высота iframe большая (≈1500px) — настраивайте под свою вёрстку.'
+        )
+        title = 'Kosmos — мобилка «всё-в-одном»'
+    elif mobile:
+        aspect = '360/620'
+        iframe_w, iframe_h = 360, 620
+        base = BASE_URL_M
+        h1 = 'Все торты — мобильные превью (только калькулятор)'
+        lead = (
+            'Мобильные версии: без заголовков, фикс-высота, в ярусных тортах поля начинок скрыты '
+            '(стоимость начинки 3 200р/кг фиксированная). Этот блок встаёт под уже свёрстанный заголовок. '
+            'Если хотите получить «калькулятор + доставку» одним iframe — смотрите <a href="../cakes-mobile-full/">cakes-mobile-full</a>.'
+        )
+        title = 'Kosmos — мобильные калькуляторы'
+    else:
+        aspect = '380/760'
+        iframe_w, iframe_h = 380, 760
+        base = BASE_URL
+        h1 = 'Все торты — десктоп превью'
+        lead = (
+            'Каждая карточка — отдельный готовый файл-калькулятор для своего торта. '
+            'Жми «Копировать сниппет» и вставляй в Readymag/Tilda как HTML-виджет. Кнопку «далее» добавит сайт — '
+            'она будет открывать <a href="../delivery/preview.html">блок доставки</a>.'
+        )
+        title = 'Kosmos — все калькуляторы'
 
     cards = []
     for i, c in enumerate(cakes):
@@ -373,6 +415,13 @@ def preview_page(cakes, mobile=False):
     </div>""")
 
     delivery_test_link = '../delivery/preview.html'
+    other_links = ''
+    if full:
+        other_links = '<a href="../cakes/">↗ десктоп</a> <a href="../cakes-mobile/">↗ мобилка (только калькулятор)</a>'
+    elif mobile:
+        other_links = '<a href="../cakes/">↗ десктоп</a> <a href="../cakes-mobile-full/">↗ мобилка «всё-в-одном»</a>'
+    else:
+        other_links = '<a href="../cakes-mobile/">↗ мобилка</a> <a href="../cakes-mobile-full/">↗ мобилка «всё-в-одном»</a>'
 
     return f"""<!doctype html>
 <html lang="ru">
@@ -425,7 +474,7 @@ def preview_page(cakes, mobile=False):
 <p class="lead">{lead}</p>
 <div class="topbar">
   <a class="primary" href="{delivery_test_link}">↗ блок доставки (превью + сниппеты)</a>
-  <a href="{'../cakes/' if mobile else '../cakes-mobile/'}">↗ {'десктоп-версии' if mobile else 'мобильные версии'}</a>
+  {other_links}
   <a href="../">↗ на главную</a>
 </div>
 <div class="grid">
@@ -464,7 +513,7 @@ function flash(id){{
 # ----------------------------------------------------------------
 import shutil
 
-def build_into(target_dir, mobile):
+def build_into(target_dir, mobile, full=False):
     if target_dir.exists():
         shutil.rmtree(target_dir)
     target_dir.mkdir(parents=True)
@@ -473,15 +522,18 @@ def build_into(target_dir, mobile):
     generated = []
     for cake in CAKES:
         path = target_dir / cake['type'] / f"{cake['id']}.html"
-        path.write_text(cake_template(cake, mobile=mobile), encoding='utf-8')
+        path.write_text(cake_template(cake, mobile=mobile, full=full), encoding='utf-8')
         generated.append(path.relative_to(target_dir))
-    (target_dir / "index.html").write_text(preview_page(CAKES, mobile=mobile), encoding='utf-8')
+    (target_dir / "index.html").write_text(preview_page(CAKES, mobile=mobile, full=full), encoding='utf-8')
     return generated
 
-desktop_files = build_into(OUT,   mobile=False)
-mobile_files  = build_into(OUT_M, mobile=True)
+desktop_files     = build_into(OUT,    mobile=False)
+mobile_files      = build_into(OUT_M,  mobile=True)
+mobile_full_files = build_into(OUT_MF, mobile=True, full=True)
 
-print(f"Десктоп ({OUT.name}/):   {len(desktop_files)} файлов")
-print(f"Мобилка ({OUT_M.name}/): {len(mobile_files)} файлов")
+print(f"Десктоп       ({OUT.name}/):   {len(desktop_files)} файлов")
+print(f"Мобилка       ({OUT_M.name}/): {len(mobile_files)} файлов")
+print(f"Мобилка-всё   ({OUT_MF.name}/): {len(mobile_full_files)} файлов")
 print(f"\nПревью десктоп: {(OUT   / 'index.html').relative_to(ROOT)}")
 print(f"Превью мобилка:  {(OUT_M / 'index.html').relative_to(ROOT)}")
+print(f"Превью мобилка-всё-в-одном: {(OUT_MF / 'index.html').relative_to(ROOT)}")

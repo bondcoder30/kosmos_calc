@@ -22,6 +22,15 @@
   .frame-wrap{aspect-ratio:520/1100;width:100%;background:#cfcfcf}
   iframe.dlv{display:block;width:100%;height:100%;border:0}
 
+  .pair{padding:14px;background:#cfcfcf;display:grid;grid-template-columns:380px 1fr;gap:14px}
+  .pair .calc-wrap{background:#cfcfcf}
+  .pair iframe.calc{display:block;width:380px;height:760px;border:0;background:#cfcfcf}
+  .pair iframe.dlv2{display:block;width:100%;height:1100px;border:0;background:#cfcfcf}
+  @media (max-width:900px){
+    .pair{grid-template-columns:1fr}
+    .pair iframe.calc{width:100%}
+  }
+
   .snippet{padding:12px 14px;border-top:1px solid #eee;display:flex;flex-direction:column;gap:8px;background:#fafafa}
   .snippet label{font-size:11px;color:#777;text-transform:uppercase;letter-spacing:.5px}
   .snippet textarea{
@@ -42,16 +51,37 @@
 <body>
 <h1>Блок доставки — превью</h1>
 <p class="lead">
-  Один общий iframe-виджет на все торты. Принимает параметры через URL:
-  <code>?total=ЧИСЛО&amp;cake=НАЗВАНИЕ&amp;tiered=0|1</code>.
-  Поведение:
+  Один общий iframe-виджет на все торты. Связывается с калькулятором торта <b>автоматически</b> —
+  калькулятор шлёт текущую сумму по BroadcastChannel, доставка ловит и пересчитывает.
+  Никакого JS на стороне сайта писать не нужно: просто вставьте два iframe на одну страницу.
 </p>
 <ul style="margin:0 0 18px;padding-left:20px;color:#555;font-size:13px;max-width:760px">
-  <li>В <b>родительской странице</b> кнопка «далее» вашей вёрстки открывает этот блок (модалкой/оверлеем) и подставляет <code>total/cake/tiered</code>.</li>
-  <li>Альтернатива — <b>postMessage</b>: <code>iframe.contentWindow.postMessage({type:'kosmos-cake', total:18395, cake:'Дарси', tiered:false}, '*')</code>.</li>
-  <li>Фиолетовый кружок «самовывоз» автоматически блокируется, если <code>tiered=1</code>.</li>
+  <li><b>Связка автоматическая</b>: оба iframe на одном домене (github pages) — общаются через <code>BroadcastChannel('kosmos-cake')</code>. При любом изменении веса/ярусов/начинки в калькуляторе блок доставки моментально пересчитывает итог.</li>
+  <li>Альтернатива (если нужно явно передать значения): URL-параметры <code>?total=…&amp;cake=…&amp;weight=…&amp;tiers=…&amp;filling=…&amp;tiered=0|1</code> либо <code>postMessage</code> из родителя.</li>
+  <li>Фиолетовый кружок «самовывоз» автоматически блокируется для ярусных тортов.</li>
   <li>«Продолжить заказ с администратором» копирует текст заказа в буфер и открывает <a href="https://t.me/kosmoscake" target="_blank">@kosmoscake</a>.</li>
+  <li>Хотите всё одним iframe? Используйте <a href="../cakes-mobile-full/">cakes-mobile-full</a> — мобильная объединённая версия.</li>
 </ul>
+
+<div class="card" style="margin-bottom:18px">
+  <header>
+    <span class="tag" style="background:#0e0e0e">демо</span>
+    <span class="name">связка автоматическая: меняй кг/ярусы/начинку слева — справа в доставке обновится сумма</span>
+  </header>
+  <div class="pair">
+    <iframe class="calc" src="../cakes/weight/darcy.html" loading="lazy" title="калькулятор Дарси"></iframe>
+    <iframe class="dlv2" src="index.html" loading="lazy" title="доставка"></iframe>
+  </div>
+  <div class="snippet">
+    <label>На реальном сайте: вставьте оба iframe рядом — связка по BroadcastChannel сработает сама</label>
+    <textarea readonly id="s0"><iframe src="https://ab-aacoop.github.io/kosmos_calc/calculator/cakes/weight/darcy.html" width="380" height="760" frameborder="0" style="border:0"></iframe>
+<iframe src="https://ab-aacoop.github.io/kosmos_calc/calculator/delivery/index.html" width="520" height="1100" frameborder="0" style="border:0"></iframe></textarea>
+    <div class="row">
+      <button data-target="s0">Скопировать связку</button>
+      <span class="ok" data-ok="s0">скопировано ✓</span>
+    </div>
+  </div>
+</div>
 
 <div class="grid">
 
