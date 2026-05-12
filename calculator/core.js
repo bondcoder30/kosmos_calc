@@ -209,9 +209,12 @@ function nextBtnHTML(){
 function totalHTML(total){
   return `
     <div class="total-wrap">
-      <span class="sparkle">${SVG_SPARKLE}</span>
-      <div class="total-value">${fmtMoney(total)}</div>
-      <span class="sparkle">${SVG_SPARKLE}</span>
+      <div class="total-meta">стоимость торта</div>
+      <div class="total-row">
+        <span class="sparkle">${SVG_SPARKLE}</span>
+        <div class="total-value">${fmtMoney(total)}</div>
+        <span class="sparkle">${SVG_SPARKLE}</span>
+      </div>
     </div>
   `;
 }
@@ -273,7 +276,6 @@ window.renderTieredCake = function(cake){
       <div class="hint hint--big">Стоимость начинки в ярусных тортах фиксированная — 3&nbsp;200&nbsp;р/кг.</div>
       ${totalHTML(r.total)}
       ${classBadgeAll()}
-      ${nextBtnHTML()}
     `;
 
     root.querySelectorAll('button[data-act]').forEach(b => {
@@ -286,12 +288,6 @@ window.renderTieredCake = function(cake){
         draw();
       };
     });
-    root.querySelector('#send').onclick = () => {
-      sendOrder({
-        type:'tiered', cake:cake.name, weight:state.weight, tiers:state.tiers,
-        decor:r.decor, fillingCost:r.filling, total:r.total
-      });
-    };
     broadcastCake({
       cake: cake.name, total: r.total,
       weight: fmtWeight(state.weight), tiers: state.tiers,
@@ -337,20 +333,13 @@ window.renderFixedCake = function(cake){
           ${cake.fillings.map(f=>`<option ${f===state.filling?'selected':''}>${f}</option>`).join('')}
         </select>
       </div>
-      ${totalHTML(r.total)}
       ${classBadge(fillingClass(state.filling))}
-      ${nextBtnHTML()}
+      ${totalHTML(r.total)}
     `;
     root.querySelectorAll('.fixed-row[data-w]').forEach(row => {
       row.onclick = () => { state.weight = parseFloat(row.dataset.w); draw(); };
     });
     root.querySelector('#filling').onchange = e => { state.filling = e.target.value; draw(); };
-    root.querySelector('#send').onclick = () => {
-      sendOrder({
-        type:'fixed', cake:cake.name, weight:state.weight, filling:state.filling,
-        decor:r.decor, fillingCost:r.filling, total:r.total
-      });
-    };
     broadcastCake({
       cake: cake.name, total: r.total,
       weight: fmtWeight(state.weight), filling: state.filling,
@@ -396,16 +385,14 @@ window.renderWeightCake = function(cake){
         <div class="value">${fmtWeight(state.weight)}</div>
         <button class="step-btn plus"  data-act="w+" aria-label="плюс" type="button">${SVG_PLUS}</button>
       </div>
-      <div class="hint">${decorHint()}</div>
       <div class="label">Начинка</div>
       <div class="tier-row">
         <select class="to-custom" id="filling">
           ${cake.fillings.map(f=>`<option ${f===state.filling?'selected':''}>${f}</option>`).join('')}
         </select>
       </div>
-      ${totalHTML(r.total)}
       ${classBadge(fillingClass(state.filling))}
-      ${nextBtnHTML()}
+      ${totalHTML(r.total)}
     `;
     root.querySelectorAll('button[data-act]').forEach(b => {
       b.onclick = () => {
@@ -416,12 +403,6 @@ window.renderWeightCake = function(cake){
       };
     });
     root.querySelector('#filling').onchange = e => { state.filling = e.target.value; draw(); };
-    root.querySelector('#send').onclick = () => {
-      sendOrder({
-        type:'weight', cake:cake.name, weight:state.weight, filling:state.filling,
-        decor:r.decor, fillingCost:r.filling, total:r.total
-      });
-    };
     broadcastCake({
       cake: cake.name, total: r.total,
       weight: fmtWeight(state.weight), filling: state.filling,
