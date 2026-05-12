@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>фаберже — калькулятор</title>
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+<div class="calc-frame">
+  <div class="calc-scroll" id="root"></div>
+</div>
+<script src="../../core.js"></script>
+<script>
+renderFixedCake({
+  "id": "faberge",
+  "name": "фаберже",
+  "title": "фаберже",
+  "desc": "По-императорски величественный и роскошный торт с вензелями, рюшами и лепниной.",
+  "subtitle": "Торт назван в честь знаменитых ювелирных изделий Российского Императорского Дома, ставших символом роскоши и богатства.",
+  "decor": {
+    "2.5": 3000,
+    "3.5": 3500
+  },
+  "fillings": FILLING_SETS.BASE
+});
+</script>
+</body>
+</html>

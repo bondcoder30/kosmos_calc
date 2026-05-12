@@ -9,8 +9,6 @@
 <body>
 
 <div class="calc-frame">
-  <span class="sparkle tl"></span>
-  <span class="sparkle tr"></span>
   <div class="calc-scroll" id="root"></div>
 </div>
 
@@ -69,16 +67,16 @@ function render(){
 
     <div class="label">Сколько килограмм?</div>
     <div class="stepper">
-      <button class="step-btn minus" data-act="w-" aria-label="минус"><img src="assets/minus.svg" alt=""></button>
+      <button class="step-btn minus" data-act="w-" aria-label="минус"><svg viewBox="0 0 100 30" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="30" rx="15"/></svg></button>
       <div class="value">${fmtWeight(state.weight)}</div>
-      <button class="step-btn plus"  data-act="w+" aria-label="плюс"><img src="assets/plus.svg" alt=""></button>
+      <button class="step-btn plus"  data-act="w+" aria-label="плюс"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect x="33" width="34" height="100" rx="14"/><rect y="33" width="100" height="34" rx="14"/></svg></button>
     </div>
 
     <div class="label">Сколько ярусов?</div>
     <div class="stepper">
-      <button class="step-btn minus" data-act="t-" aria-label="минус"><img src="assets/minus.svg" alt=""></button>
+      <button class="step-btn minus" data-act="t-" aria-label="минус"><svg viewBox="0 0 100 30" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="30" rx="15"/></svg></button>
       <div class="value">${state.tiers}</div>
-      <button class="step-btn plus"  data-act="t+" aria-label="плюс"><img src="assets/plus.svg" alt=""></button>
+      <button class="step-btn plus"  data-act="t+" aria-label="плюс"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect x="33" width="34" height="100" rx="14"/><rect y="33" width="100" height="34" rx="14"/></svg></button>
     </div>
 
     <div class="hint">От ${c.minTiers} ярус${c.minTiers===1?'а':'ов'}. От ${fmtWeight(c.minWeight)} кг.${c.note?'<br>'+c.note:''}</div>
@@ -95,7 +93,6 @@ function render(){
     </div>
 
     <div class="total-wrap">
-      <span class="sparkle l"></span><span class="sparkle r"></span>
       <div class="total-label">итоговая стоимость</div>
       <div class="total-value">${fmtMoney(r.total)}</div>
     </div>
