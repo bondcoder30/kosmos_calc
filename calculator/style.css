@@ -33,8 +33,8 @@
   --bg:#cfcfcf;
   --red:#D2363C;
   --pink:#F16471;
-  --rose:#F16471;
-  --red-deep:#D2363C;
+  --rose:#E55264;
+  --red-deep:#B0202A;
   --display:'ALS Beast', system-ui, sans-serif;
   --text:'Golos Text', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
@@ -51,23 +51,37 @@ html,body{
 .calc-scroll{
   height:100%;overflow-y:auto;
   padding:28px 22px 28px;
-  scrollbar-width:thin;scrollbar-color:rgba(0,0,0,.25) transparent;
+  scrollbar-width:thin;scrollbar-color:var(--pink) transparent;
 }
 .calc-scroll::-webkit-scrollbar{width:6px}
-.calc-scroll::-webkit-scrollbar-thumb{background:rgba(0,0,0,.2);border-radius:3px}
+.calc-scroll::-webkit-scrollbar-thumb{background:var(--pink);border-radius:3px}
 .calc-scroll::-webkit-scrollbar-track{background:transparent}
 
-/* ============ CAKE HEADER (заголовок + описание + сабтайтл) ============ */
-.cake-header{margin-bottom:10px;text-align:center}
+/* мобильный режим — фикс по контенту, без скролла внутри iframe */
+body.mobile,
+body.mobile html{height:auto;min-height:0}
+body.mobile .calc-frame{height:auto;overflow:visible}
+body.mobile .calc-scroll{height:auto;overflow:visible;padding:18px 18px 22px}
+
+/* ============ CAKE HEADER ============ */
+.cake-header{margin:0 0 22px;text-align:center}
 .cake-title{
-  margin:0 0 10px;
+  margin:0 0 16px;
   font-family:var(--display);font-weight:900;
-  font-size:96px;line-height:.100;letter-spacing:.5px;
   color:var(--pink);
   text-transform:lowercase;
+  line-height:.85;
+  letter-spacing:-1px;
+  word-break:normal;
+}
+/* Каждое слово заголовка — на отдельной строке, размер шрифта подбирается из JS */
+.cake-title .word{
+  display:block;
+  white-space:nowrap;
+  line-height:.9;
 }
 .cake-desc{
-  margin:0 0 8px;
+  margin:0 0 10px;
   font-family:var(--display);font-weight:900;
   font-size:18px;line-height:1.15;letter-spacing:.2px;
   color:#fff;
@@ -81,29 +95,15 @@ html,body{
   color:var(--red);
 }
 
-/* ============ META (мелкий технический хедер) ============ */
+/* ============ META ============ */
 .calc-meta{
   display:flex;justify-content:space-between;align-items:center;
   margin-bottom:10px;
-  font-family:var(--text);font-size:10px;color:#666;
+  font-family:var(--text);font-size:10px;color:var(--red);
   letter-spacing:.3px;text-transform:uppercase;
 }
 
-/* ============ DROPDOWNS (Golos + 1px малиновый бордер) ============ */
-.cake-picker, .pill-select{
-  width:100%;display:block;
-  font-family:var(--text);font-size:14px;font-weight:400;
-  border:1px solid var(--pink);border-radius:999px;
-  background:#fff;color:var(--pink);
-  padding:10px 16px;text-align:center;appearance:none;cursor:pointer;
-  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' stroke='%23e88997' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
-  background-repeat:no-repeat;background-position:right 16px center;background-size:13px;
-  padding-right:36px;
-  transition:border-color .15s ease, color .15s ease;
-}
-.cake-picker:hover, .pill-select:hover{border-color:var(--rose);color:var(--rose)}
-
-/* ============ LABEL (большой белый заголовок «Сколько килограмм?») ============ */
+/* ============ LABEL (большой белый «Сколько килограмм?» / «начинка») ============ */
 .label{
   text-align:center;color:#fff;
   font-family:var(--display);font-weight:900;
@@ -159,15 +159,70 @@ html,body{
   margin:8px 8px 4px;line-height:1.35;
   font-family:var(--text);
 }
+.hint--big{
+  font-family:var(--text);font-weight:400;
+  font-size:14px;line-height:1.4;
+  color:var(--red);
+  margin:18px 12px 8px;
+}
 
-/* ============ TIERS / FILLING LABELS ============ */
+/* ============ TIERS (мелкая подпись «начинка N ярус») ============ */
 .tiers{display:flex;flex-direction:column;gap:8px;margin-top:14px}
 .tier-row .tier-label{
   text-align:center;
   font-family:var(--text);font-weight:400;
-  font-size:11px;color:var(--pink);
+  font-size:11px;color:var(--red);
   margin-bottom:3px;letter-spacing:.3px;
 }
+
+/* ============ CUSTOM SELECT ============ */
+.csel{
+  position:relative;
+  font-family:var(--text);font-size:14px;
+  user-select:none;
+}
+.csel__trigger{
+  width:100%;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;
+  border:1px solid var(--pink);border-radius:999px;
+  background:#fff;color:var(--pink);
+  padding:10px 36px 10px 16px;
+  cursor:pointer;text-align:center;
+  outline:none;
+  transition:border-color .15s ease, color .15s ease;
+}
+.csel__trigger::after{
+  content:'';position:absolute;right:16px;top:50%;
+  width:13px;height:7px;transform:translateY(-50%);
+  background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' stroke='%23F16471' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>") no-repeat center / contain;
+}
+.csel__trigger:hover,
+.csel.is-open .csel__trigger{border-color:var(--rose);color:var(--rose)}
+.csel.is-open .csel__trigger::after{
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' stroke='%23E55264' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'><polyline points='18 15 12 9 6 15'/></svg>");
+}
+.csel__list{
+  position:absolute;top:calc(100% + 4px);left:0;right:0;
+  background:#fff;
+  border:1px solid var(--pink);
+  border-radius:18px;
+  padding:8px 0;
+  max-height:260px;overflow-y:auto;
+  z-index:100;
+  display:none;
+  scrollbar-width:thin;scrollbar-color:var(--pink) transparent;
+}
+.csel__list::-webkit-scrollbar{width:6px}
+.csel__list::-webkit-scrollbar-thumb{background:var(--pink);border-radius:3px}
+.csel.is-open .csel__list{display:block}
+.csel__opt{
+  padding:9px 16px;cursor:pointer;
+  color:var(--pink);text-align:center;
+  transition:background-color .12s ease, color .12s ease;
+}
+.csel__opt:hover{background:var(--pink);color:var(--red)}
+.csel__opt.is-selected{color:var(--red);font-weight:600}
 
 /* ============ TOTAL ============ */
 .total-wrap{margin-top:24px;text-align:center}
@@ -181,21 +236,28 @@ html,body{
   color:var(--red);font-size:64px;line-height:1;letter-spacing:-1px;
 }
 
-/* ============ SEND ============ */
-.send-row{margin-top:18px;display:flex;justify-content:center}
-.send-row button{
-  font-family:var(--text);font-weight:400;
-  font-size:13px;letter-spacing:.5px;text-transform:uppercase;
-  background:var(--red);color:#fff;border:0;
-  padding:11px 22px;border-radius:999px;cursor:pointer;
-  transition:background-color .15s ease;
+/* ============ NEXT BUTTON («далее» розовым жирным + искорка) ============ */
+.send-row{margin-top:22px;display:flex;justify-content:center}
+.next-btn{
+  background:none;border:0;padding:0;cursor:pointer;
+  display:inline-flex;align-items:center;gap:10px;
+  font-family:var(--display);font-weight:900;
+  font-size:32px;line-height:1;letter-spacing:.2px;
+  color:var(--pink);text-transform:lowercase;
+  transition:color .15s ease, transform .08s ease;
 }
-.send-row button:hover{background:var(--red-deep)}
+.next-btn:hover{color:var(--rose)}
+.next-btn:active{transform:scale(.96)}
+.next-btn .sparkle{
+  display:inline-block;width:22px;height:22px;color:inherit;
+  flex-shrink:0;
+}
+.next-btn .sparkle svg{width:100%;height:100%;fill:currentColor;display:block}
 
 /* ============ RESPONSIVE ============ */
 @media (max-width:420px){
   .calc-scroll{padding:22px 16px 22px}
-  .cake-title{font-size:32px}
+  .cake-header{margin-bottom:18px}
   .cake-desc{font-size:15px}
   .stepper{gap:10px}
   .stepper .step-btn.minus svg{width:42px;height:15px}
@@ -204,4 +266,5 @@ html,body{
   .label{font-size:24px}
   .total-value{font-size:48px}
   .radio-big{width:52px;height:52px}
+  .next-btn{font-size:24px}
 }

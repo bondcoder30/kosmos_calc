@@ -20,8 +20,9 @@ from pathlib import Path
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
-ROOT = Path(__file__).parent
-OUT  = ROOT / "cakes"
+ROOT   = Path(__file__).parent
+OUT    = ROOT / "cakes"
+OUT_M  = ROOT / "cakes-mobile"
 
 # ----------------------------------------------------------------
 #  ВСЕ ТОРТЫ. Описания взяты из «Вся инфа по тортикам.docx».
@@ -270,7 +271,7 @@ CAKES = [
 # ----------------------------------------------------------------
 #  ШАБЛОН СТРАНИЦЫ ТОРТА
 # ----------------------------------------------------------------
-def cake_template(cake):
+def cake_template(cake, mobile=False):
     # JS-объект с данными торта
     fillings = f"FILLING_SETS.{cake['fillings']}"
     if cake['type'] == 'tiered':
@@ -298,11 +299,14 @@ def cake_template(cake):
         }
         render = "renderWeightCake"
 
+    if mobile:
+        data["mobile"] = True
+
     data_json = json.dumps(data, ensure_ascii=False, indent=2)
-    # подставляем массив начинок не как строку, а как JS-выражение FILLING_SETS.XXX
-    # вставим закрывающую скобку и добавим fillings
-    # Преобразуем "data_json" → инжектим fillings прямо перед последней }
+    # инжектим fillings как JS-выражение FILLING_SETS.XXX вместо строки
     data_js = data_json.rstrip().rstrip('}').rstrip() + ',\n  "fillings": ' + fillings + '\n}'
+
+    body_class = ' class="mobile"' if mobile else ''
 
     return f"""<!doctype html>
 <html lang="ru">
@@ -312,7 +316,7 @@ def cake_template(cake):
 <title>{cake['name']} — калькулятор</title>
 <link rel="stylesheet" href="../../style.css">
 </head>
-<body>
+<body{body_class}>
 <div class="calc-frame">
   <div class="calc-scroll" id="root"></div>
 </div>
@@ -327,7 +331,18 @@ def cake_template(cake):
 # ----------------------------------------------------------------
 #  ПРЕВЬЮ-СТРАНИЦА
 # ----------------------------------------------------------------
-def preview_page(cakes):
+def preview_page(cakes, mobile=False):
+    aspect = '360/620' if mobile else '380/760'
+    h1 = 'Все торты — мобильные превью' if mobile else 'Все торты — десктоп превью'
+    lead = (
+        'Мобильные версии: без заголовков, фикс-высота, в ярусных тортах поля начинок скрыты '
+        '(стоимость начинки 3 200р/кг фиксированная). Этот блок встаёт под уже свёрстанный заголовок.'
+        if mobile else
+        'Каждая карточка — отдельный готовый файл-калькулятор для своего торта. '
+        'Iframe-ссылку на каждый можно вставлять в Readymag/Tilda как HTML-виджет. Кликни ↗, чтобы открыть в новой вкладке.'
+    )
+    title = 'Kosmos — мобильные калькуляторы' if mobile else 'Kosmos — все калькуляторы'
+
     cards = []
     for c in cakes:
         path = f"{c['type']}/{c['id']}.html"
@@ -345,7 +360,7 @@ def preview_page(cakes):
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Kosmos — все калькуляторы</title>
+<title>{title}</title>
 <style>
   *{{box-sizing:border-box}}
   html,body{{margin:0;padding:0;background:#eaeaea;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#222}}
@@ -359,13 +374,13 @@ def preview_page(cakes):
   .card .name{{font-weight:600;flex:1}}
   .card a{{color:#999;text-decoration:none;font-size:14px}}
   .card a:hover{{color:#d83448}}
-  .frame-wrap{{aspect-ratio:380/760;width:100%}}
+  .frame-wrap{{aspect-ratio:{aspect};width:100%;background:#cfcfcf}}
   iframe{{display:block;width:100%;height:100%;border:0}}
 </style>
 </head>
 <body>
-<h1>Все торты — превью</h1>
-<p class="lead">Каждая карточка — отдельный готовый файл-калькулятор для своего торта. Iframe-ссылку на каждый можно вставлять в Readymag/Tilda как HTML-виджет. Кликни ↗, чтобы открыть в новой вкладке.</p>
+<h1>{h1}</h1>
+<p class="lead">{lead}</p>
 <div class="grid">
 {''.join(cards)}
 </div>
@@ -376,24 +391,26 @@ def preview_page(cakes):
 # ----------------------------------------------------------------
 #  ГЕНЕРАЦИЯ
 # ----------------------------------------------------------------
-# Чистим старое
-if OUT.exists():
-    import shutil
-    shutil.rmtree(OUT)
-OUT.mkdir(parents=True)
-for t in ('tiered', 'fixed', 'weight'):
-    (OUT / t).mkdir()
+import shutil
 
-generated = []
-for cake in CAKES:
-    path = OUT / cake['type'] / f"{cake['id']}.html"
-    path.write_text(cake_template(cake), encoding='utf-8')
-    generated.append(path.relative_to(OUT))
+def build_into(target_dir, mobile):
+    if target_dir.exists():
+        shutil.rmtree(target_dir)
+    target_dir.mkdir(parents=True)
+    for t in ('tiered', 'fixed', 'weight'):
+        (target_dir / t).mkdir()
+    generated = []
+    for cake in CAKES:
+        path = target_dir / cake['type'] / f"{cake['id']}.html"
+        path.write_text(cake_template(cake, mobile=mobile), encoding='utf-8')
+        generated.append(path.relative_to(target_dir))
+    (target_dir / "index.html").write_text(preview_page(CAKES, mobile=mobile), encoding='utf-8')
+    return generated
 
-# Превью
-(OUT / "index.html").write_text(preview_page(CAKES), encoding='utf-8')
+desktop_files = build_into(OUT,   mobile=False)
+mobile_files  = build_into(OUT_M, mobile=True)
 
-print(f"Сгенерировано {len(generated)} файлов:")
-for p in sorted(generated):
-    print(f"  {p}")
-print(f"\nПревью: {(OUT / 'index.html').relative_to(ROOT)}")
+print(f"Десктоп ({OUT.name}/):   {len(desktop_files)} файлов")
+print(f"Мобилка ({OUT_M.name}/): {len(mobile_files)} файлов")
+print(f"\nПревью десктоп: {(OUT   / 'index.html').relative_to(ROOT)}")
+print(f"Превью мобилка:  {(OUT_M / 'index.html').relative_to(ROOT)}")

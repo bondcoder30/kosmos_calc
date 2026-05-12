@@ -1,56 +1,33 @@
 <!doctype html>
 <html lang="ru">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Kosmos — превью трёх калькуляторов</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kosmos — калькуляторы тортов</title>
 <style>
   *{box-sizing:border-box}
-  html,body{margin:0;padding:0;background:#eaeaea;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-  body{padding:24px;color:#222}
-  h1{margin:0 0 6px;font-size:22px}
-  p.lead{margin:0 0 18px;color:#555;font-size:14px;max-width:760px}
-  .grid{
-    display:grid;gap:18px;
-    grid-template-columns:repeat(auto-fit, minmax(340px, 1fr));
-    align-items:stretch;
-  }
-  .card{
-    display:flex;flex-direction:column;background:#fff;border-radius:10px;overflow:hidden;
-    box-shadow:0 1px 4px rgba(0,0,0,.08);
-  }
-  .card header{
-    padding:10px 14px;font-size:13px;font-weight:600;color:#555;border-bottom:1px solid #eee;
-    display:flex;justify-content:space-between;align-items:center;
-  }
-  .card header a{font-size:12px;color:#999;text-decoration:none}
-  .card header a:hover{color:#d83448}
-  .frame-wrap{
-    aspect-ratio: 380 / 760;
-    width:100%;
-  }
-  iframe{display:block;width:100%;height:100%;border:0}
+  html,body{margin:0;padding:0;height:100%;background:#cfcfcf;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#1a1a1a}
+  body{display:flex;align-items:center;justify-content:center;padding:24px}
+  .card{background:#fff;border-radius:24px;padding:32px 32px 28px;max-width:560px;box-shadow:0 4px 24px rgba(0,0,0,.08)}
+  h1{margin:0 0 6px;font-size:24px;color:#D2363C}
+  p{margin:0 0 22px;color:#555;font-size:14px;line-height:1.5}
+  ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+  ul a{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:14px 18px;background:#cfcfcf;border-radius:14px;text-decoration:none;color:#1a1a1a;transition:background-color .15s ease,color .15s ease}
+  ul a:hover{background:#F16471;color:#fff}
+  ul a span:first-child{font-weight:600}
+  ul a span:last-child{font-size:13px;opacity:.7}
+  ul a:hover span:last-child{opacity:1}
 </style>
 </head>
 <body>
-
-<h1>Калькулятор тортов — превью</h1>
-<p class="lead">Три отдельных файла-калькулятора. Каждый встраивается в сайт как iframe или как HTML-блок. Файлы лежат в этой же папке: <code>tiered.html</code>, <code>fixed.html</code>, <code>weight.html</code>. Все ассеты — в <code>assets/</code>. Каждый файл занимает 100% высоты родителя; контент скроллится внутри.</p>
-
-<div class="grid">
-  <div class="card">
-    <header>Тип 1 · ярусные <a href="tiered.html" target="_blank">открыть в новой вкладке →</a></header>
-    <div class="frame-wrap"><iframe src="tiered.html" title="Ярусные"></iframe></div>
-  </div>
-  <div class="card">
-    <header>Тип 2 · фикс. вес <a href="fixed.html" target="_blank">открыть в новой вкладке →</a></header>
-    <div class="frame-wrap"><iframe src="fixed.html" title="Фикс. вес"></iframe></div>
-  </div>
-  <div class="card">
-    <header>Тип 3 · вес + декор <a href="weight.html" target="_blank">открыть в новой вкладке →</a></header>
-    <div class="frame-wrap"><iframe src="weight.html" title="Плоский по весу"></iframe></div>
-  </div>
+<div class="card">
+  <h1>Kosmos — калькуляторы тортов</h1>
+  <p>30 отдельных калькуляторов, по одному на торт. Каждый встраивается в сайт как iframe. Готовые ссылки и сниппеты лежат в файле <code>тортоначинки_with_iframes.xlsx</code>.</p>
+  <ul>
+    <li><a href="cakes/"><span>Десктопные калькуляторы (с заголовком и описанием)</span><span>30 тортов →</span></a></li>
+    <li><a href="cakes-mobile/"><span>Мобильные калькуляторы (без заголовка, фикс-высота)</span><span>30 тортов →</span></a></li>
+    <li><a href="STYLE_GUIDE.md"><span>Инструкция: где менять цвета и шрифты</span><span>STYLE_GUIDE.md →</span></a></li>
+  </ul>
 </div>
-
 </body>
 </html>

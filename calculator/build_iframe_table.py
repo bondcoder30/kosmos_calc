@@ -14,10 +14,14 @@ from openpyxl.styles import Alignment, Font, PatternFill
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 ROOT = Path(__file__).parent
-SRC  = ROOT.parent / "tortonachinki.xlsx"
-DST  = ROOT.parent / "тортоначинки_with_iframes.xlsx"
+# исходный xlsx лежит в C:\Users\A\Desktop\kosmos\, а текущий __file__ —
+# в C:\Users\A\Desktop\kosmos\kosmos_calc\calculator\build_iframe_table.py
+# поэтому поднимаемся на 2 уровня (kosmos_calc → kosmos)
+SRC  = ROOT.parent.parent / "tortonachinki.xlsx"
+DST  = ROOT.parent.parent / "тортоначинки_with_iframes.xlsx"
 
-BASE_URL = "https://ab-aacoop.github.io/kosmos_calc/calculator/cakes"
+BASE_URL   = "https://ab-aacoop.github.io/kosmos_calc/calculator/cakes"
+BASE_URL_M = "https://ab-aacoop.github.io/kosmos_calc/calculator/cakes-mobile"
 
 # Маппинг: имя в xlsx → (тип папки, id файла) ─────────────────────
 CAKE_MAP = {
@@ -74,28 +78,39 @@ def iframe_for(type_, cid):
         f'loading="lazy"></iframe>'
     )
 
+def iframe_for_mobile(type_, cid):
+    url = f"{BASE_URL_M}/{type_}/{cid}.html"
+    return (
+        f'<iframe src="{url}" '
+        f'style="width:100%;height:620px;border:0;display:block;background:#cfcfcf" '
+        f'loading="lazy"></iframe>'
+    )
+
 # ───────────────────────────────────────────────────────────────
 shutil.copyfile(SRC, DST)
 wb = load_workbook(DST)
 ws = wb.active
 
-# Шапка таблицы — первая строка (там колонки начинок). Добавляем 2 справа.
+# Шапка таблицы — первая строка (там колонки начинок). Добавляем 4 справа.
 last_col = ws.max_column
 
-URL_COL    = last_col + 1
-IFRAME_COL = last_col + 2
+URL_COL      = last_col + 1
+IFRAME_COL   = last_col + 2
+URL_M_COL    = last_col + 3
+IFRAME_M_COL = last_col + 4
 
-ws.cell(row=1, column=URL_COL,    value="URL калькулятора")
-ws.cell(row=1, column=IFRAME_COL, value="IFRAME (готовый сниппет)")
+ws.cell(row=1, column=URL_COL,      value="URL десктоп")
+ws.cell(row=1, column=IFRAME_COL,   value="IFRAME десктоп")
+ws.cell(row=1, column=URL_M_COL,    value="URL мобильный")
+ws.cell(row=1, column=IFRAME_M_COL, value="IFRAME мобильный")
 
 header_font = Font(bold=True, color="FFFFFF")
-header_fill = PatternFill("solid", fgColor="D83448")
-ws.cell(row=1, column=URL_COL).font    = header_font
-ws.cell(row=1, column=URL_COL).fill    = header_fill
-ws.cell(row=1, column=IFRAME_COL).font = header_font
-ws.cell(row=1, column=IFRAME_COL).fill = header_fill
-ws.cell(row=1, column=URL_COL).alignment    = Alignment(horizontal="center", vertical="center", wrap_text=True)
-ws.cell(row=1, column=IFRAME_COL).alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+header_fill = PatternFill("solid", fgColor="D2363C")
+for col in (URL_COL, IFRAME_COL, URL_M_COL, IFRAME_M_COL):
+    cell = ws.cell(row=1, column=col)
+    cell.font = header_font
+    cell.fill = header_fill
+    cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
 
 found, missing = [], []
 for row_idx in range(2, ws.max_row + 1):
@@ -105,21 +120,26 @@ for row_idx in range(2, ws.max_row + 1):
     match = lookup(name)
     if match:
         type_, cid = match
-        url = f"{BASE_URL}/{type_}/{cid}.html"
-        iframe = iframe_for(type_, cid)
-        ws.cell(row=row_idx, column=URL_COL,    value=url)
-        ws.cell(row=row_idx, column=IFRAME_COL, value=iframe)
-        ws.cell(row=row_idx, column=URL_COL).alignment    = Alignment(wrap_text=True, vertical="center")
-        ws.cell(row=row_idx, column=IFRAME_COL).alignment = Alignment(wrap_text=True, vertical="center")
+        url   = f"{BASE_URL}/{type_}/{cid}.html"
+        url_m = f"{BASE_URL_M}/{type_}/{cid}.html"
+        ws.cell(row=row_idx, column=URL_COL,      value=url)
+        ws.cell(row=row_idx, column=IFRAME_COL,   value=iframe_for(type_, cid))
+        ws.cell(row=row_idx, column=URL_M_COL,    value=url_m)
+        ws.cell(row=row_idx, column=IFRAME_M_COL, value=iframe_for_mobile(type_, cid))
+        for col in (URL_COL, IFRAME_COL, URL_M_COL, IFRAME_M_COL):
+            ws.cell(row=row_idx, column=col).alignment = Alignment(wrap_text=True, vertical="center")
         found.append(str(name).strip())
     else:
-        ws.cell(row=row_idx, column=IFRAME_COL, value="— (нет данных по торту)")
+        ws.cell(row=row_idx, column=IFRAME_COL,   value="— (нет данных по торту)")
+        ws.cell(row=row_idx, column=IFRAME_M_COL, value="— (нет данных по торту)")
         missing.append(str(name).strip())
 
-# Установим ширину новых колонок
+# Ширина новых колонок
 from openpyxl.utils import get_column_letter
-ws.column_dimensions[get_column_letter(URL_COL)].width    = 50
-ws.column_dimensions[get_column_letter(IFRAME_COL)].width = 80
+ws.column_dimensions[get_column_letter(URL_COL)].width      = 55
+ws.column_dimensions[get_column_letter(IFRAME_COL)].width   = 80
+ws.column_dimensions[get_column_letter(URL_M_COL)].width    = 55
+ws.column_dimensions[get_column_letter(IFRAME_M_COL)].width = 80
 
 wb.save(DST)
 print(f"Сохранено: {DST}")

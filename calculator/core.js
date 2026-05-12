@@ -36,19 +36,101 @@ window.sendOrder = (payload) => {
 };
 
 /* ================================================================
-   SVG-ИКОНКИ (инлайн, без файлов)
+   SVG-ИКОНКИ (инлайн)
    ================================================================ */
-const SVG_MINUS = '<svg viewBox="0 0 100 30" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="30" rx="15"/></svg>';
-const SVG_PLUS  = '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect x="33" width="34" height="100" rx="14"/><rect y="33" width="100" height="34" rx="14"/></svg>';
+const SVG_MINUS   = '<svg viewBox="0 0 100 30" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="30" rx="15"/></svg>';
+const SVG_PLUS    = '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect x="33" width="34" height="100" rx="14"/><rect y="33" width="100" height="34" rx="14"/></svg>';
+const SVG_SPARKLE = '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M50 4 C52 38, 62 48, 96 50 C62 52, 52 62, 50 96 C48 62, 38 52, 4 50 C38 48, 48 38, 50 4 Z"/></svg>';
 
 /* ================================================================
-   HEADER (заголовок + описание + сабтайтл)
+   ЗАГОЛОВОК: каждое слово на отдельной строке + автоматический подбор размера
+   так, чтобы каждое слово растягивалось почти на всю ширину контейнера.
+   ================================================================ */
+function buildTitleHTML(title){
+  if (!title) return '';
+  const words = String(title).trim().split(/\s+/);
+  return words.map(w => `<span class="word">${w}</span>`).join('');
+}
+
+function fitTitle(titleEl, opts){
+  if (!titleEl) return;
+  const o = Object.assign({ max:96, min:26, target:0.96 }, opts || {});
+  const containerWidth = titleEl.clientWidth;
+  if (!containerWidth) return;
+  const words = titleEl.querySelectorAll('.word');
+  words.forEach(word => {
+    word.style.fontSize = o.max + 'px';
+    const w = word.scrollWidth;
+    if (!w) return;
+    let size = o.max * (containerWidth * o.target / w);
+    size = Math.max(o.min, Math.min(o.max, size));
+    word.style.fontSize = size + 'px';
+  });
+}
+
+/* ================================================================
+   КАСТОМНЫЙ ДРОПДАУН
+   Превращает <select> в кастомный компонент: розовая обводка,
+   розовая подложка hover, красный текст hover.
+   ================================================================ */
+function mountCustomSelect(selectEl){
+  if (!selectEl || selectEl.dataset.mounted === '1') return;
+  selectEl.dataset.mounted = '1';
+  selectEl.style.display = 'none';
+
+  const wrap = document.createElement('div');
+  wrap.className = 'csel';
+
+  const trigger = document.createElement('button');
+  trigger.type = 'button';
+  trigger.className = 'csel__trigger';
+  trigger.textContent = selectEl.value;
+
+  const list = document.createElement('div');
+  list.className = 'csel__list';
+
+  [...selectEl.options].forEach(opt => {
+    const item = document.createElement('div');
+    item.className = 'csel__opt' + (opt.value === selectEl.value ? ' is-selected' : '');
+    item.textContent = opt.textContent;
+    item.dataset.value = opt.value;
+    item.onclick = (e) => {
+      e.stopPropagation();
+      selectEl.value = opt.value;
+      trigger.textContent = opt.textContent;
+      list.querySelectorAll('.csel__opt').forEach(x => x.classList.remove('is-selected'));
+      item.classList.add('is-selected');
+      wrap.classList.remove('is-open');
+      selectEl.dispatchEvent(new Event('change', { bubbles:true }));
+    };
+    list.appendChild(item);
+  });
+
+  trigger.onclick = (e) => {
+    e.stopPropagation();
+    const wasOpen = wrap.classList.contains('is-open');
+    document.querySelectorAll('.csel.is-open').forEach(c => c.classList.remove('is-open'));
+    if (!wasOpen) wrap.classList.add('is-open');
+  };
+
+  wrap.appendChild(trigger);
+  wrap.appendChild(list);
+  selectEl.parentNode.insertBefore(wrap, selectEl.nextSibling);
+}
+
+document.addEventListener('click', () => {
+  document.querySelectorAll('.csel.is-open').forEach(c => c.classList.remove('is-open'));
+});
+
+/* ================================================================
+   ХЕДЕР
    ================================================================ */
 function renderHeader(cake){
+  if (cake.mobile) return '';
   if (!cake.title && !cake.desc && !cake.subtitle) return '';
   return `
     <header class="cake-header">
-      ${cake.title    ? `<h1 class="cake-title">${cake.title}</h1>` : ''}
+      ${cake.title    ? `<h1 class="cake-title">${buildTitleHTML(cake.title)}</h1>` : ''}
       ${cake.desc     ? `<p class="cake-desc">${cake.desc}</p>` : ''}
       ${cake.subtitle ? `<p class="cake-subtitle">${cake.subtitle}</p>` : ''}
     </header>
@@ -56,8 +138,39 @@ function renderHeader(cake){
 }
 
 /* ================================================================
-   ТИП 1 — ОДИН ЯРУСНЫЙ ТОРТ (без выбора торта)
+   КНОПКА «ДАЛЕЕ»
+   ================================================================ */
+function nextBtnHTML(){
+  return `
+    <div class="send-row">
+      <button id="send" class="next-btn" type="button">
+        <span class="sparkle">${SVG_SPARKLE}</span>
+        <span>далее</span>
+      </button>
+    </div>
+  `;
+}
+
+/* ================================================================
+   ПОСТ-ОБРАБОТКА после draw()
+   ================================================================ */
+function postDraw(root){
+  root.querySelectorAll('select.to-custom').forEach(mountCustomSelect);
+  const title = root.querySelector('.cake-title');
+  if (title) {
+    fitTitle(title);
+    if (!title.dataset.resizeBound){
+      title.dataset.resizeBound = '1';
+      window.addEventListener('resize', () => fitTitle(title));
+    }
+  }
+}
+
+/* ================================================================
+   ТИП 1 — ОДИН ЯРУСНЫЙ ТОРТ
    total = ярусы × декорPerTier  +  вес × 3200
+   В мобильном режиме поля начинок не показываются — показывается
+   подсказка «Стоимость начинки фиксированная — 3 200р/кг».
    ================================================================ */
 window.renderTieredCake = function(cake){
   const FILLING_RATE = 3200;
@@ -67,6 +180,7 @@ window.renderTieredCake = function(cake){
     tierFillings: []
   };
   const root = document.getElementById('root');
+  const isMobile = !!cake.mobile;
 
   function calc(){
     return {
@@ -76,41 +190,49 @@ window.renderTieredCake = function(cake){
     };
   }
 
-  function draw(){
+  function tiersBlock(){
+    if (isMobile){
+      return `<div class="hint hint--big">Стоимость начинки фиксированная — 3&nbsp;200&nbsp;р/кг.</div>`;
+    }
     while (state.tierFillings.length < state.tiers) state.tierFillings.push(cake.fillings[0]);
     state.tierFillings = state.tierFillings.slice(0, state.tiers);
-    const r = calc();
-
-    root.innerHTML = `
-      ${renderHeader(cake)}
-      <div class="label">Сколько килограмм?</div>
-      <div class="stepper">
-        <button class="step-btn minus" data-act="w-" aria-label="минус">${SVG_MINUS}</button>
-        <div class="value">${fmtWeight(state.weight)}</div>
-        <button class="step-btn plus"  data-act="w+" aria-label="плюс">${SVG_PLUS}</button>
-      </div>
-      <div class="label">Сколько ярусов?</div>
-      <div class="stepper">
-        <button class="step-btn minus" data-act="t-" aria-label="минус">${SVG_MINUS}</button>
-        <div class="value">${state.tiers}</div>
-        <button class="step-btn plus"  data-act="t+" aria-label="плюс">${SVG_PLUS}</button>
-      </div>
-      <div class="hint">От ${cake.minTiers} ярус${cake.minTiers===1?'а':'ов'}. От ${fmtWeight(cake.minWeight)} кг.${cake.note?'<br>'+cake.note:''}</div>
+    return `
       <div class="tiers">
         ${state.tierFillings.map((val,i)=>`
           <div class="tier-row">
             <div class="tier-label">начинка ${i+1} ярус</div>
-            <select class="pill-select" data-tier="${i}">
+            <select class="to-custom" data-tier="${i}">
               ${[...cake.fillings, 'фальш ярус'].map(f=>`<option ${f===val?'selected':''}>${f}</option>`).join('')}
             </select>
           </div>
         `).join('')}
       </div>
+    `;
+  }
+
+  function draw(){
+    const r = calc();
+    root.innerHTML = `
+      ${renderHeader(cake)}
+      <div class="label">Сколько килограмм?</div>
+      <div class="stepper">
+        <button class="step-btn minus" data-act="w-" aria-label="минус" type="button">${SVG_MINUS}</button>
+        <div class="value">${fmtWeight(state.weight)}</div>
+        <button class="step-btn plus"  data-act="w+" aria-label="плюс" type="button">${SVG_PLUS}</button>
+      </div>
+      <div class="label">Сколько ярусов?</div>
+      <div class="stepper">
+        <button class="step-btn minus" data-act="t-" aria-label="минус" type="button">${SVG_MINUS}</button>
+        <div class="value">${state.tiers}</div>
+        <button class="step-btn plus"  data-act="t+" aria-label="плюс" type="button">${SVG_PLUS}</button>
+      </div>
+      <div class="hint">От ${cake.minTiers} ярус${cake.minTiers===1?'а':'ов'}. От ${fmtWeight(cake.minWeight)} кг.${cake.note?'<br>'+cake.note:''}</div>
+      ${tiersBlock()}
       <div class="total-wrap">
         <div class="total-label">итоговая стоимость</div>
         <div class="total-value">${fmtMoney(r.total)}</div>
       </div>
-      <div class="send-row"><button id="send">Отправить заказ</button></div>
+      ${nextBtnHTML()}
     `;
 
     root.querySelectorAll('button[data-act]').forEach(b => {
@@ -123,23 +245,26 @@ window.renderTieredCake = function(cake){
         draw();
       };
     });
-    root.querySelectorAll('select[data-tier]').forEach(s => {
-      s.onchange = e => { state.tierFillings[+s.dataset.tier] = e.target.value; draw(); };
-    });
+    if (!isMobile){
+      root.querySelectorAll('select[data-tier]').forEach(s => {
+        s.onchange = () => { state.tierFillings[+s.dataset.tier] = s.value; draw(); };
+      });
+    }
     root.querySelector('#send').onclick = () => {
       sendOrder({
         type:'tiered', cake:cake.name, weight:state.weight, tiers:state.tiers,
-        tierFillings: state.tierFillings.slice(0, state.tiers),
+        tierFillings: isMobile ? null : state.tierFillings.slice(0, state.tiers),
         decor:r.decor, fillingCost:r.filling, total:r.total
       });
     };
+    postDraw(root);
   }
 
   draw();
 };
 
 /* ================================================================
-   ТИП 2 — ФИКС. ВЕС (без выбора торта)
+   ТИП 2 — ФИКС. ВЕС
    total = вес × цена_начинки  +  декор(вес)
    ================================================================ */
 window.renderFixedCake = function(cake){
@@ -166,9 +291,9 @@ window.renderFixedCake = function(cake){
         <button class="radio-big ${state.weight===3.5?'checked':''}" aria-label="3.5 кг" type="button"></button>
         <span class="value">3.5</span>
       </div>
-      <div class="tier-row" style="margin-top:14px">
-        <div class="tier-label">начинка</div>
-        <select class="pill-select" id="filling">
+      <div class="label">Начинка</div>
+      <div class="tier-row">
+        <select class="to-custom" id="filling">
           ${cake.fillings.map(f=>`<option ${f===state.filling?'selected':''}>${f}</option>`).join('')}
         </select>
       </div>
@@ -176,7 +301,7 @@ window.renderFixedCake = function(cake){
         <div class="total-label">итоговая стоимость</div>
         <div class="total-value">${fmtMoney(r.total)}</div>
       </div>
-      <div class="send-row"><button id="send">Отправить заказ</button></div>
+      ${nextBtnHTML()}
     `;
     root.querySelectorAll('.fixed-row[data-w]').forEach(row => {
       row.onclick = () => { state.weight = parseFloat(row.dataset.w); draw(); };
@@ -188,12 +313,13 @@ window.renderFixedCake = function(cake){
         decor:r.decor, fillingCost:r.filling, total:r.total
       });
     };
+    postDraw(root);
   }
   draw();
 };
 
 /* ================================================================
-   ТИП 3 — ПЛОСКИЙ ПО ВЕСУ (без выбора торта)
+   ТИП 3 — ПЛОСКИЙ ПО ВЕСУ
    total = вес × цена_начинки  +  декор(вес)
    ================================================================ */
 window.renderWeightCake = function(cake){
@@ -223,14 +349,14 @@ window.renderWeightCake = function(cake){
       ${renderHeader(cake)}
       <div class="label">Сколько килограмм?</div>
       <div class="stepper">
-        <button class="step-btn minus" data-act="w-" aria-label="минус">${SVG_MINUS}</button>
+        <button class="step-btn minus" data-act="w-" aria-label="минус" type="button">${SVG_MINUS}</button>
         <div class="value">${fmtWeight(state.weight)}</div>
-        <button class="step-btn plus"  data-act="w+" aria-label="плюс">${SVG_PLUS}</button>
+        <button class="step-btn plus"  data-act="w+" aria-label="плюс" type="button">${SVG_PLUS}</button>
       </div>
       <div class="hint">${decorHint()}</div>
-      <div class="tier-row" style="margin-top:14px">
-        <div class="tier-label">начинка</div>
-        <select class="pill-select" id="filling">
+      <div class="label">Начинка</div>
+      <div class="tier-row">
+        <select class="to-custom" id="filling">
           ${cake.fillings.map(f=>`<option ${f===state.filling?'selected':''}>${f}</option>`).join('')}
         </select>
       </div>
@@ -238,7 +364,7 @@ window.renderWeightCake = function(cake){
         <div class="total-label">итоговая стоимость</div>
         <div class="total-value">${fmtMoney(r.total)}</div>
       </div>
-      <div class="send-row"><button id="send">Отправить заказ</button></div>
+      ${nextBtnHTML()}
     `;
     root.querySelectorAll('button[data-act]').forEach(b => {
       b.onclick = () => {
@@ -255,6 +381,7 @@ window.renderWeightCake = function(cake){
         decor:r.decor, fillingCost:r.filling, total:r.total
       });
     };
+    postDraw(root);
   }
   draw();
 };
