@@ -169,18 +169,16 @@ function postDraw(root){
 /* ================================================================
    ТИП 1 — ОДИН ЯРУСНЫЙ ТОРТ
    total = ярусы × декорPerTier  +  вес × 3200
-   В мобильном режиме поля начинок не показываются — показывается
-   подсказка «Стоимость начинки фиксированная — 3 200р/кг».
+   Поля выбора начинок отсутствуют (и в десктопе, и в мобилке):
+   стоимость начинки в ярусных тортах фиксированная — 3 200 р/кг.
    ================================================================ */
 window.renderTieredCake = function(cake){
   const FILLING_RATE = 3200;
   const state = {
     weight: cake.minWeight,
-    tiers:  cake.minTiers,
-    tierFillings: []
+    tiers:  cake.minTiers
   };
   const root = document.getElementById('root');
-  const isMobile = !!cake.mobile;
 
   function calc(){
     return {
@@ -188,26 +186,6 @@ window.renderTieredCake = function(cake){
       filling: state.weight * FILLING_RATE,
       total:   state.tiers * cake.decorPerTier + state.weight * FILLING_RATE
     };
-  }
-
-  function tiersBlock(){
-    if (isMobile){
-      return `<div class="hint hint--big">Стоимость начинки фиксированная — 3&nbsp;200&nbsp;р/кг.</div>`;
-    }
-    while (state.tierFillings.length < state.tiers) state.tierFillings.push(cake.fillings[0]);
-    state.tierFillings = state.tierFillings.slice(0, state.tiers);
-    return `
-      <div class="tiers">
-        ${state.tierFillings.map((val,i)=>`
-          <div class="tier-row">
-            <div class="tier-label">начинка ${i+1} ярус</div>
-            <select class="to-custom" data-tier="${i}">
-              ${[...cake.fillings, 'фальш ярус'].map(f=>`<option ${f===val?'selected':''}>${f}</option>`).join('')}
-            </select>
-          </div>
-        `).join('')}
-      </div>
-    `;
   }
 
   function draw(){
@@ -227,7 +205,7 @@ window.renderTieredCake = function(cake){
         <button class="step-btn plus"  data-act="t+" aria-label="плюс" type="button">${SVG_PLUS}</button>
       </div>
       <div class="hint">От ${cake.minTiers} ярус${cake.minTiers===1?'а':'ов'}. От ${fmtWeight(cake.minWeight)} кг.${cake.note?'<br>'+cake.note:''}</div>
-      ${tiersBlock()}
+      <div class="hint hint--big">Стоимость начинки в ярусных тортах фиксированная — 3&nbsp;200&nbsp;р/кг.</div>
       <div class="total-wrap">
         <div class="total-label">итоговая стоимость</div>
         <div class="total-value">${fmtMoney(r.total)}</div>
@@ -245,15 +223,9 @@ window.renderTieredCake = function(cake){
         draw();
       };
     });
-    if (!isMobile){
-      root.querySelectorAll('select[data-tier]').forEach(s => {
-        s.onchange = () => { state.tierFillings[+s.dataset.tier] = s.value; draw(); };
-      });
-    }
     root.querySelector('#send').onclick = () => {
       sendOrder({
         type:'tiered', cake:cake.name, weight:state.weight, tiers:state.tiers,
-        tierFillings: isMobile ? null : state.tierFillings.slice(0, state.tiers),
         decor:r.decor, fillingCost:r.filling, total:r.total
       });
     };
