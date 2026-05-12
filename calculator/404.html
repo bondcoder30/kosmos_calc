@@ -156,8 +156,9 @@ const CFG = {
   text:      '404',
   // десктоп — одна строка «404»
   desktop:   { stepX:24, stepY:30, cherryW:22, cherryH:42, fzFactor:1.0  },
-  // мобилка — три строки «4 / 0 / 4», цифры мельче и сетка плотнее
-  mobile:    { stepX:14, stepY:18, cherryW:14, cherryH:26, fzFactor:0.66 },
+  // мобилка — три строки «4 / 0 / 4»: цифры почти на всю высоту строки,
+  // сетка очень плотная, вишни мелкие
+  mobile:    { stepX:12, stepY:14, cherryW:12, cherryH:22, fzFactor:0.95 },
   hex:       true, // сдвиг каждой второй строки на stepX/2 (соты)
   rotMax:    14,   // макс. угол наклона стебля, ±°
   alpha:     90,   // порог прозрачности пикселя из canvas (0..255)
@@ -214,8 +215,16 @@ async function build(){
     fz -= 4;
   }
   ctx.font = `900 ${fz}px "ALS Beast", system-ui, sans-serif`;
+  // утолщаем линии цифр — на случай, если шрифт-fallback тоньше ALS Beast.
+  // strokeText расширяет контур, и форма становится плотной независимо от шрифта.
+  ctx.strokeStyle = '#000';
+  ctx.lineJoin = 'round';
+  ctx.lineCap  = 'round';
+  ctx.lineWidth = Math.max(2, P.stepX * 0.6);
   lines.forEach((line, i) => {
-    ctx.fillText(line, W/2, lineH * (i + 0.5));
+    const yC = lineH * (i + 0.5);
+    ctx.fillText  (line, W/2, yC);
+    ctx.strokeText(line, W/2, yC);
   });
 
   // снимаем альфу
