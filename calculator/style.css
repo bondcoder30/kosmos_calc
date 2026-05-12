@@ -1,0 +1,156 @@
+@font-face{
+  font-family:'ALS Beast';
+  src:url('assets/ALS_Beast_Ultra.otf') format('opentype');
+  font-weight:900;font-style:normal;font-display:swap;
+}
+@font-face{
+  font-family:'Golos Text';
+  src:url('assets/GolosText-Regular.ttf') format('truetype');
+  font-weight:400;font-style:normal;font-display:swap;
+}
+
+:root{
+  --bg:#cfcfcf;
+  --red:#d83448;
+  --red-2:#c41d33;
+  --pink:#f08a99;
+  --display:'ALS Beast', system-ui, sans-serif;
+  --text:'Golos Text', system-ui, sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%;background:var(--bg);font-family:var(--text);color:#1a1a1a}
+
+/* ============ FRAME ============
+   Заполняет родителя по высоте.
+   Если контент больше — скроллится внутри .calc-scroll. */
+.calc-frame{
+  position:relative;
+  height:100%;
+  background:var(--bg);
+  overflow:hidden;
+}
+.calc-scroll{
+  height:100%;
+  overflow-y:auto;
+  padding:48px 24px 40px;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(0,0,0,.25) transparent;
+}
+.calc-scroll::-webkit-scrollbar{width:6px}
+.calc-scroll::-webkit-scrollbar-thumb{background:rgba(0,0,0,.2);border-radius:3px}
+.calc-scroll::-webkit-scrollbar-track{background:transparent}
+
+/* ============ SPARKLES (SVG) ============ */
+.sparkle{
+  position:absolute;
+  width:22px;height:22px;
+  background:url('assets/star.svg') center/contain no-repeat;
+  pointer-events:none;
+  z-index:2;
+}
+.sparkle.tl{top:14px;left:18px}
+.sparkle.tr{top:14px;right:18px}
+
+/* ============ META / PICKER ============ */
+.calc-meta{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:10px;
+  font-family:var(--display);font-size:11px;color:#555;
+  letter-spacing:.5px;text-transform:uppercase;
+}
+.cake-picker, .pill-select{
+  width:100%;display:block;font-family:var(--display);font-size:14px;
+  border:2px solid var(--red);border-radius:999px;background:#fff;color:var(--red);
+  padding:11px 16px;text-align:center;appearance:none;cursor:pointer;
+  letter-spacing:.5px;text-transform:lowercase;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' stroke='%23d83448' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat:no-repeat;background-position:right 16px center;background-size:14px;padding-right:38px;
+}
+
+/* ============ LABEL ============ */
+.label{
+  text-align:center;color:#fff;
+  font-family:var(--display);font-size:34px;
+  text-transform:lowercase;letter-spacing:.5px;line-height:1;
+  margin:24px 0 8px;
+}
+.label::first-letter{text-transform:uppercase}
+
+/* ============ STEPPER ============ */
+.stepper{
+  display:flex;align-items:center;justify-content:center;gap:22px;
+  color:var(--red);font-family:var(--display);
+}
+.stepper .step-btn{
+  background:none;border:0;padding:0;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;
+  transition:transform .08s ease, filter .15s ease;
+}
+.stepper .step-btn:active{transform:scale(.92)}
+.stepper .step-btn:hover{filter:brightness(.95) saturate(1.15)}
+.stepper .step-btn img{display:block;height:48px;width:auto;user-select:none;-webkit-user-drag:none}
+.stepper .step-btn.minus img{height:18px}
+.stepper .value{
+  font-size:88px;line-height:1;min-width:140px;text-align:center;letter-spacing:1px;color:var(--red);
+}
+
+/* ============ FIXED WEIGHT (Тип 2) ============ */
+.fixed-row{
+  display:flex;align-items:center;justify-content:center;gap:28px;
+  margin:8px 0;cursor:pointer;border-radius:8px;padding:6px 10px;
+  user-select:none;
+}
+.fixed-row .value{font-family:var(--display);color:var(--red);font-size:88px;line-height:1;letter-spacing:1px}
+.radio-big{
+  width:72px;height:72px;border-radius:50%;border:0;background:#fff;
+  cursor:pointer;flex-shrink:0;padding:0;
+  transition:background-color .15s ease, transform .08s ease;
+}
+.radio-big:hover{background:var(--pink)}
+.radio-big.checked{background:var(--red)}
+.radio-big:active{transform:scale(.94)}
+.fixed-row:hover .radio-big:not(.checked){background:var(--pink)}
+
+/* ============ HINT (Golos Text) ============ */
+.hint{
+  text-align:center;color:#3a3a3a;font-size:13px;
+  margin:14px 8px 6px;line-height:1.4;font-family:var(--text);
+}
+
+/* ============ FILLINGS ============ */
+.tiers{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.tier-row .tier-label{
+  text-align:center;font-family:var(--display);font-size:12px;color:var(--red);
+  text-transform:lowercase;margin-bottom:5px;letter-spacing:.5px;
+}
+
+/* ============ TOTAL ============ */
+.total-wrap{margin-top:32px;text-align:center;position:relative;padding-top:14px}
+.total-wrap .sparkle{position:absolute;top:-2px;width:14px;height:14px;background-position:center}
+.total-wrap .sparkle.l{left:30%}
+.total-wrap .sparkle.r{right:30%}
+.total-label{
+  font-family:var(--display);color:var(--red);font-size:14px;
+  text-transform:lowercase;letter-spacing:1.5px;margin-bottom:8px;
+}
+.total-value{font-family:var(--display);color:var(--red);font-size:60px;line-height:1;letter-spacing:1px}
+
+/* ============ SEND ============ */
+.send-row{margin-top:22px;display:flex;justify-content:center}
+.send-row button{
+  font-family:var(--display);font-size:14px;letter-spacing:1px;text-transform:uppercase;
+  background:var(--red);color:#fff;border:0;padding:13px 24px;border-radius:999px;cursor:pointer;
+}
+.send-row button:hover{background:var(--red-2)}
+
+/* ============ RESPONSIVE ============ */
+@media (max-width:480px){
+  .calc-scroll{padding:38px 18px 30px}
+  .stepper{gap:14px}
+  .stepper .step-btn img{height:36px}
+  .stepper .step-btn.minus img{height:14px}
+  .stepper .value, .fixed-row .value{font-size:64px;min-width:auto}
+  .label{font-size:26px}
+  .total-value{font-size:44px}
+  .radio-big{width:56px;height:56px}
+}
