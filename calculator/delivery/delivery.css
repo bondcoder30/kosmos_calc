@@ -65,12 +65,13 @@
 .dlv-zone[disabled]{opacity:.35;cursor:not-allowed}
 .dlv-zone[disabled]:hover{transform:none}
 
-.dlv-z-orange{background:#E89A2E;color:#E89A2E}
-.dlv-z-green {background:#3FA94E;color:#3FA94E}
-.dlv-z-purple{background:#9558C9;color:#9558C9}
-.dlv-z-brown {background:#A98968;color:#A98968}
-.dlv-z-blue  {background:#3A9DD8;color:#3A9DD8}
-.dlv-z-red   {background:#D2363C;color:#D2363C}
+/* пастельные тона: те же оттенки, но мягче — кружки выглядят бережнее */
+.dlv-z-orange{background:#F5C58A;color:#E89A2E}
+.dlv-z-green {background:#A8D8B0;color:#3FA94E}
+.dlv-z-purple{background:#C8AEE3;color:#9558C9}
+.dlv-z-brown {background:#D8C2A8;color:#A98968}
+.dlv-z-blue  {background:#A8CFE5;color:#3A9DD8}
+.dlv-z-red   {background:#EFA6AA;color:#D2363C}
 
 /* «стоимость доставки» — лейбл Beast pink 20px (как .total-meta),
    значение Beast red 60px (как .total-value на мобиле). */

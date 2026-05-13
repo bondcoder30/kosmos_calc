@@ -15,19 +15,20 @@
     }
     .cake-col{height:100%}
     .col-photo,.col-third{overflow-y:auto}
-    .col-info{padding:0 22px 40px;overflow-y:auto;display:flex;flex-direction:column;align-items:center;gap:0}
+    .col-photo{padding:0}
+    .col-info{padding:0 22px 40px;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;align-items:center;gap:0}
     .col-info .cake-title{
-      position:sticky;top:0;z-index:5;background:var(--bg);
+      position:sticky;top:0;z-index:50;background:var(--bg);
       font-size:56px;line-height:.7;margin:0 -22px;padding:18px 22px 14px;width:calc(100% + 44px);
     }
     .cake-title .word{line-height:.7;padding-bottom:.05em}
     .col-info .calc-frame{width:96%;max-width:440px;height:720px;flex:none;margin:8px auto 0}
     .col-info .end-bow{margin:0 auto 28px}
     .col-third{overflow:hidden;height:100%;position:relative}
-    .col-third .col-fillings,.col-third .col-delivery{position:absolute;inset:0;height:auto;overflow-y:auto;transition:transform .4s ease}
-    .col-third .col-delivery{display:flex;transform:translateX(100%)}
-    .cake-page.is-delivery .col-third .col-delivery{transform:translateX(0)}
-    .cake-page.is-delivery .col-third .col-fillings{display:block;transform:translateX(-20%);opacity:.45}
+    .col-third .col-fillings,.col-third .col-delivery{position:absolute;inset:0;height:auto;overflow-y:auto}
+    .col-third .col-delivery{display:none;flex-direction:column}
+    .cake-page.is-delivery .col-third .col-delivery{display:flex}
+    .cake-page.is-delivery .col-third .col-fillings{display:none}
     .delivery-back{position:absolute;width:64px;height:64px}
     .delivery-back svg{width:42px;height:42px}
   }
@@ -42,26 +43,10 @@
   <span class="menu-label">меню</span>
 </button>
 <ul class="menu-list" id="menu-list">
-  <li class="menu-cake-shell" aria-hidden="true">
-    <div class="menu-cake-stack">
-      <img class="menu-cake-tier menu-cake-tier--bottom" src="../../assets/menubottomtier.svg" alt="">
-      <img class="menu-cake-tier menu-cake-tier--top" src="../../assets/caketier1.svg" alt="">
-      <img class="menu-cake-k" src="../../assets/K.svg" alt="">
-      <img class="menu-cake-bow menu-cake-bow--1" src="../../assets/bow.svg" alt="">
-      <img class="menu-cake-bow menu-cake-bow--2" src="../../assets/bow.svg" alt="">
-      <img class="menu-cake-bow menu-cake-bow--3" src="../../assets/bow.svg" alt="">
-      <span class="menu-cake-cherry menu-cake-cherry--1"></span>
-      <span class="menu-cake-cherry menu-cake-cherry--2"></span>
-      <span class="menu-cake-cherry menu-cake-cherry--3"></span>
-      <span class="menu-cake-cherry menu-cake-cherry--4"></span>
-      <span class="menu-cake-cherry menu-cake-cherry--5"></span>
-      <span class="menu-cake-cherry menu-cake-cherry--6"></span>
-    </div>
-  </li>
   <li><a href="../index.html">каталог</a></li>
   <li><a href="../../../calculator/delivery/preview.html">доставка</a></li>
   <li><a href="../about.html">о нас</a></li>
-  <li class="menu-note">наш оператор ответит на все вопросы и подберет лучший тортик</li>
+  <li class="menu-note">наш оператор ответит на все вопросы и подберёт лучший вариант</li>
   <li class="menu-telegram"><a href="https://t.me/kosmoscake" target="_blank" rel="noopener" aria-label="написать в Telegram">telegram</a></li>
   <li class="menu-phone"><a href="tel:+79037696965">+7 (903) 769-69-65</a></li>
   <li class="menu-close-item"><button class="menu-close" type="button" aria-label="закрыть меню"></button></li>
@@ -248,6 +233,21 @@
     page.classList.remove('is-delivery');
     deliveryCol.setAttribute('aria-hidden','true');
   });
+
+  (function autoFitCalcIframe(){
+    /* Калькулятор шлёт postMessage {type:'kosmos-calc-height', height}. Подгоняем
+       высоту iframe под контент — пропадает серая пустота перед бантиком. */
+    const frames = Array.prototype.slice.call(document.querySelectorAll('.calc-frame, .mob-calc-frame'));
+    if (!frames.length) return;
+    window.addEventListener('message', (e) => {
+      const d = e.data;
+      if (!d || typeof d !== 'object' || d.type !== 'kosmos-calc-height') return;
+      const h = Math.max(360, Math.min(2000, parseInt(d.height, 10) || 0));
+      frames.forEach(f => {
+        if (f.contentWindow === e.source) f.style.height = h + 'px';
+      });
+    });
+  })();
 
   (function kosmoPeekScroll(){
     function bounce(el, vert){

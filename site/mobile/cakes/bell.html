@@ -15,26 +15,10 @@
   <span class="menu-label">меню</span>
 </button>
 <ul class="menu-list" id="menu-list">
-  <li class="menu-cake-shell" aria-hidden="true">
-    <div class="menu-cake-stack">
-      <img class="menu-cake-tier menu-cake-tier--bottom" src="../../assets/menubottomtier.svg" alt="">
-      <img class="menu-cake-tier menu-cake-tier--top" src="../../assets/caketier1.svg" alt="">
-      <img class="menu-cake-k" src="../../assets/K.svg" alt="">
-      <img class="menu-cake-bow menu-cake-bow--1" src="../../assets/bow.svg" alt="">
-      <img class="menu-cake-bow menu-cake-bow--2" src="../../assets/bow.svg" alt="">
-      <img class="menu-cake-bow menu-cake-bow--3" src="../../assets/bow.svg" alt="">
-      <span class="menu-cake-cherry menu-cake-cherry--1"></span>
-      <span class="menu-cake-cherry menu-cake-cherry--2"></span>
-      <span class="menu-cake-cherry menu-cake-cherry--3"></span>
-      <span class="menu-cake-cherry menu-cake-cherry--4"></span>
-      <span class="menu-cake-cherry menu-cake-cherry--5"></span>
-      <span class="menu-cake-cherry menu-cake-cherry--6"></span>
-    </div>
-  </li>
   <li><a href="../index.html">каталог</a></li>
   <li><a href="../../../calculator/delivery/preview.html">доставка</a></li>
   <li><a href="../about.html">о нас</a></li>
-  <li class="menu-note">наш оператор ответит на все вопросы и подберет лучший тортик</li>
+  <li class="menu-note">наш оператор ответит на все вопросы и подберёт лучший вариант</li>
   <li class="menu-telegram"><a href="https://t.me/kosmoscake" target="_blank" rel="noopener" aria-label="написать в Telegram">telegram</a></li>
   <li class="menu-phone"><a href="tel:+79037696965">+7 (903) 769-69-65</a></li>
   <li class="menu-close-item"><button class="menu-close" type="button" aria-label="закрыть меню"></button></li>
@@ -208,6 +192,21 @@
   const col = document.getElementById('mob-fillings');
   resolveFillings(col.dataset.fillings).forEach(name => col.appendChild(buildSlice(name)));
 
+
+  (function autoFitCalcIframe(){
+    /* Калькулятор шлёт postMessage {type:'kosmos-calc-height', height}. Подгоняем
+       высоту iframe под контент — пропадает серая пустота перед бантиком. */
+    const frames = Array.prototype.slice.call(document.querySelectorAll('.calc-frame, .mob-calc-frame'));
+    if (!frames.length) return;
+    window.addEventListener('message', (e) => {
+      const d = e.data;
+      if (!d || typeof d !== 'object' || d.type !== 'kosmos-calc-height') return;
+      const h = Math.max(360, Math.min(2000, parseInt(d.height, 10) || 0));
+      frames.forEach(f => {
+        if (f.contentWindow === e.source) f.style.height = h + 'px';
+      });
+    });
+  })();
 
   (function kosmoPeekScroll(){
     function bounce(el, vert){

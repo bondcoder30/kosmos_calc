@@ -51,6 +51,33 @@ window.sendOrder = (payload) => {
    Payload:
      { type:'kosmos-cake', total, cake, weight, tiers, pieces, filling, tiered }
    ================================================================ */
+/* высота калькулятора → родительской странице.
+   Родитель (страница торта) подгоняет iframe под содержимое — так пропадает
+   серая пустота между концом «далее» и бантиком в десктоп- и мобильной версии. */
+window.__kosmosPostHeight = function(){
+  try {
+    if (!window.parent || window.parent === window) return;
+    var doc = document.documentElement, body = document.body;
+    var h = Math.max(
+      body ? body.scrollHeight : 0,
+      doc ? doc.scrollHeight : 0,
+      body ? body.offsetHeight : 0,
+      doc ? doc.offsetHeight : 0
+    );
+    window.parent.postMessage({ type:'kosmos-calc-height', height: h }, '*');
+  } catch(_){}
+};
+window.addEventListener('load',  window.__kosmosPostHeight);
+window.addEventListener('resize', window.__kosmosPostHeight);
+document.addEventListener('DOMContentLoaded', window.__kosmosPostHeight);
+try {
+  var __koMo = new MutationObserver(function(){
+    if (window.__kosmosHTimer) cancelAnimationFrame(window.__kosmosHTimer);
+    window.__kosmosHTimer = requestAnimationFrame(window.__kosmosPostHeight);
+  });
+  __koMo.observe(document.documentElement, { childList:true, subtree:true, characterData:true, attributes:true });
+} catch(_){}
+
 window.__kosmosBC = null;
 window.broadcastCake = function(payload){
   payload = Object.assign({ type:'kosmos-cake' }, payload || {});

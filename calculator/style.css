@@ -45,6 +45,9 @@ html,body{
   background:var(--bg);
   font-family:var(--text);color:#1a1a1a;
   cursor:url('assets/cursor.svg') 8 8, auto;
+  overflow-x:hidden;
+  overscroll-behavior-x:none;
+  touch-action:pan-y;
 }
 button, select, .csel__trigger, .csel__opt, .radio-big, .fixed-row, .next-btn, .stepper .step-btn{
   cursor:url('assets/cursor.svg') 8 8, pointer;
