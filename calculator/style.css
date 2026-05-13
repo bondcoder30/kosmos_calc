@@ -66,11 +66,18 @@ body::-webkit-scrollbar{display:none;width:0;height:0}
 
 /* мобильный режим — компактный по высоте, без скролла внутри iframe.
    Используется и на телефонах, и в правой колонке десктопной страницы торта:
-   плотная вёрстка, чтобы калькулятор целиком умещался в одно окно. */
+   плотная вёрстка, чтобы калькулятор целиком умещался в одно окно.
+   .calc-scroll — flex-колонка с min-height:100%, чтобы «стоимость торта»
+   прижималась к низу и совпадала по высоте с «итоговой стоимостью» в
+   соседнем iframe доставки. */
 body.mobile,
-body.mobile html{height:auto;min-height:0}
-body.mobile .calc-frame{height:auto;overflow:visible}
-body.mobile .calc-scroll{height:auto;overflow:visible;padding:14px 16px 18px}
+body.mobile html{min-height:100%;height:auto}
+body.mobile .calc-frame{height:auto;overflow:visible;min-height:100%}
+body.mobile .calc-scroll{
+  height:auto;overflow:visible;padding:14px 16px 18px;
+  display:flex;flex-direction:column;min-height:100vh;
+}
+body.mobile .total-wrap{margin-top:auto}
 body.mobile .label{font-size:28px;margin:8px 0 0}
 body.mobile .stepper{gap:10px}
 body.mobile .stepper .value, body.mobile .fixed-row .value{font-size:96px}

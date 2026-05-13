@@ -70,13 +70,16 @@ img{display:block;max-width:100%}
 }
 .menu-list a:hover{color:var(--rose)}
 
-/* ============ ГЛАВНАЯ — ГРИД ОБЛОЖЕК ============ */
+/* ============ ГЛАВНАЯ — ГРИД ОБЛОЖЕК ============
+   Сетка без зазоров, картинки плотно встык. Никаких ховер-эффектов
+   и параллакса. Названия тортов всегда видны, центрированы по центру
+   плитки белым display-шрифтом с тенью для читаемости. */
 .cover-grid{
-  padding:80px 24px 24px;
+  padding:64px 0 0;
   display:grid;
   grid-template-columns:repeat(3, 1fr);
-  gap:18px;
-  max-width:1400px;margin:0 auto;
+  gap:0;
+  max-width:100%;margin:0;
 }
 .cover{
   position:relative;display:block;
@@ -84,28 +87,22 @@ img{display:block;max-width:100%}
   background:#222;text-decoration:none;
 }
 .cover img{
-  width:100%;height:100%;object-fit:cover;
-  transition:transform .5s ease, filter .3s ease;
+  width:100%;height:100%;object-fit:cover;display:block;
 }
-.cover:hover img{transform:scale(1.04);filter:brightness(.75)}
 .cover .cover-name{
-  position:absolute;inset:auto 0 0 0;
-  padding:14px 16px 18px;
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  text-align:center;padding:12px 14px;
   font-family:var(--display);font-weight:900;color:#fff;
-  font-size:clamp(22px, 2.4vw, 32px);line-height:.95;letter-spacing:.2px;
+  font-size:clamp(20px, 2.2vw, 30px);line-height:.95;letter-spacing:.2px;
   text-transform:lowercase;
-  opacity:0;transform:translateY(8px);
-  transition:opacity .25s ease, transform .25s ease;
-  text-shadow:0 2px 12px rgba(0,0,0,.45);
+  text-shadow:0 2px 14px rgba(0,0,0,.55), 0 0 24px rgba(0,0,0,.35);
   pointer-events:none;
 }
-.cover:hover .cover-name{opacity:1;transform:translateY(0)}
 
 @media (max-width:780px){
-  .cover-grid{grid-template-columns:repeat(2, 1fr);gap:12px;padding:70px 14px 14px}
-  /* на мобильных тапах подпись остается видна — наведения нет */
-  .cover .cover-name{opacity:1;transform:none;font-size:18px;padding:10px 12px 12px}
-  .cover:hover img{transform:none;filter:none}
+  .cover-grid{grid-template-columns:repeat(2, 1fr);padding:56px 0 0}
+  .cover .cover-name{font-size:18px;padding:10px 12px}
 }
 
 /* ============ СТРАНИЦА ТОРТА — ТРИ КОЛОНКИ ============ */
@@ -127,12 +124,30 @@ img{display:block;max-width:100%}
   margin:0;
 }
 
-/* ----- колонка 2: описание + калькулятор ----- */
-.col-info{padding:24px 22px 24px;display:flex;flex-direction:column;align-items:center;gap:10px;min-height:0}
+/* ----- колонка 2: описание + калькулятор -----
+   Заголовок «прибит» к верху (sticky). Калькулятор имеет фикс высоту,
+   чтобы колонка целиком скроллилась как один блок и контент уезжал
+   ПОД заголовок. Под заголовком — тонкая «дымка» (полупрозрачный
+   градиент + backdrop-blur), через которую содержимое плавно
+   уходит и размывается при скролле. */
+.col-info{
+  padding:0 22px 24px;display:flex;flex-direction:column;align-items:center;gap:10px;
+  min-height:0;overflow-y:auto;
+}
 .col-info .cake-title{
+  position:sticky;top:0;z-index:5;
+  background:var(--bg);
   font-family:var(--display);font-weight:900;color:var(--pink);
-  font-size:56px;line-height:.9;text-transform:lowercase;letter-spacing:.2px;
-  margin:0;text-align:center;
+  font-size:56px;line-height:.7;text-transform:lowercase;letter-spacing:-1px;
+  margin:0 -22px;padding:18px 22px 14px;width:calc(100% + 44px);
+  text-align:center;
+}
+/* каждое слово на отдельной строке. JS подбирает font-size так, чтобы
+   оно занимало почти всю ширину. line-height:.7 — строки максимально
+   плотные, контент при скролле резко уезжает под огромный заголовок. */
+.cake-title .word{
+  display:block;line-height:.7;white-space:nowrap;letter-spacing:-1px;
+  padding-bottom:.05em;
 }
 .col-info .cake-desc{
   font-family:var(--display);font-weight:900;color:#fff;
@@ -146,8 +161,15 @@ img{display:block;max-width:100%}
   margin:0 0 4px;max-width:380px;
 }
 .col-info .calc-frame{
-  width:100%;max-width:460px;flex:1 1 0;min-height:0;height:100%;
-  border:0;background:transparent;display:block;
+  width:100%;max-width:460px;flex:none;
+  height:720px;border:0;background:transparent;display:block;
+}
+/* финальный бантик — визуальная точка после калькулятора. flex:none, чтобы
+   не растягивался; margin сверху отделяет от калькулятора, снизу — 0,
+   чтобы бантик был у самого края и дальше скролла не было. */
+.col-info .end-bow{
+  flex:none;display:block;
+  width:92px;height:auto;margin:24px auto 0;
 }
 
 /* ----- колонка 3: «колбаса» начинок + оверлей доставки -----
@@ -233,9 +255,15 @@ img{display:block;max-width:100%}
   display:none;
   flex-direction:column;align-items:center;justify-content:flex-start;
   text-align:center;color:var(--red);
-  padding:23% 13% 20%;
+  /* default — заголовок в одну строку, верхний паддинг побольше,
+     описание сидит ниже к центру круга. */
+  padding:28% 13% 24%;
   z-index:3;
 }
+/* для длинных названий заголовок занимает 2-3 строки — поднимаем контент
+   вверх, иначе цена выпадает за круг. */
+.slice-wrap .filling-bubble.is-title-2{padding-top:22%}
+.slice-wrap .filling-bubble.is-title-3{padding-top:14%}
 .slice-wrap.is-open .filling-bubble{display:flex}
 
 .slice-wrap .filling-bubble::before{
@@ -260,6 +288,22 @@ img{display:block;max-width:100%}
   font-family:var(--text);font-weight:400;color:var(--red);
   font-size:12px;line-height:1.2;margin:0 0 2px;
 }
+/* маленький красный «X» внутри круга снизу — закрывает попап.
+   Подтянут на 5п выше, чтобы оставался в пределах круга. */
+.slice-wrap .filling-bubble .close{
+  position:absolute;left:50%;bottom:17%;transform:translateX(-50%);
+  width:6%;height:6%;min-width:16px;min-height:16px;max-width:22px;max-height:22px;
+  border:0;background:none;padding:0;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--red);z-index:4;
+  cursor:url('assets/cursor.svg') 8 8, pointer;
+  transition:color .15s ease, transform .08s ease;
+}
+.slice-wrap .filling-bubble .close:hover{color:var(--rose)}
+.slice-wrap .filling-bubble .close:active{transform:translateX(-50%) scale(.9)}
+.slice-wrap .filling-bubble .close svg{width:100%;height:100%;display:block;overflow:visible}
+.slice-wrap .filling-bubble .close svg path{fill:currentColor}
+
 .slice-wrap .filling-bubble .spark{
   position:absolute;top:50%;transform:translateY(-50%);
   width:18%;height:18%;pointer-events:none;
@@ -280,7 +324,9 @@ body.mob-page{height:auto;min-height:100%;overflow-x:hidden}
 .mob-page .menu-btn{top:14px;left:14px}
 .mob-page .menu-list{top:80px;left:14px}
 
-/* (1) карусель фото — на всю ширину, листается свайпом */
+/* (1) карусель фото — на всю ширину, листается свайпом.
+   Снизу мелким красным Golos — подсказка про свайп. */
+.mob-photos-wrap{position:relative;width:100vw}
 .mob-photos{
   display:flex;width:100vw;overflow-x:auto;
   scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;
@@ -290,13 +336,20 @@ body.mob-page{height:auto;min-height:100%;overflow-x:hidden}
   aspect-ratio:1/1.25;object-fit:cover;
   scroll-snap-align:start;display:block;
 }
+.mob-swipe-hint{
+  position:absolute;right:14px;bottom:10px;margin:0;
+  font-family:var(--text);font-weight:500;font-size:11px;color:#fff;
+  background:rgba(0,0,0,.35);padding:4px 10px;border-radius:999px;
+  pointer-events:none;letter-spacing:.2px;
+}
 
 /* (2) шапка торта */
 .mob-head{padding:22px 18px 4px;text-align:center}
 .mob-head .cake-title{
   font-family:var(--display);font-weight:900;color:var(--pink);
-  font-size:64px;line-height:.9;letter-spacing:.2px;
-  text-transform:lowercase;margin:0;
+  font-size:64px;line-height:.7;letter-spacing:-1px;
+  text-transform:lowercase;margin:0;width:100%;
+  padding-bottom:.05em;
 }
 .mob-head .cake-desc{
   font-family:var(--display);font-weight:900;color:#fff;
@@ -340,6 +393,10 @@ body.mob-page{height:auto;min-height:100%;overflow-x:hidden}
 }
 .mob-delivery-frame{
   display:block;width:100%;height:780px;border:0;background:transparent;
+}
+/* (7) финальный бантик — центрирован, без отступа снизу: дальше скролла нет */
+.mob-page .end-bow{
+  display:block;width:96px;height:auto;margin:24px auto 0;
 }
 
 @media (max-width:900px){

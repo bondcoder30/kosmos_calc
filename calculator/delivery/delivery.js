@@ -63,11 +63,11 @@
     }).join('');
     return ''+
 '<div class="dlv-frame">'+
-'  <p class="dlv-title">Мы бережно доставляем торты по всей Москве и до 20 км от МКАД.</p>'+
 '  <div class="dlv-map"><iframe src="'+MAP_SRC+'" title="Зоны доставки" loading="lazy" allowfullscreen></iframe></div>'+
+'  <p class="dlv-title">Мы бережно доставляем торты по всей Москве и до 20 км от МКАД.</p>'+
 '  <div class="dlv-zone-label">выберите зону</div>'+
 '  <div class="dlv-zones" data-role="zones">'+zonesHTML+'</div>'+
-'  <div class="dlv-cost"><div class="lbl">стоимость доставки</div><div class="val" data-role="delivery-val">—</div></div>'+
+'  <div class="dlv-cost"><div class="lbl" data-role="delivery-lbl">стоимость доставки</div><div class="val" data-role="delivery-val">—</div></div>'+
 '  <div class="dlv-total"><div class="lbl">итоговая стоимость</div>'+
 '    <div class="val-row"><span class="sparkle">'+SPARKLE_SVG+'</span><div class="val" data-role="final-val">—</div><span class="sparkle">'+SPARKLE_SVG+'</span></div>'+
 '  </div>'+
@@ -83,6 +83,7 @@
     host.innerHTML = buildTemplate();
 
     var $zones      = host.querySelector('[data-role="zones"]');
+    var $deliveryL  = host.querySelector('[data-role="delivery-lbl"]');
     var $deliveryV  = host.querySelector('[data-role="delivery-val"]');
     var $finalV     = host.querySelector('[data-role="final-val"]');
     var $cta        = host.querySelector('[data-role="cta"]');
@@ -99,14 +100,14 @@
       var purple = $zones.querySelector('[data-key="purple"]');
       if (!purple) return;
       if (state.params.tiered){
-        purple.setAttribute('disabled','disabled');
-        purple.title = 'Самовывоз доступен только для не-ярусных тортов';
-        // если уже была выбрана фиолетовая — сбросим
+        // для ярусных тортов самовывоз не предлагаем — прячем кружок целиком
+        purple.style.display = 'none';
         if (purple.classList.contains('is-active')){
           purple.classList.remove('is-active');
           state.rate = null; state.name = null; state.pickup = false;
         }
       } else {
+        purple.style.display = '';
         purple.removeAttribute('disabled');
         purple.removeAttribute('title');
       }
@@ -115,12 +116,20 @@
 
     function render(){
       if (state.rate === null){
+        $deliveryL.textContent = 'стоимость доставки';
         $deliveryV.textContent = '—';
         $finalV.textContent    = fmtRub(state.params.total);
         $cta.setAttribute('disabled','disabled');
         return;
       }
-      $deliveryV.textContent = state.pickup ? 'бесплатно' : fmtRub(state.rate);
+      if (state.pickup){
+        // при выборе самовывоза переписываем и лейбл, и значение
+        $deliveryL.textContent = 'самовывоз';
+        $deliveryV.textContent = 'бесплатно';
+      } else {
+        $deliveryL.textContent = 'стоимость доставки';
+        $deliveryV.textContent = fmtRub(state.rate);
+      }
       $finalV.textContent    = fmtRub(state.params.total + state.rate);
       $cta.removeAttribute('disabled');
     }

@@ -9,11 +9,18 @@
    --pink — лейблы, --red — крупные значения.
    Размеры подобраны под высоту .total-meta / .total-value в style.css. */
 
+/* блок растягивается на всю высоту iframe (если она задана) и прижимает
+   «итоговую стоимость» к низу — чтобы рядом с калькулятором (в десктопе)
+   она оказывалась примерно на одной горизонтали с «стоимостью торта». */
 .dlv-frame{
   max-width:520px;margin:0 auto;padding:14px 16px 18px;
   display:flex;flex-direction:column;gap:10px;align-items:stretch;
   background:var(--bg);
+  min-height:100%;
 }
+/* всё что после .dlv-zones — «бюджетный» блок: лейблы, цены, CTA.
+   Прижимаем его к низу через margin-top:auto на .dlv-cost. */
+.dlv-frame .dlv-cost{margin-top:auto}
 
 /* «Мы бережно доставляем…» — обычный мелкий красный текст (Golos) */
 .dlv-title{
@@ -38,23 +45,23 @@
 }
 .dlv-zone-label::first-letter{text-transform:uppercase}
 
-/* шесть зон в один ряд */
+/* шесть зон в один ряд — компактнее, чтобы блок не разъезжался по высоте */
 .dlv-zones{
   display:grid;grid-template-columns:repeat(6, minmax(0,1fr));
-  gap:10px;justify-content:center;align-items:center;
-  margin:0 auto;width:100%;max-width:420px;
+  gap:8px;justify-content:center;align-items:center;
+  margin:0 auto;width:100%;max-width:300px;
 }
 .dlv-zone{
   aspect-ratio:1/1;width:100%;border-radius:50%;
   border:0;outline:0;padding:0;
   display:flex;align-items:center;justify-content:center;
-  font-family:var(--display);font-weight:900;color:#fff;font-size:20px;
+  font-family:var(--display);font-weight:900;color:#fff;font-size:16px;
   position:relative;
   transition:transform .15s ease, box-shadow .15s ease, opacity .15s ease;
   box-shadow:0 0 0 0 transparent;
 }
 .dlv-zone:hover{transform:scale(1.06)}
-.dlv-zone.is-active{box-shadow:0 0 0 3px #fff, 0 0 0 5px currentColor}
+.dlv-zone.is-active{box-shadow:0 0 0 2px #fff, 0 0 0 4px currentColor}
 .dlv-zone[disabled]{opacity:.35;cursor:not-allowed}
 .dlv-zone[disabled]:hover{transform:none}
 
@@ -120,8 +127,8 @@
 
 @media (max-width:420px){
   .dlv-zone-label{font-size:24px}
-  .dlv-zones{gap:8px;max-width:340px}
-  .dlv-zone{font-size:18px}
+  .dlv-zones{gap:8px;max-width:280px}
+  .dlv-zone{font-size:14px}
   .dlv-cost .val{font-size:48px}
   .dlv-total .val{font-size:60px}
   .dlv-cta{font-size:20px}
