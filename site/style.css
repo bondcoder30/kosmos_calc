@@ -163,13 +163,12 @@ img{display:block;max-width:100%}
 .col-info .calc-frame{
   width:100%;max-width:460px;flex:none;
   height:720px;border:0;background:transparent;display:block;
+  margin-bottom:0;
 }
-/* финальный бантик — визуальная точка после калькулятора. flex:none, чтобы
-   не растягивался; margin сверху отделяет от калькулятора, снизу — 0,
-   чтобы бантик был у самого края и дальше скролла не было. */
+/* сразу под калькулятором: компенсируем row-gap колонки + чуть подтягиваем вверх */
 .col-info .end-bow{
   flex:none;display:block;
-  width:92px;height:auto;margin:24px auto 0;
+  width:92px;height:auto;margin:-8px auto 0;
 }
 
 /* ----- колонка 3: «колбаса» начинок + оверлей доставки -----
@@ -390,13 +389,15 @@ body.mob-page{height:auto;min-height:100%;overflow-x:hidden}
 /* (5) калькулятор + (6) доставка — фикс-высота iframes без скролла */
 .mob-calc-frame{
   display:block;width:100%;height:720px;border:0;background:transparent;
+  margin:0;
 }
 .mob-delivery-frame{
   display:block;width:100%;height:780px;border:0;background:transparent;
+  margin:0;
 }
-/* (7) финальный бантик — центрирован, без отступа снизу: дальше скролла нет */
+/* (7) финальный бантик — ближе к блоку доставки/калькулятору */
 .mob-page .end-bow{
-  display:block;width:96px;height:auto;margin:24px auto 0;
+  display:block;width:96px;height:auto;margin:-6px auto 0;
 }
 
 @media (max-width:900px){

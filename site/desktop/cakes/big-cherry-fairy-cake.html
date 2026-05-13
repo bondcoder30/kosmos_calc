@@ -2,11 +2,33 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>fairy cake — kosmos</title>
+<meta name="viewport" content="width=1280">
+<title>big cherry fairy cake — kosmos</title>
 <link rel="stylesheet" href="../../style.css">
+<style>
+  /* десктоп-вариант: жёстко 3 колонки даже в узком iframe-превью */
+  @media (max-width:900px){
+    .cake-page{grid-template-columns:1fr 1fr 1fr;grid-template-rows:none}
+    .cake-col{height:100%}
+    .col-photo,.col-third{overflow-y:auto}
+    .col-info{padding:0 22px 24px;overflow-y:auto;display:flex;flex-direction:column;align-items:center;gap:10px}
+    .col-info .cake-title{
+      position:sticky;top:0;z-index:5;background:var(--bg);
+      font-size:56px;line-height:.7;margin:0 -22px;padding:18px 22px 14px;width:calc(100% + 44px);
+    }
+    .cake-title .word{line-height:.7;padding-bottom:.05em}
+    .col-info .calc-frame{height:720px;flex:none}
+    .col-third{overflow:hidden;height:100%;position:relative}
+    .col-third .col-fillings,.col-third .col-delivery{position:absolute;inset:0;height:auto;overflow-y:auto;transition:transform .4s ease}
+    .col-third .col-delivery{display:flex;transform:translateX(100%)}
+    .cake-page.is-delivery .col-third .col-delivery{transform:translateX(0)}
+    .cake-page.is-delivery .col-third .col-fillings{display:block;transform:translateX(-20%);opacity:.45}
+    .delivery-back{position:absolute;width:64px;height:64px}
+    .delivery-back svg{width:42px;height:42px}
+  }
+</style>
 </head>
-<body class="mob-page">
+<body>
 
 <button class="menu-btn" id="menu-toggle" aria-label="меню" type="button">
   <svg viewBox="0 0 54 65" xmlns="http://www.w3.org/2000/svg">
@@ -20,38 +42,37 @@
   <li><a href="#">о нас</a></li>
 </ul>
 
-<section class="mob-photos-wrap" aria-label="фото торта">
-  <div class="mob-photos" id="mob-photos">
-    <img src="../../photos/fairy-cake/slice-1.jpg" alt="fairy cake — деталь" loading="eager">
-    <img src="../../photos/fairy-cake/slice-2.jpg" alt="fairy cake — деталь" loading="lazy">
-    <img src="../../photos/fairy-cake/slice-3.jpg" alt="fairy cake — деталь" loading="lazy">
-    <img src="../../photos/fairy-cake/cover.jpg" alt="fairy cake — обложка" loading="lazy">
-  </div>
-  <p class="mob-swipe-hint">листайте фото&nbsp;→</p>
-</section>
+<div class="cake-page">
 
-<header class="mob-head">
-  <h1 class="cake-title">fairy cake</h1>
-  <p class="cake-desc">По-настоящему сказочный большой торт, как из мультика. Мечта детства!</p>
-  <p class="cake-sub">Для сохранения сказочного объёма при небольшом весе возможно использование фальш-ярусов.</p>
-</header>
+  <section class="cake-col col-photo" aria-label="фото торта">
+    <img class="photo" src="../../photos/fairy-cake/cover.jpg" alt="big cherry fairy cake">
+  </section>
 
-<div class="mob-fill-head">
-  <h2 class="mob-section-title">Что внутри?</h2>
-  <p class="mob-section-hint">листайте вправо — нажмите на начинку, чтобы узнать больше</p>
+  <section class="cake-col col-info" aria-label="параметры торта">
+    <h1 class="cake-title">big cherry fairy cake</h1>
+    <p class="cake-desc">Ещё больше усиливаем сказочность фэири кейка большой мультяшной вишней на макушке. Вот это действительно cherry on top!</p>
+    <p class="cake-sub">Внутри вишенки — торт, поэтому она считается отдельным ярусом.</p>
+    <iframe class="calc-frame"
+            src="../../../calculator/cakes-mobile/tiered/big-cherry-fairy-cake.html"
+            title="калькулятор big cherry fairy cake"></iframe>
+    <img class="end-bow" src="../../assets/bow.svg" alt="" aria-hidden="true">
+  </section>
+
+  <section class="cake-col col-third" aria-label="третья колонка">
+    <div class="col-fillings" id="fillings-col" data-fillings="BASE"></div>
+    <div class="col-delivery" id="delivery-col" aria-hidden="true">
+      <button class="delivery-back" id="delivery-back" type="button" aria-label="назад к начинкам">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M14.7 4.3a1 1 0 0 1 0 1.4L9.4 11H20a1 1 0 1 1 0 2H9.4l5.3 5.3a1 1 0 1 1-1.4 1.4l-7-7a1 1 0 0 1 0-1.4l7-7a1 1 0 0 1 1.4 0Z"/>
+        </svg>
+      </button>
+      <iframe class="delivery-frame"
+              src="../../../calculator/delivery/index.html"
+              title="доставка"></iframe>
+    </div>
+  </section>
+
 </div>
-
-<section class="mob-fillings" id="mob-fillings" data-fillings="BASE" aria-label="начинки"></section>
-
-<iframe class="mob-calc-frame"
-        src="../../../calculator/cakes-mobile/tiered/fairy-cake.html"
-        title="калькулятор fairy cake"></iframe>
-
-<iframe class="mob-delivery-frame" id="mob-delivery"
-        src="../../../calculator/delivery/index.html"
-        title="доставка"></iframe>
-
-<img class="end-bow" src="../../assets/bow.svg" alt="" aria-hidden="true">
 
 <script src="../../fillings/data.js"></script>
 <script>
@@ -67,7 +88,7 @@
     if (!title) return;
     const raw = title.textContent.trim();
     title.innerHTML = raw.split(/\s+/).map(w => `<span class="word">${w}</span>`).join('');
-    const MAX = 200, MIN = 32, TARGET = 0.94;
+    const MAX = 160, MIN = 28, TARGET = 0.96;
     function fit(){
       const cw = title.clientWidth;
       if (!cw) return;
@@ -181,16 +202,21 @@
     return wrap;
   }
 
-  const col = document.getElementById('mob-fillings');
+  const col = document.getElementById('fillings-col');
   resolveFillings(col.dataset.fillings).forEach(name => col.appendChild(buildSlice(name)));
 
-
-  const dlv = document.getElementById('mob-delivery');
+  const page = document.querySelector('.cake-page');
+  const deliveryCol = document.getElementById('delivery-col');
   window.addEventListener('message', (e) => {
     const d = e.data;
     if (d && typeof d === 'object' && d.type === 'kosmos-next'){
-      dlv.scrollIntoView({behavior:'smooth', block:'start'});
+      page.classList.add('is-delivery');
+      deliveryCol.setAttribute('aria-hidden','false');
     }
+  });
+  document.getElementById('delivery-back').addEventListener('click', () => {
+    page.classList.remove('is-delivery');
+    deliveryCol.setAttribute('aria-hidden','true');
   });
 
 </script>
