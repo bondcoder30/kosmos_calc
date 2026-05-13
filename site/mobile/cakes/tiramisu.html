@@ -16,13 +16,20 @@
 </button>
 <ul class="menu-list" id="menu-list">
   <li><a href="../index.html">каталог</a></li>
-  <li><a href="#">доставка</a></li>
-  <li><a href="#">о нас</a></li>
+  <li><a href="../../../calculator/delivery/preview.html">доставка</a></li>
+  <li><a href="../about.html">о нас</a></li>
+  <li class="menu-note">наш оператор ответит на все вопросы и подберет лучший тортик</li>
+  <li class="menu-telegram"><a href="https://t.me/kosmoscake" target="_blank" rel="noopener" aria-label="написать в Telegram">telegram</a></li>
+  <li class="menu-phone"><a href="tel:+79037696965">+7 (903) 769-69-65</a></li>
+  <li class="menu-close-item"><button class="menu-close" type="button" aria-label="закрыть меню"></button></li>
 </ul>
 
 <section class="mob-photos-wrap" aria-label="фото торта">
   <div class="mob-photos" id="mob-photos">
-    <img src="../../photos/fairy-cake/cover.jpg" alt="тирамису — обложка" loading="eager">
+    <img src="../../photos/tiramisu/IMG_2100.JPG" alt="тирамису — деталь" loading="eager">
+    <img src="../../photos/tiramisu/IMG_6804.JPG" alt="тирамису — деталь" loading="lazy">
+    <img src="../../photos/tiramisu/обложка.JPG" alt="тирамису — деталь" loading="lazy">
+    <img src="../../photos/tiramisu/D3849F05-1892-4D7F-BE24-D05744257726.JPG" alt="тирамису — деталь" loading="lazy">
   </div>
   <p class="mob-swipe-hint">листайте фото&nbsp;→</p>
 </section>
@@ -55,6 +62,10 @@
   const menuBtn  = document.getElementById('menu-toggle');
   const menuList = document.getElementById('menu-list');
   menuBtn.addEventListener('click', (e) => { e.stopPropagation(); menuList.classList.toggle('is-open'); });
+  menuList.querySelector('.menu-close').addEventListener('click', (e) => {
+    e.stopPropagation();
+    menuList.classList.remove('is-open');
+  });
   document.addEventListener('click', (e) => {
     if (!menuList.contains(e.target) && e.target !== menuBtn && !menuBtn.contains(e.target)) menuList.classList.remove('is-open');
   });
@@ -181,6 +192,36 @@
   const col = document.getElementById('mob-fillings');
   resolveFillings(col.dataset.fillings).forEach(name => col.appendChild(buildSlice(name)));
 
+
+  (function kosmoPeekScroll(){
+    function bounce(el, vert){
+      if (!el) return;
+      function cap(){ return Math.max(0, vert ? el.scrollHeight - el.clientHeight : el.scrollWidth - el.clientWidth); }
+      if (cap() < 10) return;
+      var dir = 1, pause = 0, dead = 0;
+      var id = setInterval(function(){
+        if (dead) return;
+        if (pause > 0) { pause--; return; }
+        var m = cap();
+        if (m < 8) return;
+        var c = vert ? el.scrollTop : el.scrollLeft;
+        c += (vert ? 0.65 : 1) * dir;
+        if (c >= m) { c = m; dir = -1; pause = 75; }
+        else if (c <= 0) { c = 0; dir = 1; pause = 90; }
+        if (vert) el.scrollTop = c; else el.scrollLeft = c;
+      }, 40);
+      function kill(){ dead = 1; clearInterval(id); }
+      el.addEventListener('touchstart', kill, {passive:true});
+      el.addEventListener('wheel', kill, {passive:true});
+      el.addEventListener('pointerdown', kill, {passive:true});
+    }
+    bounce(document.getElementById('mob-photos'), false);
+    bounce(document.getElementById('mob-fillings'), false);
+    var cp = document.querySelector('.col-photo');
+    if (cp) bounce(cp, true);
+    var fc = document.getElementById('fillings-col');
+    if (fc) bounce(fc, true);
+  })();
 
   const dlv = document.getElementById('mob-delivery');
   window.addEventListener('message', (e) => {

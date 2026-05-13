@@ -45,49 +45,62 @@ def load_cakes():
 PHOTO_EXT = (".jpg", ".jpeg", ".png", ".webp")
 
 
-def cover_filename(cid: str) -> str:
-    d = PH / cid
-    if not d.is_dir():
-        return "cover.jpg"
-    for ext in PHOTO_EXT:
-        if (d / f"cover{ext}").exists():
-            return f"cover{ext}"
-    return "cover.jpg"
-
-
-def slice_filenames(cid: str) -> list[str]:
+def list_cake_image_files(cid: str) -> list[Path]:
     d = PH / cid
     if not d.is_dir():
         return []
-    found: list[tuple[int, str]] = []
-    for p in d.iterdir():
-        if not p.is_file() or p.suffix.lower() not in PHOTO_EXT:
-            continue
+    xs = [p for p in d.iterdir() if p.is_file() and p.suffix.lower() in PHOTO_EXT]
+    return sorted(xs, key=lambda p: p.name.lower())
+
+
+def pick_cover_path(cid: str) -> Path | None:
+    """Обложка: cover.* или первый файл, не slice-N.* (как после import_photos_raw)."""
+    d = PH / cid
+    files = list_cake_image_files(cid)
+    if not files:
+        return None
+    for ext in PHOTO_EXT:
+        p = d / f"cover{ext}"
+        if p.exists():
+            return p
+    for p in files:
+        if not re.match(r"slice-\d+\.", p.name, re.I):
+            return p
+    return files[0]
+
+
+def slice_paths_after_cover(cid: str, cover: Path | None) -> list[Path]:
+    files = list_cake_image_files(cid)
+    named: list[tuple[int, Path]] = []
+    for p in files:
         m = re.match(r"slice-(\d+)\.", p.name, re.I)
         if m:
-            found.append((int(m.group(1)), p.name))
-    found.sort(key=lambda t: t[0])
-    return [fn for _, fn in found]
+            named.append((int(m.group(1)), p))
+    if named:
+        named.sort(key=lambda t: t[0])
+        return [t[1] for t in named]
+    if cover is None:
+        return []
+    covr = cover.resolve()
+    return [p for p in files if p.resolve() != covr]
+
+
+def cover_filename(cid: str) -> str:
+    """Имя файла обложки для каталога (реальный файл в photos/<id>/)."""
+    p = pick_cover_path(cid)
+    return p.name if p else "cover.jpg"
 
 
 def photo_paths(cid: str) -> tuple[list[str], list[str]]:
     """Десктоп: cover + slice-…; мобилка: slice-… + cover в конце."""
-    d = PH / cid
     rel = f"../../photos/{cid}"
-    cov = cover_filename(cid)
-    slices = slice_filenames(cid)
-    desk: list[str] = []
-    if d.is_dir() and (d / cov).exists():
-        desk.append(f"{rel}/{cov}")
-    for s in slices:
-        desk.append(f"{rel}/{s}")
-    mob = [f"{rel}/{s}" for s in slices]
-    if d.is_dir() and (d / cov).exists():
-        mob.append(f"{rel}/{cov}")
-    if not desk:
-        desk = ["../../photos/fairy-cake/cover.jpg"]
-    if not mob:
-        mob = ["../../photos/fairy-cake/cover.jpg"]
+    cov = pick_cover_path(cid)
+    if cov is None:
+        fb = "../../photos/fairy-cake/cover.jpg"
+        return ([fb], [fb])
+    slices = slice_paths_after_cover(cid, cov)
+    desk = [f"{rel}/{cov.name}"] + [f"{rel}/{p.name}" for p in slices]
+    mob = [f"{rel}/{p.name}" for p in slices] + [f"{rel}/{cov.name}"]
     return desk, mob
 
 
@@ -133,9 +146,12 @@ DESKTOP_HEAD = """<!doctype html>
 <title>__PAGE_TITLE__</title>
 <link rel="stylesheet" href="../../style.css">
 <style>
-  /* десктоп-вариант: жёстко 3 колонки даже в узком iframe-превью */
+  /* Узкий iframe/окно: третья колонка (начинки) сужается сильнее центра и фото */
   @media (max-width:900px){
-    .cake-page{grid-template-columns:1fr 1fr 1fr;grid-template-rows:none}
+    .cake-page{
+      grid-template-columns:minmax(0,1fr) minmax(0,1.22fr) minmax(0,0.26fr);
+      grid-template-rows:minmax(0,1fr);
+    }
     .cake-col{height:100%}
     .col-photo,.col-third{overflow-y:auto}
     .col-info{padding:0 22px 24px;overflow-y:auto;display:flex;flex-direction:column;align-items:center;gap:10px}
@@ -165,8 +181,12 @@ DESKTOP_HEAD = """<!doctype html>
 </button>
 <ul class="menu-list" id="menu-list">
   <li><a href="../index.html">каталог</a></li>
-  <li><a href="#">доставка</a></li>
-  <li><a href="#">о нас</a></li>
+  <li><a href="../../../calculator/delivery/preview.html">доставка</a></li>
+  <li><a href="../about.html">о нас</a></li>
+  <li class="menu-note">наш оператор ответит на все вопросы и подберет лучший тортик</li>
+  <li class="menu-telegram"><a href="https://t.me/kosmoscake" target="_blank" rel="noopener" aria-label="написать в Telegram">telegram</a></li>
+  <li class="menu-phone"><a href="tel:+79037696965">+7 (903) 769-69-65</a></li>
+  <li class="menu-close-item"><button class="menu-close" type="button" aria-label="закрыть меню"></button></li>
 </ul>
 
 <div class="cake-page">
@@ -228,8 +248,12 @@ MOBILE_BODY = """<!doctype html>
 </button>
 <ul class="menu-list" id="menu-list">
   <li><a href="../index.html">каталог</a></li>
-  <li><a href="#">доставка</a></li>
-  <li><a href="#">о нас</a></li>
+  <li><a href="../../../calculator/delivery/preview.html">доставка</a></li>
+  <li><a href="../about.html">о нас</a></li>
+  <li class="menu-note">наш оператор ответит на все вопросы и подберет лучший тортик</li>
+  <li class="menu-telegram"><a href="https://t.me/kosmoscake" target="_blank" rel="noopener" aria-label="написать в Telegram">telegram</a></li>
+  <li class="menu-phone"><a href="tel:+79037696965">+7 (903) 769-69-65</a></li>
+  <li class="menu-close-item"><button class="menu-close" type="button" aria-label="закрыть меню"></button></li>
 </ul>
 
 <section class="mob-photos-wrap" aria-label="фото торта">
@@ -274,6 +298,10 @@ __SHARED_JS_MOBILE__
 SHARED_JS = r"""  const menuBtn  = document.getElementById('menu-toggle');
   const menuList = document.getElementById('menu-list');
   menuBtn.addEventListener('click', (e) => { e.stopPropagation(); menuList.classList.toggle('is-open'); });
+  menuList.querySelector('.menu-close').addEventListener('click', (e) => {
+    e.stopPropagation();
+    menuList.classList.remove('is-open');
+  });
   document.addEventListener('click', (e) => {
     if (!menuList.contains(e.target) && e.target !== menuBtn && !menuBtn.contains(e.target)) menuList.classList.remove('is-open');
   });
@@ -413,6 +441,36 @@ SHARED_JS = r"""  const menuBtn  = document.getElementById('menu-toggle');
     page.classList.remove('is-delivery');
     deliveryCol.setAttribute('aria-hidden','true');
   });
+
+  (function kosmoPeekScroll(){
+    function bounce(el, vert){
+      if (!el) return;
+      function cap(){ return Math.max(0, vert ? el.scrollHeight - el.clientHeight : el.scrollWidth - el.clientWidth); }
+      if (cap() < 10) return;
+      var dir = 1, pause = 0, dead = 0;
+      var id = setInterval(function(){
+        if (dead) return;
+        if (pause > 0) { pause--; return; }
+        var m = cap();
+        if (m < 8) return;
+        var c = vert ? el.scrollTop : el.scrollLeft;
+        c += (vert ? 0.65 : 1) * dir;
+        if (c >= m) { c = m; dir = -1; pause = 75; }
+        else if (c <= 0) { c = 0; dir = 1; pause = 90; }
+        if (vert) el.scrollTop = c; else el.scrollLeft = c;
+      }, 40);
+      function kill(){ dead = 1; clearInterval(id); }
+      el.addEventListener('touchstart', kill, {passive:true});
+      el.addEventListener('wheel', kill, {passive:true});
+      el.addEventListener('pointerdown', kill, {passive:true});
+    }
+    bounce(document.getElementById('mob-photos'), false);
+    bounce(document.getElementById('mob-fillings'), false);
+    var cp = document.querySelector('.col-photo');
+    if (cp) bounce(cp, true);
+    var fc = document.getElementById('fillings-col');
+    if (fc) bounce(fc, true);
+  })();
 """
 
 
@@ -647,7 +705,7 @@ def write_site_preview_index(cakes: list, by_id: dict) -> None:
 <h1>Kosmos cake — превью страниц сайта</h1>
 <p class="lead">
   Каждая страница — готовый HTML для iframe (Tilda / Readymag и т.д.).
-  Ниже — главные и <strong>все страницы тортов</strong> (десктоп и мобилка), с кнопкой копирования сниппета.
+  Ниже — главные, страница «о нас» и <strong>все страницы тортов</strong> (десктоп и мобилка), с кнопкой копирования сниппета.
   Фото торта: положите файлы в <code>site/photos raw/&lt;id&gt;/</code> и выполните
   <code>python site/import_photos_raw.py</code>, затем <code>python site/build_site_pages.py</code>.
 </p>
@@ -692,6 +750,44 @@ def write_site_preview_index(cakes: list, by_id: dict) -> None:
       <div class="snip-row">
         <button type="button" data-copy="snip-mob-home">копировать сниппет</button>
         <span class="ok" data-ok="snip-mob-home">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2>О нас — десктоп</h2>
+<div class="grid-dsk">
+  <div class="card">
+    <header>
+      <span class="type">desktop</span>
+      <span class="name">о нас</span>
+      <a class="open" href="desktop/about.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="desktop/about.html" loading="lazy" title="о нас — десктоп"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-dsk-about"><iframe src="{base}/desktop/about.html" width="1280" height="800" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-dsk-about">копировать сниппет</button>
+        <span class="ok" data-ok="snip-dsk-about">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2>О нас — мобилка</h2>
+<div class="grid-mob">
+  <div class="card">
+    <header>
+      <span class="type">mobile</span>
+      <span class="name">о нас</span>
+      <a class="open" href="mobile/about.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="mobile/about.html" loading="lazy" title="о нас — мобилка"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-mob-about"><iframe src="{base}/mobile/about.html" width="380" height="780" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-mob-about">копировать сниппет</button>
+        <span class="ok" data-ok="snip-mob-about">✓ скопировано</span>
       </div>
     </div>
   </div>

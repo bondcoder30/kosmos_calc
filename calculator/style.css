@@ -78,7 +78,8 @@ body.mobile .calc-scroll{
   display:flex;flex-direction:column;min-height:100vh;
 }
 body.mobile .total-wrap{margin-top:auto}
-body.mobile .label{font-size:28px;margin:8px 0 0}
+body.mobile .label{font-size:19px;margin:8px 0 0}
+body.mobile .cake-desc{font-size:22px}
 body.mobile .stepper{gap:10px}
 body.mobile .stepper .value, body.mobile .fixed-row .value{font-size:96px}
 body.mobile .stepper .step-btn.plus svg{width:46px;height:46px}
@@ -89,7 +90,7 @@ body.mobile .total-wrap{margin-top:10px;padding:6px 0 0;gap:2px}
 body.mobile .total-meta{font-size:18px}
 body.mobile .total-value{font-size:60px}
 body.mobile .send-row{margin-top:4px}
-body.mobile .next-btn{font-size:28px}
+body.mobile .next-btn{font-size:22px}
 body.mobile .fill-class{margin-top:8px}
 
 /* ============ CAKE HEADER ============ */
@@ -112,7 +113,7 @@ body.mobile .fill-class{margin-top:8px}
 .cake-desc{
   margin:0 0 10px;
   font-family:var(--display);font-weight:900;
-  font-size:18px;line-height:1.15;letter-spacing:.2px;
+  font-size:24px;line-height:1.15;letter-spacing:.2px;
   color:#fff;
   text-transform:lowercase;
 }
@@ -132,11 +133,11 @@ body.mobile .fill-class{margin-top:8px}
   letter-spacing:.3px;text-transform:uppercase;
 }
 
-/* ============ LABEL (большой белый «Сколько килограмм?» / «начинка») ============ */
+/* ============ LABEL («Сколько килограмм?» / «начинка») — чуть меньше белого описания торта ============ */
 .label{
   text-align:center;color:#fff;
   font-family:var(--display);font-weight:900;
-  font-size:32px;text-transform:lowercase;line-height:1;
+  font-size:22px;text-transform:lowercase;line-height:1;
   margin:18px 0 4px;
 }
 .label::first-letter{text-transform:uppercase}
@@ -312,14 +313,12 @@ body.mobile .fill-class{margin-top:8px}
   .fill-class--all .fill-class__ico{width:90px;height:40px}
 }
 
-/* ============ NEXT BUTTON («далее» розовым жирным под итоговой ценой) ============
-   Размер совпадает с .label («Сколько килограмм?»). Клик — postMessage в
-   родительскую страницу, которая открывает блок доставки поверх начинок. */
+/* ============ NEXT BUTTON («далее») — в одну визуальную линию с .label ============ */
 .send-row{margin-top:10px;display:flex;justify-content:center}
 .next-btn{
   background:none;border:0;padding:0;cursor:pointer;
   font-family:var(--display);font-weight:900;
-  font-size:32px;line-height:1;letter-spacing:.2px;
+  font-size:22px;line-height:1;letter-spacing:.2px;
   color:var(--pink);text-transform:lowercase;
   transition:color .15s ease, transform .08s ease;
 }
@@ -331,13 +330,13 @@ body.mobile .fill-class{margin-top:8px}
 @media (max-width:420px){
   .calc-scroll{padding:22px 16px 22px}
   .cake-header{margin-bottom:18px}
-  .cake-desc{font-size:15px}
+  .cake-desc{font-size:18px}
   .stepper{gap:10px}
   .stepper .step-btn.minus svg{width:42px;height:15px}
   .stepper .step-btn.plus svg{width:42px;height:42px}
   .stepper .value, .fixed-row .value{font-size:90px}
-  .label{font-size:24px}
+  .label{font-size:16px}
   .total-value{font-size:48px}
   .radio-big{width:52px;height:52px}
-  .next-btn{font-size:24px}
+  .next-btn{font-size:17px}
 }

@@ -58,7 +58,7 @@
 <h1>Kosmos cake — превью страниц сайта</h1>
 <p class="lead">
   Каждая страница — готовый HTML для iframe (Tilda / Readymag и т.д.).
-  Ниже — главные и <strong>все страницы тортов</strong> (десктоп и мобилка), с кнопкой копирования сниппета.
+  Ниже — главные, страница «о нас» и <strong>все страницы тортов</strong> (десктоп и мобилка), с кнопкой копирования сниппета.
   Фото торта: положите файлы в <code>site/photos raw/&lt;id&gt;/</code> и выполните
   <code>python site/import_photos_raw.py</code>, затем <code>python site/build_site_pages.py</code>.
 </p>
@@ -103,6 +103,44 @@
       <div class="snip-row">
         <button type="button" data-copy="snip-mob-home">копировать сниппет</button>
         <span class="ok" data-ok="snip-mob-home">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2>О нас — десктоп</h2>
+<div class="grid-dsk">
+  <div class="card">
+    <header>
+      <span class="type">desktop</span>
+      <span class="name">о нас</span>
+      <a class="open" href="desktop/about.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="desktop/about.html" loading="lazy" title="о нас — десктоп"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-dsk-about"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/desktop/about.html" width="1280" height="800" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-dsk-about">копировать сниппет</button>
+        <span class="ok" data-ok="snip-dsk-about">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2>О нас — мобилка</h2>
+<div class="grid-mob">
+  <div class="card">
+    <header>
+      <span class="type">mobile</span>
+      <span class="name">о нас</span>
+      <a class="open" href="mobile/about.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="mobile/about.html" loading="lazy" title="о нас — мобилка"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-mob-about"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/mobile/about.html" width="380" height="780" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-mob-about">копировать сниппет</button>
+        <span class="ok" data-ok="snip-mob-about">✓ скопировано</span>
       </div>
     </div>
   </div>
