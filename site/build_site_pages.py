@@ -8,6 +8,9 @@
 
 Запуск из корня репозитория kosmos_calc:
   python site/build_site_pages.py
+
+Также: синхронизирует window.KOSMOS_FILLING_SETS в fillings/data.js с window.FILLING_SETS
+из calculator/core.js; пересобирает site/index.html (превью всех страниц тортов).
 """
 from __future__ import annotations
 
@@ -39,23 +42,48 @@ def load_cakes():
     return ns["CAKES"]
 
 
+PHOTO_EXT = (".jpg", ".jpeg", ".png", ".webp")
+
+
+def cover_filename(cid: str) -> str:
+    d = PH / cid
+    if not d.is_dir():
+        return "cover.jpg"
+    for ext in PHOTO_EXT:
+        if (d / f"cover{ext}").exists():
+            return f"cover{ext}"
+    return "cover.jpg"
+
+
+def slice_filenames(cid: str) -> list[str]:
+    d = PH / cid
+    if not d.is_dir():
+        return []
+    found: list[tuple[int, str]] = []
+    for p in d.iterdir():
+        if not p.is_file() or p.suffix.lower() not in PHOTO_EXT:
+            continue
+        m = re.match(r"slice-(\d+)\.", p.name, re.I)
+        if m:
+            found.append((int(m.group(1)), p.name))
+    found.sort(key=lambda t: t[0])
+    return [fn for _, fn in found]
+
+
 def photo_paths(cid: str) -> tuple[list[str], list[str]]:
     """Десктоп: cover + slice-…; мобилка: slice-… + cover в конце."""
     d = PH / cid
-    cover = d / "cover.jpg"
-    slices = []
-    if d.is_dir():
-        for p in sorted(d.glob("slice-*.jpg")):
-            slices.append(p.name)
     rel = f"../../photos/{cid}"
+    cov = cover_filename(cid)
+    slices = slice_filenames(cid)
     desk: list[str] = []
-    if cover.exists():
-        desk.append(f"{rel}/cover.jpg")
+    if d.is_dir() and (d / cov).exists():
+        desk.append(f"{rel}/{cov}")
     for s in slices:
         desk.append(f"{rel}/{s}")
     mob = [f"{rel}/{s}" for s in slices]
-    if cover.exists():
-        mob.append(f"{rel}/cover.jpg")
+    if d.is_dir() and (d / cov).exists():
+        mob.append(f"{rel}/{cov}")
     if not desk:
         desk = ["../../photos/fairy-cake/cover.jpg"]
     if not mob:
@@ -469,6 +497,248 @@ def render_mobile(cake: dict) -> str:
     )
 
 
+def ordered_cakes(cakes: list, by_id: dict) -> list:
+    seen: set[str] = set()
+    out: list = []
+    for cid in CATALOG_ORDER:
+        if cid in by_id:
+            out.append(by_id[cid])
+            seen.add(cid)
+    for c in cakes:
+        if c["id"] not in seen:
+            out.append(c)
+            seen.add(c["id"])
+    return out
+
+
+def sync_kosmos_filling_sets() -> None:
+    core = (ROOT / "calculator" / "core.js").read_text(encoding="utf-8")
+    base_start = core.index("const _BASE =")
+    base_end = core.index("window.FILLING_SETS", base_start)
+    base_block = core[base_start:base_end].strip()
+    fs_start = core.index("window.FILLING_SETS =")
+    fs_end = core.index("window.fmtMoney", fs_start)
+    filling_sets = core[fs_start:fs_end].strip()
+    filling_sets = filling_sets.replace("window.FILLING_SETS", "window.KOSMOS_FILLING_SETS", 1)
+    extracted = base_block + "\n\n" + filling_sets
+    data_path = SITE / "fillings" / "data.js"
+    data = data_path.read_text(encoding="utf-8")
+    m_start = "/* >>> SYNC_FILLING_SETS"
+    m_end = "/* <<< SYNC_FILLING_SETS */"
+    if m_start not in data or m_end not in data:
+        print("WARN: маркеры SYNC_FILLING_SETS в fillings/data.js не найдены — пропуск синхрона")
+        return
+    a = data.index(m_start)
+    b = data.index(m_end) + len(m_end)
+    block = f"/* >>> SYNC_FILLING_SETS (build_site_pages.py — из calculator/core.js) */\n{extracted}\n{m_end}"
+    data_path.write_text(data[:a] + block + data[b:], encoding="utf-8")
+    print("OK: KOSMOS_FILLING_SETS ← calculator/core.js (fillings/data.js)")
+
+
+def write_site_preview_index(cakes: list, by_id: dict) -> None:
+    """Полное превью site/index.html — все страницы тортов (десктоп + мобилка)."""
+    base = "https://ab-aacoop.github.io/kosmos_calc/site"
+    oc = ordered_cakes(cakes, by_id)
+
+    def card_dsk(c: dict) -> str:
+        cid, nm = c["id"], html.escape(c["name"])
+        sn = f"snip-dsk-{cid}"
+        url = f"{base}/desktop/cakes/{cid}.html"
+        return (
+            f'  <div class="card">\n'
+            f'    <header>\n'
+            f'      <span class="type">desktop</span>\n'
+            f'      <span class="name">{nm}</span>\n'
+            f'      <a class="open" href="desktop/cakes/{html.escape(cid)}.html" target="_blank">↗</a>\n'
+            f"    </header>\n"
+            f'    <div class="frame-wrap"><iframe src="desktop/cakes/{html.escape(cid)}.html" loading="lazy" title="{nm}"></iframe></div>\n'
+            f'    <div class="snip">\n'
+            f'      <textarea readonly id="{sn}"><iframe src="{html.escape(url)}" width="1280" height="800" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>\n'
+            f'      <div class="snip-row">\n'
+            f'        <button type="button" data-copy="{sn}">копировать сниппет</button>\n'
+            f'        <span class="ok" data-ok="{sn}">✓ скопировано</span>\n'
+            f"      </div>\n"
+            f"    </div>\n"
+            f"  </div>"
+        )
+
+    def card_mob(c: dict) -> str:
+        cid, nm = c["id"], html.escape(c["name"])
+        sn = f"snip-mob-{cid}"
+        url = f"{base}/mobile/cakes/{cid}.html"
+        return (
+            f'  <div class="card">\n'
+            f'    <header>\n'
+            f'      <span class="type">mobile</span>\n'
+            f'      <span class="name">{nm}</span>\n'
+            f'      <a class="open" href="mobile/cakes/{html.escape(cid)}.html" target="_blank">↗</a>\n'
+            f"    </header>\n"
+            f'    <div class="frame-wrap"><iframe src="mobile/cakes/{html.escape(cid)}.html" loading="lazy" title="{nm}"></iframe></div>\n'
+            f'    <div class="snip">\n'
+            f'      <textarea readonly id="{sn}"><iframe src="{html.escape(url)}" width="380" height="780" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>\n'
+            f'      <div class="snip-row">\n'
+            f'        <button type="button" data-copy="{sn}">копировать сниппет</button>\n'
+            f'        <span class="ok" data-ok="{sn}">✓ скопировано</span>\n'
+            f"      </div>\n"
+            f"    </div>\n"
+            f"  </div>"
+        )
+
+    dsk_rows = "\n".join(card_dsk(c) for c in oc)
+    mob_rows = "\n".join(card_mob(c) for c in oc)
+
+    html_out = f"""<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kosmos cake — превью страниц сайта</title>
+<style>
+  *{{box-sizing:border-box}}
+  html,body{{margin:0;padding:0;background:#eaeaea;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#222}}
+  body{{padding:24px}}
+  h1{{margin:0 0 6px;font-size:22px}}
+  h2{{margin:28px 0 10px;font-size:16px;color:#555}}
+  p.lead{{margin:0 0 14px;color:#555;font-size:14px;max-width:900px;line-height:1.45}}
+  p.lead a{{color:#d83448}}
+  .topbar{{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 18px}}
+  .topbar a{{
+    text-decoration:none;background:#fff;border:1px solid #ddd;padding:7px 12px;
+    border-radius:6px;color:#222;font-size:13px;font-weight:500;
+  }}
+  .topbar a.primary{{background:#d83448;color:#fff;border-color:#d83448}}
+  .topbar a:hover{{filter:brightness(0.95)}}
+
+  .grid-dsk{{display:grid;gap:18px;grid-template-columns:1fr;align-items:start}}
+  .grid-mob{{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));align-items:start}}
+  .grid-cakes{{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(520px,1fr));align-items:start}}
+
+  .card{{display:flex;flex-direction:column;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08)}}
+  .card header{{padding:8px 14px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:10px;font-size:12px}}
+  .card .type{{padding:2px 8px;background:#d83448;color:#fff;border-radius:999px;font-size:10px;text-transform:uppercase;letter-spacing:.3px}}
+  .card .name{{font-weight:600;flex:1}}
+  .card a.open{{color:#999;text-decoration:none;font-size:14px}}
+  .card a.open:hover{{color:#d83448}}
+
+  .frame-wrap{{width:100%;background:#cfcfcf}}
+  .grid-dsk .frame-wrap{{aspect-ratio:1280/800}}
+  .grid-cakes .frame-wrap{{aspect-ratio:1280/800}}
+  .grid-cakes.grid-mob .frame-wrap{{aspect-ratio:380/780}}
+  .frame-wrap iframe{{display:block;width:100%;height:100%;border:0}}
+
+  .snip{{padding:10px 12px;border-top:1px solid #eee;background:#fafafa;display:flex;flex-direction:column;gap:6px}}
+  .snip textarea{{
+    width:100%;min-height:48px;resize:vertical;
+    font-family:Menlo,Consolas,monospace;font-size:11px;line-height:1.4;
+    border:1px solid #ddd;border-radius:5px;padding:6px;background:#fff;color:#333;
+  }}
+  .snip-row{{display:flex;gap:8px;align-items:center}}
+  .snip button{{
+    background:#d83448;color:#fff;border:0;border-radius:5px;padding:6px 12px;
+    font-size:12px;cursor:pointer;font-weight:600;
+  }}
+  .snip button:hover{{background:#b22937}}
+  .snip .ok{{font-size:11px;color:#3b9b4f;opacity:0;transition:opacity .25s}}
+  .snip .ok.show{{opacity:1}}
+</style>
+</head>
+<body>
+
+<h1>Kosmos cake — превью страниц сайта</h1>
+<p class="lead">
+  Каждая страница — готовый HTML для iframe (Tilda / Readymag и т.д.).
+  Ниже — главные и <strong>все страницы тортов</strong> (десктоп и мобилка), с кнопкой копирования сниппета.
+  Фото торта: положите файлы в <code>site/photos raw/&lt;id&gt;/</code> и выполните
+  <code>python site/import_photos_raw.py</code>, затем <code>python site/build_site_pages.py</code>.
+</p>
+
+<div class="topbar">
+  <a class="primary" href="../calculator/cakes/">↗ калькуляторы — десктоп</a>
+  <a href="../calculator/cakes-mobile/">↗ калькуляторы — мобилка</a>
+  <a href="../calculator/cakes-mobile-full/">↗ мобилка всё-в-одном</a>
+  <a href="../calculator/delivery/preview.html">↗ блок доставки</a>
+</div>
+
+<h2>Главная — десктоп</h2>
+<div class="grid-dsk">
+  <div class="card">
+    <header>
+      <span class="type">desktop</span>
+      <span class="name">главная (каталог)</span>
+      <a class="open" href="desktop/index.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="desktop/index.html" loading="lazy" title="главная — десктоп"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-dsk-home"><iframe src="{base}/desktop/index.html" width="1280" height="800" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-dsk-home">копировать сниппет</button>
+        <span class="ok" data-ok="snip-dsk-home">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2>Главная — мобилка</h2>
+<div class="grid-mob">
+  <div class="card">
+    <header>
+      <span class="type">mobile</span>
+      <span class="name">главная (каталог)</span>
+      <a class="open" href="mobile/index.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="mobile/index.html" loading="lazy" title="главная — мобилка"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-mob-home"><iframe src="{base}/mobile/index.html" width="380" height="780" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-mob-home">копировать сниппет</button>
+        <span class="ok" data-ok="snip-mob-home">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2>Все страницы тортов — десктоп</h2>
+<div class="grid-cakes">
+{dsk_rows}
+</div>
+
+<h2>Все страницы тортов — мобилка</h2>
+<div class="grid-cakes grid-mob">
+{mob_rows}
+</div>
+
+<script>
+document.addEventListener('click', function(e){{
+  var b = e.target.closest('button[data-copy]');
+  if (!b) return;
+  var id = b.dataset.copy;
+  var ta = document.getElementById(id);
+  if (!ta) return;
+  ta.select();
+  ta.setSelectionRange(0, ta.value.length);
+  var ok = false;
+  try {{ ok = document.execCommand('copy'); }} catch(_{{}}){{}}
+  if (!ok && navigator.clipboard){{
+    navigator.clipboard.writeText(ta.value).then(function(){{ flash(id); }});
+    return;
+  }}
+  if (ok) flash(id);
+}});
+function flash(id){{
+  var el = document.querySelector('[data-ok="'+id+'"]');
+  if (!el) return;
+  el.classList.add('show');
+  setTimeout(function(){{ el.classList.remove('show'); }}, 1800);
+}}
+</script>
+
+</body>
+</html>
+"""
+    (SITE / "index.html").write_text(html_out, encoding="utf-8")
+    print(f"OK: site/index.html — превью всех {len(oc)} тортов + главные")
+
+
 def write_catalog(path: Path, by_id: dict):
     text = path.read_text(encoding="utf-8")
     parts = text.split('<main class="cover-grid">', 1)
@@ -487,9 +757,10 @@ def write_catalog(path: Path, by_id: dict):
     for cid in CATALOG_ORDER:
         c = by_id[cid]
         nm = html.escape(c["name"])
+        cov = cover_filename(cid)
         rows.append(
             f'  <a class="cover" href="cakes/{html.escape(cid)}.html">'
-            f'<img src="../photos/{html.escape(cid)}/cover.jpg" alt="{nm}" loading="lazy">'
+            f'<img src="../photos/{html.escape(cid)}/{html.escape(cov)}" alt="{nm}" loading="lazy">'
             f'<div class="cover-name">{nm}</div></a>'
         )
     body = "<main class=\"cover-grid\">\n" + "\n".join(rows) + "\n</main>"
@@ -511,6 +782,10 @@ def main():
 
     write_catalog(SITE / "desktop" / "index.html", by_id)
     write_catalog(SITE / "mobile" / "index.html", by_id)
+
+    sync_kosmos_filling_sets()
+    write_site_preview_index(cakes, by_id)
+    (SITE / "photos raw").mkdir(parents=True, exist_ok=True)
 
     print(f"OK: {len(cakes)} тортов → desktop/cakes + mobile/cakes")
     print("OK: каталог desktop/index.html, mobile/index.html")

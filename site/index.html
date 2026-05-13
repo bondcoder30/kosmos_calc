@@ -10,7 +10,7 @@
   body{padding:24px}
   h1{margin:0 0 6px;font-size:22px}
   h2{margin:28px 0 10px;font-size:16px;color:#555}
-  p.lead{margin:0 0 14px;color:#555;font-size:14px;max-width:760px}
+  p.lead{margin:0 0 14px;color:#555;font-size:14px;max-width:900px;line-height:1.45}
   p.lead a{color:#d83448}
   .topbar{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 18px}
   .topbar a{
@@ -20,9 +20,9 @@
   .topbar a.primary{background:#d83448;color:#fff;border-color:#d83448}
   .topbar a:hover{filter:brightness(0.95)}
 
-  /* «Десктопные» карточки занимают всю ширину, мобильные — в сетку 380 */
   .grid-dsk{display:grid;gap:18px;grid-template-columns:1fr;align-items:start}
   .grid-mob{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));align-items:start}
+  .grid-cakes{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(520px,1fr));align-items:start}
 
   .card{display:flex;flex-direction:column;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08)}
   .card header{padding:8px 14px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:10px;font-size:12px}
@@ -33,7 +33,8 @@
 
   .frame-wrap{width:100%;background:#cfcfcf}
   .grid-dsk .frame-wrap{aspect-ratio:1280/800}
-  .grid-mob .frame-wrap{aspect-ratio:380/780}
+  .grid-cakes .frame-wrap{aspect-ratio:1280/800}
+  .grid-cakes.grid-mob .frame-wrap{aspect-ratio:380/780}
   .frame-wrap iframe{display:block;width:100%;height:100%;border:0}
 
   .snip{padding:10px 12px;border-top:1px solid #eee;background:#fafafa;display:flex;flex-direction:column;gap:6px}
@@ -56,16 +57,16 @@
 
 <h1>Kosmos cake — превью страниц сайта</h1>
 <p class="lead">
-  Каждая страница — готовый HTML, который можно вставить как iframe на витрину
-  (Tilda / Readymag / любой конструктор). Десктоп и мобилка собраны раздельно,
-  чтобы в нужное место витрины вставлять подходящий снiппет.
-  Чтобы открыть в новой вкладке — кликни «↗» в шапке карточки.
+  Каждая страница — готовый HTML для iframe (Tilda / Readymag и т.д.).
+  Ниже — главные и <strong>все страницы тортов</strong> (десктоп и мобилка), с кнопкой копирования сниппета.
+  Фото торта: положите файлы в <code>site/photos raw/&lt;id&gt;/</code> и выполните
+  <code>python site/import_photos_raw.py</code>, затем <code>python site/build_site_pages.py</code>.
 </p>
 
 <div class="topbar">
   <a class="primary" href="../calculator/cakes/">↗ калькуляторы — десктоп</a>
   <a href="../calculator/cakes-mobile/">↗ калькуляторы — мобилка</a>
-  <a href="../calculator/cakes-mobile-full/">↗ калькуляторы — мобилка-всё-в-одном</a>
+  <a href="../calculator/cakes-mobile-full/">↗ мобилка всё-в-одном</a>
   <a href="../calculator/delivery/preview.html">↗ блок доставки</a>
 </div>
 
@@ -107,39 +108,909 @@
   </div>
 </div>
 
-<h2>Страницы тортов — десктоп</h2>
-<div class="grid-dsk">
+<h2>Все страницы тортов — десктоп</h2>
+<div class="grid-cakes">
   <div class="card">
     <header>
       <span class="type">desktop</span>
       <span class="name">fairy cake</span>
       <a class="open" href="desktop/cakes/fairy-cake.html" target="_blank">↗</a>
     </header>
-    <div class="frame-wrap"><iframe src="desktop/cakes/fairy-cake.html" loading="lazy" title="fairy cake — десктоп"></iframe></div>
+    <div class="frame-wrap"><iframe src="desktop/cakes/fairy-cake.html" loading="lazy" title="fairy cake"></iframe></div>
     <div class="snip">
-      <textarea readonly id="snip-dsk-fc"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/desktop/cakes/fairy-cake.html" width="1280" height="800" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <textarea readonly id="snip-dsk-fairy-cake"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/desktop/cakes/fairy-cake.html" width="1280" height="800" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
       <div class="snip-row">
-        <button type="button" data-copy="snip-dsk-fc">копировать сниппет</button>
-        <span class="ok" data-ok="snip-dsk-fc">✓ скопировано</span>
+        <button type="button" data-copy="snip-dsk-fairy-cake">копировать сниппет</button>
+        <span class="ok" data-ok="snip-dsk-fairy-cake">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">desktop</span>
+      <span class="name">тирамису</span>
+      <a class="open" href="desktop/cakes/tiramisu.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="desktop/cakes/tiramisu.html" loading="lazy" title="тирамису"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-dsk-tiramisu"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/desktop/cakes/tiramisu.html" width="1280" height="800" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-dsk-tiramisu">копировать сниппет</button>
+        <span class="ok" data-ok="snip-dsk-tiramisu">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">desktop</span>
+      <span class="name">люмьер</span>
+      <a class="open" href="desktop/cakes/lumiere.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="desktop/cakes/lumiere.html" loading="lazy" title="люмьер"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-dsk-lumiere"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/desktop/cakes/lumiere.html" width="1280" height="800" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-dsk-lumiere">копировать сниппет</button>
+        <span class="ok" data-ok="snip-dsk-lumiere">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">desktop</span>
+      <span class="name">вам письмо</span>
+      <a class="open" href="desktop/cakes/letter.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="desktop/cakes/letter.html" loading="lazy" title="вам письмо"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-dsk-letter"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/desktop/cakes/letter.html" width="1280" height="800" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-dsk-letter">копировать сниппет</button>
+        <span class="ok" data-ok="snip-dsk-letter">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">desktop</span>
+      <span class="name">big cherry fairy cake</span>
+      <a class="open" href="desktop/cakes/big-cherry-fairy-cake.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="desktop/cakes/big-cherry-fairy-cake.html" loading="lazy" title="big cherry fairy cake"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-dsk-big-cherry-fairy-cake"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/desktop/cakes/big-cherry-fairy-cake.html" width="1280" height="800" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-dsk-big-cherry-fairy-cake">копировать сниппет</button>
+        <span class="ok" data-ok="snip-dsk-big-cherry-fairy-cake">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">desktop</span>
+      <span class="name">лебединое озеро</span>
+      <a class="open" href="desktop/cakes/swan-lake.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="desktop/cakes/swan-lake.html" loading="lazy" title="лебединое озеро"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-dsk-swan-lake"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/desktop/cakes/swan-lake.html" width="1280" height="800" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-dsk-swan-lake">копировать сниппет</button>
+        <span class="ok" data-ok="snip-dsk-swan-lake">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">desktop</span>
+      <span class="name">вавилон</span>
+      <a class="open" href="desktop/cakes/babylon.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="desktop/cakes/babylon.html" loading="lazy" title="вавилон"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-dsk-babylon"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/desktop/cakes/babylon.html" width="1280" height="800" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-dsk-babylon">копировать сниппет</button>
+        <span class="ok" data-ok="snip-dsk-babylon">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">desktop</span>
+      <span class="name">любовное настроение</span>
+      <a class="open" href="desktop/cakes/love-in-mood.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="desktop/cakes/love-in-mood.html" loading="lazy" title="любовное настроение"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-dsk-love-in-mood"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/desktop/cakes/love-in-mood.html" width="1280" height="800" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-dsk-love-in-mood">копировать сниппет</button>
+        <span class="ok" data-ok="snip-dsk-love-in-mood">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">desktop</span>
+      <span class="name">dancing queen</span>
+      <a class="open" href="desktop/cakes/dancing-queen.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="desktop/cakes/dancing-queen.html" loading="lazy" title="dancing queen"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-dsk-dancing-queen"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/desktop/cakes/dancing-queen.html" width="1280" height="800" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-dsk-dancing-queen">копировать сниппет</button>
+        <span class="ok" data-ok="snip-dsk-dancing-queen">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">desktop</span>
+      <span class="name">secret garden</span>
+      <a class="open" href="desktop/cakes/secret-garden.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="desktop/cakes/secret-garden.html" loading="lazy" title="secret garden"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-dsk-secret-garden"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/desktop/cakes/secret-garden.html" width="1280" height="800" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-dsk-secret-garden">копировать сниппет</button>
+        <span class="ok" data-ok="snip-dsk-secret-garden">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">desktop</span>
+      <span class="name">шапито</span>
+      <a class="open" href="desktop/cakes/chapito.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="desktop/cakes/chapito.html" loading="lazy" title="шапито"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-dsk-chapito"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/desktop/cakes/chapito.html" width="1280" height="800" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-dsk-chapito">копировать сниппет</button>
+        <span class="ok" data-ok="snip-dsk-chapito">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">desktop</span>
+      <span class="name">анна</span>
+      <a class="open" href="desktop/cakes/anna.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="desktop/cakes/anna.html" loading="lazy" title="анна"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-dsk-anna"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/desktop/cakes/anna.html" width="1280" height="800" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-dsk-anna">копировать сниппет</button>
+        <span class="ok" data-ok="snip-dsk-anna">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">desktop</span>
+      <span class="name">белль</span>
+      <a class="open" href="desktop/cakes/bell.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="desktop/cakes/bell.html" loading="lazy" title="белль"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-dsk-bell"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/desktop/cakes/bell.html" width="1280" height="800" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-dsk-bell">копировать сниппет</button>
+        <span class="ok" data-ok="snip-dsk-bell">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">desktop</span>
+      <span class="name">богемская рапсодия</span>
+      <a class="open" href="desktop/cakes/bohemian-rhapsody.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="desktop/cakes/bohemian-rhapsody.html" loading="lazy" title="богемская рапсодия"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-dsk-bohemian-rhapsody"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/desktop/cakes/bohemian-rhapsody.html" width="1280" height="800" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-dsk-bohemian-rhapsody">копировать сниппет</button>
+        <span class="ok" data-ok="snip-dsk-bohemian-rhapsody">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">desktop</span>
+      <span class="name">тоторо</span>
+      <a class="open" href="desktop/cakes/totoro.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="desktop/cakes/totoro.html" loading="lazy" title="тоторо"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-dsk-totoro"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/desktop/cakes/totoro.html" width="1280" height="800" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-dsk-totoro">копировать сниппет</button>
+        <span class="ok" data-ok="snip-dsk-totoro">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">desktop</span>
+      <span class="name">келли</span>
+      <a class="open" href="desktop/cakes/kelly.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="desktop/cakes/kelly.html" loading="lazy" title="келли"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-dsk-kelly"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/desktop/cakes/kelly.html" width="1280" height="800" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-dsk-kelly">копировать сниппет</button>
+        <span class="ok" data-ok="snip-dsk-kelly">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">desktop</span>
+      <span class="name">la la land</span>
+      <a class="open" href="desktop/cakes/la-la-land.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="desktop/cakes/la-la-land.html" loading="lazy" title="la la land"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-dsk-la-la-land"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/desktop/cakes/la-la-land.html" width="1280" height="800" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-dsk-la-la-land">копировать сниппет</button>
+        <span class="ok" data-ok="snip-dsk-la-la-land">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">desktop</span>
+      <span class="name">дарси</span>
+      <a class="open" href="desktop/cakes/darcy.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="desktop/cakes/darcy.html" loading="lazy" title="дарси"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-dsk-darcy"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/desktop/cakes/darcy.html" width="1280" height="800" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-dsk-darcy">копировать сниппет</button>
+        <span class="ok" data-ok="snip-dsk-darcy">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">desktop</span>
+      <span class="name">shine bright</span>
+      <a class="open" href="desktop/cakes/shine-bright.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="desktop/cakes/shine-bright.html" loading="lazy" title="shine bright"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-dsk-shine-bright"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/desktop/cakes/shine-bright.html" width="1280" height="800" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-dsk-shine-bright">копировать сниппет</button>
+        <span class="ok" data-ok="snip-dsk-shine-bright">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">desktop</span>
+      <span class="name">green day</span>
+      <a class="open" href="desktop/cakes/green-day.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="desktop/cakes/green-day.html" loading="lazy" title="green day"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-dsk-green-day"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/desktop/cakes/green-day.html" width="1280" height="800" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-dsk-green-day">копировать сниппет</button>
+        <span class="ok" data-ok="snip-dsk-green-day">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">desktop</span>
+      <span class="name">орфей</span>
+      <a class="open" href="desktop/cakes/orpheus.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="desktop/cakes/orpheus.html" loading="lazy" title="орфей"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-dsk-orpheus"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/desktop/cakes/orpheus.html" width="1280" height="800" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-dsk-orpheus">копировать сниппет</button>
+        <span class="ok" data-ok="snip-dsk-orpheus">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">desktop</span>
+      <span class="name">вишневый сад</span>
+      <a class="open" href="desktop/cakes/cherry-orchard.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="desktop/cakes/cherry-orchard.html" loading="lazy" title="вишневый сад"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-dsk-cherry-orchard"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/desktop/cakes/cherry-orchard.html" width="1280" height="800" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-dsk-cherry-orchard">копировать сниппет</button>
+        <span class="ok" data-ok="snip-dsk-cherry-orchard">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">desktop</span>
+      <span class="name">элизабет</span>
+      <a class="open" href="desktop/cakes/elizabeth.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="desktop/cakes/elizabeth.html" loading="lazy" title="элизабет"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-dsk-elizabeth"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/desktop/cakes/elizabeth.html" width="1280" height="800" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-dsk-elizabeth">копировать сниппет</button>
+        <span class="ok" data-ok="snip-dsk-elizabeth">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">desktop</span>
+      <span class="name">ягодные поля навсегда</span>
+      <a class="open" href="desktop/cakes/berry-fields.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="desktop/cakes/berry-fields.html" loading="lazy" title="ягодные поля навсегда"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-dsk-berry-fields"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/desktop/cakes/berry-fields.html" width="1280" height="800" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-dsk-berry-fields">копировать сниппет</button>
+        <span class="ok" data-ok="snip-dsk-berry-fields">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">desktop</span>
+      <span class="name">куинджи</span>
+      <a class="open" href="desktop/cakes/kuinji.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="desktop/cakes/kuinji.html" loading="lazy" title="куинджи"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-dsk-kuinji"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/desktop/cakes/kuinji.html" width="1280" height="800" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-dsk-kuinji">копировать сниппет</button>
+        <span class="ok" data-ok="snip-dsk-kuinji">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">desktop</span>
+      <span class="name">фаберже</span>
+      <a class="open" href="desktop/cakes/faberge.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="desktop/cakes/faberge.html" loading="lazy" title="фаберже"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-dsk-faberge"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/desktop/cakes/faberge.html" width="1280" height="800" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-dsk-faberge">копировать сниппет</button>
+        <span class="ok" data-ok="snip-dsk-faberge">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">desktop</span>
+      <span class="name">sailor moon</span>
+      <a class="open" href="desktop/cakes/sailor-moon.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="desktop/cakes/sailor-moon.html" loading="lazy" title="sailor moon"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-dsk-sailor-moon"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/desktop/cakes/sailor-moon.html" width="1280" height="800" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-dsk-sailor-moon">копировать сниппет</button>
+        <span class="ok" data-ok="snip-dsk-sailor-moon">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">desktop</span>
+      <span class="name">аполлон</span>
+      <a class="open" href="desktop/cakes/apollo.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="desktop/cakes/apollo.html" loading="lazy" title="аполлон"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-dsk-apollo"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/desktop/cakes/apollo.html" width="1280" height="800" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-dsk-apollo">копировать сниппет</button>
+        <span class="ok" data-ok="snip-dsk-apollo">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">desktop</span>
+      <span class="name">blueberry hill</span>
+      <a class="open" href="desktop/cakes/blueberry-hill.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="desktop/cakes/blueberry-hill.html" loading="lazy" title="blueberry hill"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-dsk-blueberry-hill"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/desktop/cakes/blueberry-hill.html" width="1280" height="800" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-dsk-blueberry-hill">копировать сниппет</button>
+        <span class="ok" data-ok="snip-dsk-blueberry-hill">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">desktop</span>
+      <span class="name">fuji</span>
+      <a class="open" href="desktop/cakes/fuji.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="desktop/cakes/fuji.html" loading="lazy" title="fuji"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-dsk-fuji"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/desktop/cakes/fuji.html" width="1280" height="800" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-dsk-fuji">копировать сниппет</button>
+        <span class="ok" data-ok="snip-dsk-fuji">✓ скопировано</span>
       </div>
     </div>
   </div>
 </div>
 
-<h2>Страницы тортов — мобилка</h2>
-<div class="grid-mob">
+<h2>Все страницы тортов — мобилка</h2>
+<div class="grid-cakes grid-mob">
   <div class="card">
     <header>
       <span class="type">mobile</span>
       <span class="name">fairy cake</span>
       <a class="open" href="mobile/cakes/fairy-cake.html" target="_blank">↗</a>
     </header>
-    <div class="frame-wrap"><iframe src="mobile/cakes/fairy-cake.html" loading="lazy" title="fairy cake — мобилка"></iframe></div>
+    <div class="frame-wrap"><iframe src="mobile/cakes/fairy-cake.html" loading="lazy" title="fairy cake"></iframe></div>
     <div class="snip">
-      <textarea readonly id="snip-mob-fc"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/mobile/cakes/fairy-cake.html" width="380" height="780" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <textarea readonly id="snip-mob-fairy-cake"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/mobile/cakes/fairy-cake.html" width="380" height="780" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
       <div class="snip-row">
-        <button type="button" data-copy="snip-mob-fc">копировать сниппет</button>
-        <span class="ok" data-ok="snip-mob-fc">✓ скопировано</span>
+        <button type="button" data-copy="snip-mob-fairy-cake">копировать сниппет</button>
+        <span class="ok" data-ok="snip-mob-fairy-cake">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">mobile</span>
+      <span class="name">тирамису</span>
+      <a class="open" href="mobile/cakes/tiramisu.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="mobile/cakes/tiramisu.html" loading="lazy" title="тирамису"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-mob-tiramisu"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/mobile/cakes/tiramisu.html" width="380" height="780" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-mob-tiramisu">копировать сниппет</button>
+        <span class="ok" data-ok="snip-mob-tiramisu">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">mobile</span>
+      <span class="name">люмьер</span>
+      <a class="open" href="mobile/cakes/lumiere.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="mobile/cakes/lumiere.html" loading="lazy" title="люмьер"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-mob-lumiere"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/mobile/cakes/lumiere.html" width="380" height="780" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-mob-lumiere">копировать сниппет</button>
+        <span class="ok" data-ok="snip-mob-lumiere">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">mobile</span>
+      <span class="name">вам письмо</span>
+      <a class="open" href="mobile/cakes/letter.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="mobile/cakes/letter.html" loading="lazy" title="вам письмо"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-mob-letter"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/mobile/cakes/letter.html" width="380" height="780" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-mob-letter">копировать сниппет</button>
+        <span class="ok" data-ok="snip-mob-letter">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">mobile</span>
+      <span class="name">big cherry fairy cake</span>
+      <a class="open" href="mobile/cakes/big-cherry-fairy-cake.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="mobile/cakes/big-cherry-fairy-cake.html" loading="lazy" title="big cherry fairy cake"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-mob-big-cherry-fairy-cake"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/mobile/cakes/big-cherry-fairy-cake.html" width="380" height="780" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-mob-big-cherry-fairy-cake">копировать сниппет</button>
+        <span class="ok" data-ok="snip-mob-big-cherry-fairy-cake">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">mobile</span>
+      <span class="name">лебединое озеро</span>
+      <a class="open" href="mobile/cakes/swan-lake.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="mobile/cakes/swan-lake.html" loading="lazy" title="лебединое озеро"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-mob-swan-lake"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/mobile/cakes/swan-lake.html" width="380" height="780" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-mob-swan-lake">копировать сниппет</button>
+        <span class="ok" data-ok="snip-mob-swan-lake">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">mobile</span>
+      <span class="name">вавилон</span>
+      <a class="open" href="mobile/cakes/babylon.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="mobile/cakes/babylon.html" loading="lazy" title="вавилон"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-mob-babylon"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/mobile/cakes/babylon.html" width="380" height="780" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-mob-babylon">копировать сниппет</button>
+        <span class="ok" data-ok="snip-mob-babylon">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">mobile</span>
+      <span class="name">любовное настроение</span>
+      <a class="open" href="mobile/cakes/love-in-mood.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="mobile/cakes/love-in-mood.html" loading="lazy" title="любовное настроение"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-mob-love-in-mood"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/mobile/cakes/love-in-mood.html" width="380" height="780" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-mob-love-in-mood">копировать сниппет</button>
+        <span class="ok" data-ok="snip-mob-love-in-mood">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">mobile</span>
+      <span class="name">dancing queen</span>
+      <a class="open" href="mobile/cakes/dancing-queen.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="mobile/cakes/dancing-queen.html" loading="lazy" title="dancing queen"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-mob-dancing-queen"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/mobile/cakes/dancing-queen.html" width="380" height="780" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-mob-dancing-queen">копировать сниппет</button>
+        <span class="ok" data-ok="snip-mob-dancing-queen">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">mobile</span>
+      <span class="name">secret garden</span>
+      <a class="open" href="mobile/cakes/secret-garden.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="mobile/cakes/secret-garden.html" loading="lazy" title="secret garden"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-mob-secret-garden"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/mobile/cakes/secret-garden.html" width="380" height="780" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-mob-secret-garden">копировать сниппет</button>
+        <span class="ok" data-ok="snip-mob-secret-garden">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">mobile</span>
+      <span class="name">шапито</span>
+      <a class="open" href="mobile/cakes/chapito.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="mobile/cakes/chapito.html" loading="lazy" title="шапито"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-mob-chapito"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/mobile/cakes/chapito.html" width="380" height="780" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-mob-chapito">копировать сниппет</button>
+        <span class="ok" data-ok="snip-mob-chapito">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">mobile</span>
+      <span class="name">анна</span>
+      <a class="open" href="mobile/cakes/anna.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="mobile/cakes/anna.html" loading="lazy" title="анна"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-mob-anna"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/mobile/cakes/anna.html" width="380" height="780" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-mob-anna">копировать сниппет</button>
+        <span class="ok" data-ok="snip-mob-anna">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">mobile</span>
+      <span class="name">белль</span>
+      <a class="open" href="mobile/cakes/bell.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="mobile/cakes/bell.html" loading="lazy" title="белль"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-mob-bell"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/mobile/cakes/bell.html" width="380" height="780" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-mob-bell">копировать сниппет</button>
+        <span class="ok" data-ok="snip-mob-bell">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">mobile</span>
+      <span class="name">богемская рапсодия</span>
+      <a class="open" href="mobile/cakes/bohemian-rhapsody.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="mobile/cakes/bohemian-rhapsody.html" loading="lazy" title="богемская рапсодия"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-mob-bohemian-rhapsody"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/mobile/cakes/bohemian-rhapsody.html" width="380" height="780" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-mob-bohemian-rhapsody">копировать сниппет</button>
+        <span class="ok" data-ok="snip-mob-bohemian-rhapsody">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">mobile</span>
+      <span class="name">тоторо</span>
+      <a class="open" href="mobile/cakes/totoro.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="mobile/cakes/totoro.html" loading="lazy" title="тоторо"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-mob-totoro"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/mobile/cakes/totoro.html" width="380" height="780" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-mob-totoro">копировать сниппет</button>
+        <span class="ok" data-ok="snip-mob-totoro">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">mobile</span>
+      <span class="name">келли</span>
+      <a class="open" href="mobile/cakes/kelly.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="mobile/cakes/kelly.html" loading="lazy" title="келли"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-mob-kelly"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/mobile/cakes/kelly.html" width="380" height="780" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-mob-kelly">копировать сниппет</button>
+        <span class="ok" data-ok="snip-mob-kelly">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">mobile</span>
+      <span class="name">la la land</span>
+      <a class="open" href="mobile/cakes/la-la-land.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="mobile/cakes/la-la-land.html" loading="lazy" title="la la land"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-mob-la-la-land"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/mobile/cakes/la-la-land.html" width="380" height="780" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-mob-la-la-land">копировать сниппет</button>
+        <span class="ok" data-ok="snip-mob-la-la-land">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">mobile</span>
+      <span class="name">дарси</span>
+      <a class="open" href="mobile/cakes/darcy.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="mobile/cakes/darcy.html" loading="lazy" title="дарси"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-mob-darcy"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/mobile/cakes/darcy.html" width="380" height="780" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-mob-darcy">копировать сниппет</button>
+        <span class="ok" data-ok="snip-mob-darcy">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">mobile</span>
+      <span class="name">shine bright</span>
+      <a class="open" href="mobile/cakes/shine-bright.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="mobile/cakes/shine-bright.html" loading="lazy" title="shine bright"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-mob-shine-bright"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/mobile/cakes/shine-bright.html" width="380" height="780" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-mob-shine-bright">копировать сниппет</button>
+        <span class="ok" data-ok="snip-mob-shine-bright">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">mobile</span>
+      <span class="name">green day</span>
+      <a class="open" href="mobile/cakes/green-day.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="mobile/cakes/green-day.html" loading="lazy" title="green day"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-mob-green-day"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/mobile/cakes/green-day.html" width="380" height="780" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-mob-green-day">копировать сниппет</button>
+        <span class="ok" data-ok="snip-mob-green-day">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">mobile</span>
+      <span class="name">орфей</span>
+      <a class="open" href="mobile/cakes/orpheus.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="mobile/cakes/orpheus.html" loading="lazy" title="орфей"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-mob-orpheus"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/mobile/cakes/orpheus.html" width="380" height="780" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-mob-orpheus">копировать сниппет</button>
+        <span class="ok" data-ok="snip-mob-orpheus">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">mobile</span>
+      <span class="name">вишневый сад</span>
+      <a class="open" href="mobile/cakes/cherry-orchard.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="mobile/cakes/cherry-orchard.html" loading="lazy" title="вишневый сад"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-mob-cherry-orchard"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/mobile/cakes/cherry-orchard.html" width="380" height="780" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-mob-cherry-orchard">копировать сниппет</button>
+        <span class="ok" data-ok="snip-mob-cherry-orchard">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">mobile</span>
+      <span class="name">элизабет</span>
+      <a class="open" href="mobile/cakes/elizabeth.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="mobile/cakes/elizabeth.html" loading="lazy" title="элизабет"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-mob-elizabeth"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/mobile/cakes/elizabeth.html" width="380" height="780" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-mob-elizabeth">копировать сниппет</button>
+        <span class="ok" data-ok="snip-mob-elizabeth">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">mobile</span>
+      <span class="name">ягодные поля навсегда</span>
+      <a class="open" href="mobile/cakes/berry-fields.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="mobile/cakes/berry-fields.html" loading="lazy" title="ягодные поля навсегда"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-mob-berry-fields"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/mobile/cakes/berry-fields.html" width="380" height="780" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-mob-berry-fields">копировать сниппет</button>
+        <span class="ok" data-ok="snip-mob-berry-fields">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">mobile</span>
+      <span class="name">куинджи</span>
+      <a class="open" href="mobile/cakes/kuinji.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="mobile/cakes/kuinji.html" loading="lazy" title="куинджи"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-mob-kuinji"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/mobile/cakes/kuinji.html" width="380" height="780" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-mob-kuinji">копировать сниппет</button>
+        <span class="ok" data-ok="snip-mob-kuinji">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">mobile</span>
+      <span class="name">фаберже</span>
+      <a class="open" href="mobile/cakes/faberge.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="mobile/cakes/faberge.html" loading="lazy" title="фаберже"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-mob-faberge"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/mobile/cakes/faberge.html" width="380" height="780" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-mob-faberge">копировать сниппет</button>
+        <span class="ok" data-ok="snip-mob-faberge">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">mobile</span>
+      <span class="name">sailor moon</span>
+      <a class="open" href="mobile/cakes/sailor-moon.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="mobile/cakes/sailor-moon.html" loading="lazy" title="sailor moon"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-mob-sailor-moon"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/mobile/cakes/sailor-moon.html" width="380" height="780" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-mob-sailor-moon">копировать сниппет</button>
+        <span class="ok" data-ok="snip-mob-sailor-moon">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">mobile</span>
+      <span class="name">аполлон</span>
+      <a class="open" href="mobile/cakes/apollo.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="mobile/cakes/apollo.html" loading="lazy" title="аполлон"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-mob-apollo"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/mobile/cakes/apollo.html" width="380" height="780" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-mob-apollo">копировать сниппет</button>
+        <span class="ok" data-ok="snip-mob-apollo">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">mobile</span>
+      <span class="name">blueberry hill</span>
+      <a class="open" href="mobile/cakes/blueberry-hill.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="mobile/cakes/blueberry-hill.html" loading="lazy" title="blueberry hill"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-mob-blueberry-hill"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/mobile/cakes/blueberry-hill.html" width="380" height="780" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-mob-blueberry-hill">копировать сниппет</button>
+        <span class="ok" data-ok="snip-mob-blueberry-hill">✓ скопировано</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <header>
+      <span class="type">mobile</span>
+      <span class="name">fuji</span>
+      <a class="open" href="mobile/cakes/fuji.html" target="_blank">↗</a>
+    </header>
+    <div class="frame-wrap"><iframe src="mobile/cakes/fuji.html" loading="lazy" title="fuji"></iframe></div>
+    <div class="snip">
+      <textarea readonly id="snip-mob-fuji"><iframe src="https://ab-aacoop.github.io/kosmos_calc/site/mobile/cakes/fuji.html" width="380" height="780" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <div class="snip-row">
+        <button type="button" data-copy="snip-mob-fuji">копировать сниппет</button>
+        <span class="ok" data-ok="snip-mob-fuji">✓ скопировано</span>
       </div>
     </div>
   </div>
@@ -155,7 +1026,7 @@ document.addEventListener('click', function(e){
   ta.select();
   ta.setSelectionRange(0, ta.value.length);
   var ok = false;
-  try { ok = document.execCommand('copy'); } catch(_){}
+  try { ok = document.execCommand('copy'); } catch(_{}){}
   if (!ok && navigator.clipboard){
     navigator.clipboard.writeText(ta.value).then(function(){ flash(id); });
     return;
