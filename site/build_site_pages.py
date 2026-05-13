@@ -22,6 +22,58 @@ ROOT = Path(__file__).resolve().parent.parent
 SITE = ROOT / "site"
 BC = ROOT / "calculator" / "build_cakes.py"
 PH = SITE / "photos"
+CALC = ROOT / "calculator"
+
+
+def bust_class_svg_cache():
+    """Подменяет ?v=... в calculator/style.css на mtime соответствующего SVG-файла,
+    чтобы после ручной замены картинки в assets/ браузер не отдавал старую версию
+    из кэша. Версия = int(mtime), уникальна для каждого файла. """
+    css = CALC / "style.css"
+    if not css.exists():
+        return
+    text = css.read_text(encoding="utf-8")
+    for name in ("class-base.svg", "class-classic.svg", "class-lux.svg"):
+        f = CALC / "assets" / name
+        if not f.exists():
+            continue
+        v = int(f.stat().st_mtime)
+        text = re.sub(
+            rf"(url\('assets/{re.escape(name)})\?v=\d+('\))",
+            lambda m, v=v: f"{m.group(1)}?v={v}{m.group(2)}",
+            text,
+        )
+    css.write_text(text, encoding="utf-8")
+
+
+def bust_calc_iframe_cache():
+    """Дописывает ?v=<mtime> к ссылкам на ../../style.css и ../../core.js во всех
+    iframe-страницах калькулятора (cakes-mobile/* и cakes-mobile-full/*). Иначе
+    браузер удерживает старую версию CSS/JS даже после обновления исходников. """
+    css = CALC / "style.css"
+    js = CALC / "core.js"
+    css_v = int(css.stat().st_mtime) if css.exists() else 0
+    js_v = int(js.stat().st_mtime) if js.exists() else 0
+    targets: list[Path] = []
+    for sub in ("cakes-mobile", "cakes-mobile-full"):
+        d = CALC / sub
+        if d.is_dir():
+            targets.extend(d.rglob("*.html"))
+    for p in targets:
+        text = p.read_text(encoding="utf-8")
+        new = text
+        new = re.sub(
+            r'(href=")(\.\./\.\./style\.css)(?:\?v=\d+)?(")',
+            lambda m: f'{m.group(1)}{m.group(2)}?v={css_v}{m.group(3)}',
+            new,
+        )
+        new = re.sub(
+            r'(src=")(\.\./\.\./core\.js)(?:\?v=\d+)?(")',
+            lambda m: f'{m.group(1)}{m.group(2)}?v={js_v}{m.group(3)}',
+            new,
+        )
+        if new != text:
+            p.write_text(new, encoding="utf-8")
 
 # Порядок на главной (как договорились с заказчиком), без fuji
 CATALOG_ORDER = [
@@ -33,35 +85,158 @@ CATALOG_ORDER = [
     "sailor-moon", "apollo", "blueberry-hill",
 ]
 
-# При регенерации каталога: если в <head>… меню ещё без сборки торта — вставить первым пунктом.
-CATALOG_MENU_CAKE_SHELL = """  <li class="menu-cake-shell" aria-hidden="true">
-    <div class="menu-cake-stack">
-      <img class="menu-cake-tier menu-cake-tier--bottom" src="../assets/menubottomtier.svg" alt="">
-      <img class="menu-cake-tier menu-cake-tier--top" src="../assets/caketier1.svg" alt="">
-      <img class="menu-cake-k" src="../assets/K.svg" alt="">
-      <img class="menu-cake-bow menu-cake-bow--1" src="../assets/bow.svg" alt="">
-      <img class="menu-cake-bow menu-cake-bow--2" src="../assets/bow.svg" alt="">
-      <img class="menu-cake-bow menu-cake-bow--3" src="../assets/bow.svg" alt="">
-      <span class="menu-cake-cherry menu-cake-cherry--1"></span>
-      <span class="menu-cake-cherry menu-cake-cherry--2"></span>
-      <span class="menu-cake-cherry menu-cake-cherry--3"></span>
-      <span class="menu-cake-cherry menu-cake-cherry--4"></span>
-      <span class="menu-cake-cherry menu-cake-cherry--5"></span>
-      <span class="menu-cake-cherry menu-cake-cherry--6"></span>
-    </div>
-  </li>
-"""
+_RE_MENU_CAKE_SHELL = re.compile(
+    r'\s*<li class="menu-cake-shell"[\s\S]*?</li>\s*',
+    re.IGNORECASE,
+)
 
 
-def ensure_menu_cake_shell(head: str) -> str:
-    if "menu-cake-shell" in head:
-        return head
-    return re.sub(
-        r'(<ul\s+class="menu-list"\s+id="menu-list">\s*)',
-        r"\1" + CATALOG_MENU_CAKE_SHELL + "\n",
-        head,
-        count=1,
-    )
+def strip_menu_cake_shell(head: str) -> str:
+    """Меню-«тортик» было удалено по требованию пользователя. При регенерации
+    каталога вычищаем его, если он там ещё остался от старых сборок."""
+    return _RE_MENU_CAKE_SHELL.sub("\n", head, count=1)
+
+
+def patch_catalog_head(head: str) -> str:
+    """Дополнительные правки <head>+<body-начало> каталога, чтобы пересборка
+    не возвращала старые версии:
+      • убираем верхнюю «серую полосу» (padding:64px → 0, padding:56px → 0);
+      • заменяем «лучший тортик» на «лучший вариант»;
+      • удаляем устаревший li.menu-cake-shell;
+      • меню (popup) убрано полностью: <button class="menu-btn"> → <a>-ссылка
+        на сам каталог, <ul class="menu-list"> вырезано.
+    """
+    head = strip_menu_cake_shell(head)
+    head = re.sub(r"padding:\s*64px\s*0\s*0", "padding:0", head)
+    head = re.sub(r"padding:\s*56px\s*0\s*0", "padding:0", head)
+    head = head.replace("подберет лучший тортик", "подберёт лучший вариант")
+    head = strip_menu_list(head)
+    head = convert_menu_btn_to_link(head, href="index.html")
+    return head
+
+
+_RE_MENU_LIST = re.compile(
+    r'<ul[^>]*class="menu-list"[^>]*>[\s\S]*?</ul>\s*',
+    re.IGNORECASE,
+)
+
+
+def strip_menu_list(html_text: str) -> str:
+    """Вырезает popup-меню <ul class="menu-list"> вместе со всеми пунктами. """
+    return _RE_MENU_LIST.sub("", html_text)
+
+
+_RE_MENU_BTN_BUTTON = re.compile(
+    r'<button([^>]*\sclass="menu-btn"[^>]*)>([\s\S]*?)</button>',
+    re.IGNORECASE,
+)
+
+
+def convert_menu_btn_to_link(html_text: str, href: str) -> str:
+    """<button class="menu-btn">…</button> → <a class="menu-btn" href="…">…</a>.
+    Убирает <span class="menu-label">меню</span> из содержимого и заменяет
+    type="button"/aria-label="меню". """
+    def repl(m):
+        attrs = m.group(1)
+        inner = m.group(2)
+        attrs = re.sub(r'\stype="button"', "", attrs)
+        attrs = re.sub(r'\saria-label="[^"]*"', "", attrs)
+        inner = re.sub(
+            r'<span[^>]*class="menu-label"[^>]*>[\s\S]*?</span>\s*',
+            "",
+            inner,
+        )
+        return f'<a{attrs} href="{href}" aria-label="каталог">{inner}</a>'
+    return _RE_MENU_BTN_BUTTON.sub(repl, html_text)
+
+
+_RE_FIT_IIFE = re.compile(
+    r"\s*<script>\s*(?:/\*[\s\S]*?\*/\s*)?\(function\(\)\{[\s\S]*?fitCovers[\s\S]*?\}\)\(\);\s*</script>",
+    re.IGNORECASE,
+)
+
+
+def strip_fit_script(foot: str) -> str:
+    """Раньше в каталоге подбирался размер подписи JS-ом. Теперь шрифт фиксированный —
+    подчищаем старый код fitCovers, как отдельный IIFE-скрипт, так и inline-функцию
+    внутри основного <script>. Для inline-варианта режем от предшествующего комментария
+    до строки с .then(fitCovers).catch(...). """
+    foot = _RE_FIT_IIFE.sub("", foot)
+    foot = strip_menu_js(foot)
+    if "fitCovers" not in foot:
+        return foot
+    lines = foot.splitlines(keepends=True)
+    start = end = None
+    for i, ln in enumerate(lines):
+        if start is None and ln.lstrip().startswith("/*") and "fitCovers" in "".join(lines[i:i + 6]):
+            start = i
+        if start is not None and "fitCovers" in ln and ".catch" in ln:
+            end = i
+            break
+    if start is not None and end is not None and end >= start:
+        del lines[start:end + 1]
+        foot = "".join(lines)
+    return foot
+
+
+_MENU_JS_MARKERS = (
+    "menu-toggle",
+    "menu-list",
+    "menu-close",
+    ".classList.toggle('is-open')",
+    '.classList.toggle("is-open")',
+    ".classList.remove('is-open')",
+    '.classList.remove("is-open")',
+    "menuList",
+    "menuBtn",
+)
+
+# «Мусорные» строки внутри <script>, которые остаются от старого popup-меню
+# (e.stopPropagation, голый document.addEventListener('click', …) и сирые `})`).
+_MENU_JS_ORPHAN_PATTERNS = (
+    re.compile(r"e\.stopPropagation\(\)\s*;"),
+    re.compile(r"document\.addEventListener\(\s*['\"]click['\"]\s*,\s*\(?\s*e?\s*\)?\s*=>\s*\{"),
+    re.compile(r"const\s+(?:btn|list|menuBtn|menuList)\s*=\s*document\.getElementById"),
+)
+
+_RE_SCRIPT_BLOCK = re.compile(
+    r"<script>([\s\S]*?)</script>",
+    re.IGNORECASE,
+)
+
+
+def strip_menu_js(html_text: str) -> str:
+    """Удаляет инлайн-JS popup-меню. Внутри каждого <script>…</script>:
+      • строки, содержащие маркеры меню (menu-toggle, menu-list, .toggle('is-open'),
+        const btn/list/…) — выбрасываются;
+      • остаются «сиротские» строки (e.stopPropagation; голый document.addEventListener;
+        одинокие `});`) — режутся тоже;
+      • если после чистки в блоке остался только whitespace и пара пустых стрелочных
+        функций — режем весь <script> целиком. """
+    def clean_script(m: re.Match) -> str:
+        body = m.group(1)
+        if not any(t in body for t in _MENU_JS_MARKERS) and not any(p.search(body) for p in _MENU_JS_ORPHAN_PATTERNS):
+            return m.group(0)
+        kept: list[str] = []
+        for line in body.splitlines(keepends=True):
+            if any(t in line for t in _MENU_JS_MARKERS):
+                continue
+            if any(p.search(line) for p in _MENU_JS_ORPHAN_PATTERNS):
+                continue
+            kept.append(line)
+        # подчищаем одинокие закрывающие скобки/фигурки, оставшиеся от удалённых блоков
+        cleaned: list[str] = []
+        for line in kept:
+            stripped = line.strip()
+            if stripped in ("});", "})", "}", ");"):
+                continue
+            cleaned.append(line)
+        residual = "".join(cleaned).strip()
+        if not residual:
+            return ""
+        return f"<script>{''.join(cleaned)}</script>"
+
+    return _RE_SCRIPT_BLOCK.sub(clean_script, html_text)
 
 
 def load_cakes():
@@ -135,7 +310,14 @@ def photo_paths(cid: str) -> tuple[list[str], list[str]]:
 
 
 def desktop_photos_html(cid: str, cname: str) -> str:
-    paths, _ = photo_paths(cid)
+    # Для PHOTO_GRID_CAKES левая колонка получает только первую половину фото
+    # (вторая половина уходит в третью колонку — see third_col_inner_html).
+    if cid in PHOTO_GRID_CAKES:
+        paths, _ = photo_paths(cid)
+        half = max(1, (len(paths) + 1) // 2)
+        paths = paths[:half]
+    else:
+        paths, _ = photo_paths(cid)
     lines = []
     for i, p in enumerate(paths):
         if i == 0 and "cover" in p:
@@ -147,7 +329,12 @@ def desktop_photos_html(cid: str, cname: str) -> str:
 
 
 def mobile_photos_html(cid: str, cname: str) -> str:
-    _, paths = photo_paths(cid)
+    if cid in PHOTO_GRID_CAKES:
+        _, paths = photo_paths(cid)
+        half = max(1, (len(paths) + 1) // 2)
+        paths = paths[:half]
+    else:
+        _, paths = photo_paths(cid)
     lines = []
     for i, p in enumerate(paths):
         if "cover" in p.split("/")[-1]:
@@ -186,41 +373,37 @@ DESKTOP_HEAD = """<!doctype html>
     .cake-col{height:100%}
     .col-photo,.col-third{overflow-y:auto}
     .col-photo{padding:0}
-    .col-info{padding:0 22px 40px;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;align-items:center;gap:0}
+    .col-info{padding:0 22px 40px;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;align-items:center;gap:0;scrollbar-width:none;-ms-overflow-style:none}
+    .col-info::-webkit-scrollbar{display:none;width:0;height:0}
     .col-info .cake-title{
       position:sticky;top:0;z-index:50;background:var(--bg);
       font-size:56px;line-height:.7;margin:0 -22px;padding:18px 22px 14px;width:calc(100% + 44px);
     }
     .cake-title .word{line-height:.7;padding-bottom:.05em}
-    .col-info .calc-frame{width:96%;max-width:440px;height:720px;flex:none;margin:8px auto 0}
-    .col-info .end-bow{margin:0 auto 28px}
+    .col-info .calc-frame{width:96%;max-width:440px;height:520px;min-height:0;flex:none;margin:8px auto 32px}
     .col-third{overflow:hidden;height:100%;position:relative}
     .col-third .col-fillings,.col-third .col-delivery{position:absolute;inset:0;height:auto;overflow-y:auto}
     .col-third .col-delivery{display:none;flex-direction:column}
     .cake-page.is-delivery .col-third .col-delivery{display:flex}
     .cake-page.is-delivery .col-third .col-fillings{display:none}
-    .delivery-back{position:absolute;width:64px;height:64px}
-    .delivery-back svg{width:42px;height:42px}
+    .delivery-back{position:absolute;right:18px;bottom:18px;left:auto;width:36px;height:36px}
+    .delivery-back svg{width:100%;height:100%}
   }
 </style>
 </head>
 <body>
 
-<button class="menu-btn" id="menu-toggle" aria-label="меню" type="button">
+<a class="menu-btn" id="menu-toggle" href="../index.html" aria-label="каталог">
   <svg viewBox="0 0 54 65" xmlns="http://www.w3.org/2000/svg">
     <path d="M21.5183 26.4696C21.6112 26.4696 21.7061 26.4146 21.7357 26.3215C22.5312 23.2215 24.6898 15.7815 26.055 13.0814C27.8169 9.58359 30.7331 4.22365 35.8564 2.85457C44.0267 0.670814 49.705 4.96003 50.952 9.56666C51.9818 13.3692 50.0173 17.6881 47.5295 20.1067C45.0417 22.5317 37.9074 25.8348 32.9023 28.3847C27.397 31.1863 24.8164 29.8786 30.9694 31.4275C38.0108 33.1966 47.3818 32.5998 52.2856 43.9863C53.7437 47.3825 53.9146 52.9371 52.3553 56.4202C49.5087 62.8127 39.4668 67.9759 31.1003 61.45C26.7176 58.0305 24.2931 51.7712 23.4132 45.8018C23.0165 43.1568 22.3286 37.6635 22.1345 36.1611C22.1113 35.9897 21.9467 35.8797 21.7757 35.9114H21.7378C21.5901 35.9432 21.4951 36.0765 21.5035 36.2246C21.7209 38.7512 21.7694 40.262 21.9002 42.3273C22.1429 45.9648 22.6324 49.5811 22.835 53.2186C22.9047 54.5644 22.6557 56.0117 22.2336 57.311C19.8935 64.5881 11.9722 66.2619 6.8025 60.629C3.83149 57.3893 2.10965 53.5085 1.39222 49.2531C-0.93944 35.3951 -0.667231 21.7339 4.72195 8.51076C5.30645 7.06338 5.89095 5.56945 6.81939 4.32521C8.65939 1.87695 11.3266 -0.376626 14.9833 0.0529308C18.5156 0.467676 20.6912 2.71279 21.5099 5.93764C22.0627 8.14468 21.9066 10.5549 21.877 12.8783C21.8538 14.3955 21.4318 24.1293 21.2145 26.2348C21.206 26.3511 21.2841 26.4464 21.3938 26.4527C21.4318 26.4527 21.4803 26.4527 21.5183 26.4612H21.5099L21.5183 26.4696Z"/>
   </svg>
-  <span class="menu-label">меню</span>
-</button>
-<ul class="menu-list" id="menu-list">
-  <li><a href="../index.html">каталог</a></li>
-  <li><a href="../../../calculator/delivery/preview.html">доставка</a></li>
-  <li><a href="../about.html">о нас</a></li>
-  <li class="menu-note">наш оператор ответит на все вопросы и подберёт лучший вариант</li>
-  <li class="menu-telegram"><a href="https://t.me/kosmoscake" target="_blank" rel="noopener" aria-label="написать в Telegram">telegram</a></li>
-  <li class="menu-phone"><a href="tel:+79037696965">+7 (903) 769-69-65</a></li>
-  <li class="menu-close-item"><button class="menu-close" type="button" aria-label="закрыть меню"></button></li>
-</ul>
+</a>
+
+<a class="back-to-catalog" href="../index.html" aria-label="вернуться в каталог">
+  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M14.7 4.3a1 1 0 0 1 0 1.4L9.4 11H20a1 1 0 1 1 0 2H9.4l5.3 5.3a1 1 0 1 1-1.4 1.4l-7-7a1 1 0 0 1 0-1.4l7-7a1 1 0 0 1 1.4 0Z"/>
+  </svg>
+</a>
 
 <div class="cake-page">
 
@@ -235,15 +418,14 @@ __PHOTOS_DESKTOP__
     <iframe class="calc-frame"
             src="__CALC_SRC__"
             title="__IFRAME_TITLE__"></iframe>
-    <img class="end-bow" src="../../assets/bow.svg" alt="" aria-hidden="true">
   </section>
 
   <section class="cake-col col-third" aria-label="третья колонка">
-    <div class="col-fillings" id="fillings-col" data-fillings="__FILL__"></div>
+__THIRD_COL_INNER__
     <div class="col-delivery" id="delivery-col" aria-hidden="true">
-      <button class="delivery-back" id="delivery-back" type="button" aria-label="назад к начинкам">
-        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <path d="M14.7 4.3a1 1 0 0 1 0 1.4L9.4 11H20a1 1 0 1 1 0 2H9.4l5.3 5.3a1 1 0 1 1-1.4 1.4l-7-7a1 1 0 0 1 0-1.4l7-7a1 1 0 0 1 1.4 0Z"/>
+      <button class="delivery-back" id="delivery-back" type="button" aria-label="закрыть доставку">
+        <svg viewBox="0 0 22 21" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M0.877209 0.877275C2.04698 -0.292499 3.94367 -0.292351 5.11354 0.877275L10.5657 6.32942L16.012 0.883134C17.1818 -0.286425 19.0785 -0.286409 20.2483 0.883134C21.4181 2.05291 21.4179 3.9496 20.2483 5.11946L14.802 10.5658L20.1174 15.8812C21.2873 17.051 21.2873 18.9477 20.1174 20.1175C18.9476 21.2872 17.0509 21.2873 15.8811 20.1175L10.5657 14.8021L5.2444 20.1234C4.07455 21.2932 2.17792 21.2932 1.00807 20.1234C-0.161545 18.9535 -0.161701 17.0568 1.00807 15.887L6.32936 10.5658L0.877209 5.1136C-0.292372 3.94378 -0.292433 2.04706 0.877209 0.877275Z"/>
         </svg>
       </button>
       <iframe class="delivery-frame"
@@ -273,27 +455,17 @@ MOBILE_BODY = """<!doctype html>
 </head>
 <body class="mob-page">
 
-<button class="menu-btn" id="menu-toggle" aria-label="меню" type="button">
+<a class="menu-btn" id="menu-toggle" href="../index.html" aria-label="каталог">
   <svg viewBox="0 0 54 65" xmlns="http://www.w3.org/2000/svg">
     <path d="M21.5183 26.4696C21.6112 26.4696 21.7061 26.4146 21.7357 26.3215C22.5312 23.2215 24.6898 15.7815 26.055 13.0814C27.8169 9.58359 30.7331 4.22365 35.8564 2.85457C44.0267 0.670814 49.705 4.96003 50.952 9.56666C51.9818 13.3692 50.0173 17.6881 47.5295 20.1067C45.0417 22.5317 37.9074 25.8348 32.9023 28.3847C27.397 31.1863 24.8164 29.8786 30.9694 31.4275C38.0108 33.1966 47.3818 32.5998 52.2856 43.9863C53.7437 47.3825 53.9146 52.9371 52.3553 56.4202C49.5087 62.8127 39.4668 67.9759 31.1003 61.45C26.7176 58.0305 24.2931 51.7712 23.4132 45.8018C23.0165 43.1568 22.3286 37.6635 22.1345 36.1611C22.1113 35.9897 21.9467 35.8797 21.7757 35.9114H21.7378C21.5901 35.9432 21.4951 36.0765 21.5035 36.2246C21.7209 38.7512 21.7694 40.262 21.9002 42.3273C22.1429 45.9648 22.6324 49.5811 22.835 53.2186C22.9047 54.5644 22.6557 56.0117 22.2336 57.311C19.8935 64.5881 11.9722 66.2619 6.8025 60.629C3.83149 57.3893 2.10965 53.5085 1.39222 49.2531C-0.93944 35.3951 -0.667231 21.7339 4.72195 8.51076C5.30645 7.06338 5.89095 5.56945 6.81939 4.32521C8.65939 1.87695 11.3266 -0.376626 14.9833 0.0529308C18.5156 0.467676 20.6912 2.71279 21.5099 5.93764C22.0627 8.14468 21.9066 10.5549 21.877 12.8783C21.8538 14.3955 21.4318 24.1293 21.2145 26.2348C21.206 26.3511 21.2841 26.4464 21.3938 26.4527C21.4318 26.4527 21.4803 26.4527 21.5183 26.4612H21.5099L21.5183 26.4696Z"/>
   </svg>
-  <span class="menu-label">меню</span>
-</button>
-<ul class="menu-list" id="menu-list">
-  <li><a href="../index.html">каталог</a></li>
-  <li><a href="../../../calculator/delivery/preview.html">доставка</a></li>
-  <li><a href="../about.html">о нас</a></li>
-  <li class="menu-note">наш оператор ответит на все вопросы и подберёт лучший вариант</li>
-  <li class="menu-telegram"><a href="https://t.me/kosmoscake" target="_blank" rel="noopener" aria-label="написать в Telegram">telegram</a></li>
-  <li class="menu-phone"><a href="tel:+79037696965">+7 (903) 769-69-65</a></li>
-  <li class="menu-close-item"><button class="menu-close" type="button" aria-label="закрыть меню"></button></li>
-</ul>
+</a>
 
 <section class="mob-photos-wrap" aria-label="фото торта">
   <div class="mob-photos" id="mob-photos">
 __PHOTOS_MOBILE__
   </div>
-  <p class="mob-swipe-hint">листайте фото&nbsp;→</p>
+  <div class="mob-dots" id="mob-photo-dots" aria-hidden="true"></div>
 </section>
 
 <header class="mob-head">
@@ -302,12 +474,7 @@ __PHOTOS_MOBILE__
   <p class="cake-sub">__SUB__</p>
 </header>
 
-<div class="mob-fill-head">
-  <h2 class="mob-section-title">Что внутри?</h2>
-  <p class="mob-section-hint">листайте вправо — нажмите на начинку, чтобы узнать больше</p>
-</div>
-
-<section class="mob-fillings" id="mob-fillings" data-fillings="__FILL__" aria-label="начинки"></section>
+__MOBILE_FILL_BLOCK__
 
 <iframe class="mob-calc-frame"
         src="__CALC_SRC__"
@@ -317,7 +484,11 @@ __PHOTOS_MOBILE__
         src="../../../calculator/delivery/index.html"
         title="доставка"></iframe>
 
-<img class="end-bow" src="../../assets/bow.svg" alt="" aria-hidden="true">
+<a class="back-to-catalog" href="../index.html" aria-label="вернуться в каталог">
+  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M14.7 4.3a1 1 0 0 1 0 1.4L9.4 11H20a1 1 0 1 1 0 2H9.4l5.3 5.3a1 1 0 1 1-1.4 1.4l-7-7a1 1 0 0 1 0-1.4l7-7a1 1 0 0 1 1.4 0Z"/>
+  </svg>
+</a>
 
 <script src="../../fillings/data.js"></script>
 <script>
@@ -328,16 +499,7 @@ __SHARED_JS_MOBILE__
 </html>
 """
 
-SHARED_JS = r"""  const menuBtn  = document.getElementById('menu-toggle');
-  const menuList = document.getElementById('menu-list');
-  menuBtn.addEventListener('click', (e) => { e.stopPropagation(); menuList.classList.toggle('is-open'); });
-  menuList.querySelector('.menu-close').addEventListener('click', (e) => {
-    e.stopPropagation();
-    menuList.classList.remove('is-open');
-  });
-  document.addEventListener('click', (e) => {
-    if (!menuList.contains(e.target) && e.target !== menuBtn && !menuBtn.contains(e.target)) menuList.classList.remove('is-open');
-  });
+SHARED_JS = r"""  /* Меню удалено: кнопка «К» теперь — простая ссылка-каталог (см. шаблон). */
 
   (function fitCakeTitle(){
     const title = document.querySelector('.cake-title');
@@ -454,103 +616,280 @@ SHARED_JS = r"""  const menuBtn  = document.getElementById('menu-toggle');
     dot.setAttribute('aria-label', name + ' — описание');
     dot.innerHTML = SPARKLE;
     wrap.appendChild(dot);
-    dot.addEventListener('click', () => openWrap(wrap, name));
     return wrap;
   }
 
+  /* Делегирование кликов по точкам начинок: работает и для оригиналов,
+     и для клонов (которые добавляются автокаруселью для бесшовного цикла). */
+  function bindFillingDelegation(container){
+    if (!container || container.__kDeleg) return;
+    container.__kDeleg = true;
+    container.addEventListener('click', (e) => {
+      const dot = e.target.closest('.info-dot');
+      if (!dot) return;
+      const wrap = dot.closest('.slice-wrap');
+      if (!wrap) return;
+      const name = wrap.dataset.filling;
+      if (!name) return;
+      openWrap(wrap, name);
+    });
+  }
+
   const col = document.getElementById('fillings-col');
-  resolveFillings(col.dataset.fillings).forEach(name => col.appendChild(buildSlice(name)));
+  if (col && col.dataset.fillings){
+    resolveFillings(col.dataset.fillings).forEach(name => col.appendChild(buildSlice(name)));
+    bindFillingDelegation(col);
+  }
 
   const page = document.querySelector('.cake-page');
   const deliveryCol = document.getElementById('delivery-col');
+  /* Прокидываем kosmos-cake от калькулятора в iframe доставки. BroadcastChannel
+     не работает на file://, поэтому без этого моста для ярусных тортов не
+     прятался кружок самовывоза. */
+  const deliveryFrames = Array.prototype.slice.call(document.querySelectorAll('.delivery-frame, .mob-delivery-frame'));
   window.addEventListener('message', (e) => {
     const d = e.data;
-    if (d && typeof d === 'object' && d.type === 'kosmos-next'){
-      page.classList.add('is-delivery');
-      deliveryCol.setAttribute('aria-hidden','false');
+    if (!d || typeof d !== 'object') return;
+    if (d.type === 'kosmos-cake'){
+      deliveryFrames.forEach(f => {
+        if (f.contentWindow && f.contentWindow !== e.source){
+          try { f.contentWindow.postMessage(d, '*'); } catch(_){}
+        }
+      });
     }
   });
-  document.getElementById('delivery-back').addEventListener('click', () => {
-    page.classList.remove('is-delivery');
-    deliveryCol.setAttribute('aria-hidden','true');
-  });
+  if (page && deliveryCol){
+    window.addEventListener('message', (e) => {
+      const d = e.data;
+      if (d && typeof d === 'object' && d.type === 'kosmos-next'){
+        page.classList.add('is-delivery');
+        deliveryCol.setAttribute('aria-hidden','false');
+      }
+    });
+    const dBack = document.getElementById('delivery-back');
+    if (dBack){
+      dBack.addEventListener('click', () => {
+        page.classList.remove('is-delivery');
+        deliveryCol.setAttribute('aria-hidden','true');
+      });
+    }
+  }
 
   (function autoFitCalcIframe(){
     /* Калькулятор шлёт postMessage {type:'kosmos-calc-height', height}. Подгоняем
-       высоту iframe под контент — пропадает серая пустота перед бантиком. */
+       высоту iframe ровно под контент — бантик внутри iframe сразу под кнопкой
+       «далее», между ним и краем iframe пустоты нет. */
     const frames = Array.prototype.slice.call(document.querySelectorAll('.calc-frame, .mob-calc-frame'));
     if (!frames.length) return;
     window.addEventListener('message', (e) => {
       const d = e.data;
       if (!d || typeof d !== 'object' || d.type !== 'kosmos-calc-height') return;
-      const h = Math.max(360, Math.min(2000, parseInt(d.height, 10) || 0));
+      const h = Math.max(120, Math.min(2400, parseInt(d.height, 10) || 0));
       frames.forEach(f => {
         if (f.contentWindow === e.source) f.style.height = h + 'px';
       });
     });
   })();
 
-  (function kosmoPeekScroll(){
-    function bounce(el, vert){
-      if (!el) return;
-      function cap(){ return Math.max(0, vert ? el.scrollHeight - el.clientHeight : el.scrollWidth - el.clientWidth); }
-      if (cap() < 10) return;
-      var dir = 1, pause = 0, dead = 0;
-      var id = setInterval(function(){
-        if (dead) return;
-        if (pause > 0) { pause--; return; }
-        var m = cap();
-        if (m < 8) return;
-        var c = vert ? el.scrollTop : el.scrollLeft;
-        c += (vert ? 0.65 : 1) * dir;
-        if (c >= m) { c = m; dir = -1; pause = 75; }
-        else if (c <= 0) { c = 0; dir = 1; pause = 90; }
-        if (vert) el.scrollTop = c; else el.scrollLeft = c;
-      }, 40);
-      function kill(){ dead = 1; clearInterval(id); }
-      el.addEventListener('touchstart', kill, {passive:true});
-      el.addEventListener('wheel', kill, {passive:true});
-      el.addEventListener('pointerdown', kill, {passive:true});
+  /* Бесконечная авто-карусель: клонируем оригинальный набор детей один раз
+     и крутим только в одну сторону. При прохождении длины оригинала вычитаем
+     её — позиция «обнуляется» без рывка, потому что клон выглядит идентично.
+     Используется и для горизонтальных карусели (mob-photos, mob-fillings),
+     и для вертикальной «колбасы» начинок и фото на десктопе. */
+  function kosmoLoop(el, vert, speed){
+    if (!el) return null;
+    if (el.__kLoop) return el.__kLoop;
+    var kids = Array.prototype.slice.call(el.children);
+    if (!kids.length) return null;
+    function origSize(){
+      var t = 0;
+      for (var i = 0; i < kids.length; i++) t += vert ? kids[i].offsetHeight : kids[i].offsetWidth;
+      return t;
     }
-    bounce(document.getElementById('mob-photos'), false);
-    bounce(document.getElementById('mob-fillings'), false);
+    function viewSize(){ return vert ? el.clientHeight : el.clientWidth; }
+    /* Клонируем, пока общая длина не превысит видимую область как минимум в 2 раза,
+       иначе при wrap-around будут мелькать пустоты на широких контейнерах. */
+    var safety = 0;
+    while (origSize() < viewSize() * 2 + 4 && safety++ < 8){
+      kids.forEach(function(c){ el.appendChild(c.cloneNode(true)); });
+    }
+    var dead = 0, sp = speed || (vert ? 0.55 : 0.9);
+    var id = setInterval(function(){
+      if (dead) return;
+      var sz = origSize();
+      if (sz < 8) return;
+      var c = vert ? el.scrollTop : el.scrollLeft;
+      c += sp;
+      if (c >= sz) c -= sz;
+      if (vert) el.scrollTop = c; else el.scrollLeft = c;
+    }, 30);
+    function kill(){ dead = 1; clearInterval(id); }
+    el.addEventListener('touchstart', kill, {passive:true});
+    el.addEventListener('wheel', kill, {passive:true});
+    el.addEventListener('pointerdown', kill, {passive:true});
+    el.__kLoop = { kids: kids, origSize: origSize, kill: kill };
+    return el.__kLoop;
+  }
+
+  (function kosmoLoopScroll(){
+    var ph = document.getElementById('mob-photos');
+    if (ph) kosmoLoop(ph, false, 1.0);
+    var mf = document.getElementById('mob-fillings');
+    if (mf) {
+      kosmoLoop(mf, false, 0.9);
+      bindFillingDelegation(mf);
+    }
     var cp = document.querySelector('.col-photo');
-    if (cp) bounce(cp, true);
+    if (cp) kosmoLoop(cp, true, 0.55);
     var fc = document.getElementById('fillings-col');
-    if (fc) bounce(fc, true);
+    if (fc) {
+      /* Тирамису: третья колонка — фото-стек (.col-fillings--photos),
+         тоже бесшовно прокручивается. У обычных тортов — колбаса начинок. */
+      if (fc.classList.contains('col-fillings--photos')) {
+        kosmoLoop(fc, true, 0.55);
+      } else if (fc.dataset.fillings) {
+        kosmoLoop(fc, true, 0.55);
+      }
+    }
   })();
 """
 
 
 def fix_mobile_js():
-    """Мобильный скрипт: только fillings + scroll к доставке, без delivery overlay."""
+    """Мобильный скрипт: тот же общий блок (десктоп-делая защита внутри `if (page && deliveryCol)`
+    сама обходит мобилку), плюс: рендер начинок в #mob-fillings, скролл к доставке
+    по событию 'kosmos-next', точки-индикаторы под мобильными каруселями. """
     base = SHARED_JS
-    # убрать блок desktop delivery
-    base = re.sub(
-        r"\n  const page = document\.querySelector\('\.cake-page'\);.*?deliveryCol\.setAttribute\('aria-hidden','true'\);\n  \}\);\n",
-        "\n",
-        base,
-        flags=re.S,
-    )
     base = base.replace(
         "const col = document.getElementById('fillings-col');",
         "const col = document.getElementById('mob-fillings');",
     )
-    tail = """
-  const dlv = document.getElementById('mob-delivery');
-  window.addEventListener('message', (e) => {
-    const d = e.data;
-    if (d && typeof d === 'object' && d.type === 'kosmos-next'){
-      dlv.scrollIntoView({behavior:'smooth', block:'start'});
-    }
-  });
-"""
-    # fitCakeTitle mobile params
     base = base.replace("const MAX = 160, MIN = 28, TARGET = 0.96;", "const MAX = 200, MIN = 32, TARGET = 0.94;")
+    tail = r"""
+  /* «далее» в калькуляторе — листаем страницу к блоку доставки на мобилке. */
+  const dlv = document.getElementById('mob-delivery');
+  if (dlv){
+    window.addEventListener('message', (e) => {
+      const d = e.data;
+      if (d && typeof d === 'object' && d.type === 'kosmos-next'){
+        dlv.scrollIntoView({behavior:'smooth', block:'start'});
+      }
+    });
+  }
+
+  /* Точки-индикаторы под mob-photos и mob-fillings. Количество точек равно
+     числу ИСХОДНЫХ слайдов (без клонов, добавленных kosmoLoop для бесшовного цикла).
+     Активная точка — текущий слайд, по нажатию — плавный переход к слайду. */
+  function kosmoDots(carouselId, dotsId){
+    const car = document.getElementById(carouselId);
+    const dotsBox = document.getElementById(dotsId);
+    if (!car || !dotsBox) return;
+    const meta = car.__kLoop;
+    const originals = meta ? meta.kids : Array.prototype.slice.call(car.children);
+    if (!originals.length || originals.length < 2) return;
+    dotsBox.innerHTML = '';
+    const dots = [];
+    for (let i = 0; i < originals.length; i++){
+      const dot = document.createElement('button');
+      dot.type = 'button';
+      dot.className = 'dot';
+      dot.setAttribute('aria-label', 'к слайду ' + (i + 1));
+      if (i === 0) dot.classList.add('active');
+      dot.style.pointerEvents = 'auto';
+      dot.addEventListener('click', () => {
+        const target = originals[i];
+        if (target && target.scrollIntoView){
+          target.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
+        }
+      });
+      dotsBox.appendChild(dot);
+      dots.push(dot);
+    }
+    let prev = 0;
+    function update(){
+      const w = car.clientWidth || 1;
+      const idxRaw = Math.round(car.scrollLeft / w);
+      const i = ((idxRaw % originals.length) + originals.length) % originals.length;
+      if (i === prev) return;
+      dots[prev].classList.remove('active');
+      dots[i].classList.add('active');
+      prev = i;
+    }
+    car.addEventListener('scroll', () => {
+      window.requestAnimationFrame(update);
+    }, {passive:true});
+  }
+  /* Запускаем после kosmoLoop, чтобы он успел расставить клоны и записать meta. */
+  setTimeout(() => {
+    kosmoDots('mob-photos', 'mob-photo-dots');
+    kosmoDots('mob-fillings', 'mob-fillings-dots');
+  }, 30);
+"""
     return base + tail
 
 
 SHARED_JS_MOBILE = fix_mobile_js()
+
+
+PHOTO_GRID_CAKES = {"tiramisu"}
+
+
+def photo_paths_split(cid: str) -> tuple[list[str], list[str], list[str], list[str]]:
+    """Для PHOTO_GRID_CAKES делим фото пополам: левая колонка — первая половина,
+    третья колонка (вместо начинок) — вторая половина. Тот же сплит для мобилки. """
+    desk, mob = photo_paths(cid)
+    half_d = max(1, (len(desk) + 1) // 2)
+    half_m = max(1, (len(mob) + 1) // 2)
+    return desk[:half_d], desk[half_d:], mob[:half_m], mob[half_m:]
+
+
+def third_col_inner_html(cake: dict) -> str:
+    """Содержимое третьей колонки на десктопе.
+    Для PHOTO_GRID_CAKES — вертикальный стек больших фото (как .col-photo слева).
+    Для остальных — обычный контейнер начинок, который JS заполняет срезами. """
+    cid = cake["id"]
+    fill = html.escape(cake.get("fillings") or "BASE")
+    if cid in PHOTO_GRID_CAKES:
+        _left, right, _, _ = photo_paths_split(cid)
+        if not right:
+            right = _left[-1:] or ["../../photos/fairy-cake/cover.jpg"]
+        items = "\n".join(
+            f'      <img class="photo" src="{html.escape(p)}" alt="{html.escape(cake["name"])}">'
+            for p in right
+        )
+        return (
+            '    <div class="col-fillings col-fillings--photos" id="fillings-col" data-fillings="">\n'
+            f"{items}\n"
+            '    </div>'
+        )
+    return f'    <div class="col-fillings" id="fillings-col" data-fillings="{fill}"></div>'
+
+
+def mobile_fill_block_html(cake: dict) -> str:
+    """Блок «что внутри?» + начинки для мобилки.
+    Для PHOTO_GRID_CAKES блок начинок заменяется на вертикальный стек больших фото. """
+    cid = cake["id"]
+    fill = html.escape(cake.get("fillings") or "BASE")
+    if cid in PHOTO_GRID_CAKES:
+        _, _, _left, right = photo_paths_split(cid)
+        if not right:
+            right = _left[-1:] or ["../../photos/fairy-cake/cover.jpg"]
+        items = "\n".join(
+            f'  <img src="{html.escape(p)}" alt="{html.escape(cake["name"])}">'
+            for p in right
+        )
+        return (
+            '<section class="mob-photos-grid" aria-label="фото торта">\n'
+            f"{items}\n"
+            '</section>'
+        )
+    return (
+        '<div class="mob-fill-head">\n'
+        '  <h2 class="mob-section-title">Что внутри?</h2>\n'
+        '</div>\n\n'
+        f'<section class="mob-fillings" id="mob-fillings" data-fillings="{fill}" aria-label="начинки"></section>\n'
+        '<div class="mob-dots" id="mob-fillings-dots" aria-hidden="true"></div>'
+    )
 
 
 def render_desktop(cake: dict) -> str:
@@ -562,9 +901,9 @@ def render_desktop(cake: dict) -> str:
     h1 = html.escape(name)
     desc = html.escape(cake.get("desc") or "")
     sub = subtitle_html(cake)
-    fill = html.escape(cake.get("fillings") or "BASE")
     iframe_title = html.escape(f"калькулятор {name}")
     photos = desktop_photos_html(cid, name)
+    third = third_col_inner_html(cake)
     return (
         DESKTOP_HEAD.replace("__PAGE_TITLE__", page_title)
         .replace("__PHOTOS_DESKTOP__", photos)
@@ -573,7 +912,7 @@ def render_desktop(cake: dict) -> str:
         .replace("__SUB__", sub)
         .replace("__CALC_SRC__", html.escape(calc))
         .replace("__IFRAME_TITLE__", iframe_title)
-        .replace("__FILL__", fill)
+        .replace("__THIRD_COL_INNER__", third)
         .replace("__SHARED_JS__", SHARED_JS)
     )
 
@@ -587,9 +926,9 @@ def render_mobile(cake: dict) -> str:
     h1 = html.escape(name)
     desc = html.escape(cake.get("desc") or "")
     sub = subtitle_html(cake)
-    fill = html.escape(cake.get("fillings") or "BASE")
     iframe_title = html.escape(f"калькулятор {name}")
     photos = mobile_photos_html(cid, name)
+    fill_block = mobile_fill_block_html(cake)
     return (
         MOBILE_BODY.replace("__PAGE_TITLE__", page_title)
         .replace("__PHOTOS_MOBILE__", photos)
@@ -598,7 +937,7 @@ def render_mobile(cake: dict) -> str:
         .replace("__SUB__", sub)
         .replace("__CALC_SRC__", html.escape(calc))
         .replace("__IFRAME_TITLE__", iframe_title)
-        .replace("__FILL__", fill)
+        .replace("__MOBILE_FILL_BLOCK__", fill_block)
         .replace("__SHARED_JS_MOBILE__", SHARED_JS_MOBILE)
     )
 
@@ -883,13 +1222,28 @@ function flash(id){{
     print(f"OK: site/index.html — превью всех {len(oc)} тортов + главные")
 
 
+def patch_static_page(path: Path, catalog_href: str):
+    """Чистит popup-меню и его JS на «статичных» страницах сайта (about/каталог
+    без cover-grid). Идемпотентно — повторный вызов ничего не ломает. """
+    if not path.exists():
+        return
+    text = path.read_text(encoding="utf-8")
+    new = text
+    new = strip_menu_list(new)
+    new = convert_menu_btn_to_link(new, href=catalog_href)
+    new = strip_menu_js(new)
+    if new != text:
+        path.write_text(new, encoding="utf-8")
+
+
 def write_catalog(path: Path, by_id: dict):
     text = path.read_text(encoding="utf-8")
     parts = text.split('<main class="cover-grid">', 1)
     head = parts[0]
     rest = parts[1].split("</main>", 1)
     foot = rest[1]
-    head = ensure_menu_cake_shell(head)
+    head = patch_catalog_head(head)
+    foot = strip_fit_script(foot)
     # актуальный комментарий вместо старого «только fairy-cake»
     head = re.sub(
         r"<!-- Каталог тортов\.[\s\S]*?-->\s*\n",
@@ -928,6 +1282,13 @@ def main():
     write_catalog(SITE / "desktop" / "index.html", by_id)
     write_catalog(SITE / "mobile" / "index.html", by_id)
 
+    # about-страницы и любые другие со старым popup-меню — вычищаем меню,
+    # кнопку «К» оставляем как ссылку на каталог.
+    patch_static_page(SITE / "desktop" / "about.html", catalog_href="index.html")
+    patch_static_page(SITE / "mobile" / "about.html", catalog_href="index.html")
+
+    bust_class_svg_cache()
+    bust_calc_iframe_cache()
     sync_kosmos_filling_sets()
     write_site_preview_index(cakes, by_id)
     (SITE / "photos raw").mkdir(parents=True, exist_ok=True)

@@ -16,41 +16,37 @@
     .cake-col{height:100%}
     .col-photo,.col-third{overflow-y:auto}
     .col-photo{padding:0}
-    .col-info{padding:0 22px 40px;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;align-items:center;gap:0}
+    .col-info{padding:0 22px 40px;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;align-items:center;gap:0;scrollbar-width:none;-ms-overflow-style:none}
+    .col-info::-webkit-scrollbar{display:none;width:0;height:0}
     .col-info .cake-title{
       position:sticky;top:0;z-index:50;background:var(--bg);
       font-size:56px;line-height:.7;margin:0 -22px;padding:18px 22px 14px;width:calc(100% + 44px);
     }
     .cake-title .word{line-height:.7;padding-bottom:.05em}
-    .col-info .calc-frame{width:96%;max-width:440px;height:720px;flex:none;margin:8px auto 0}
-    .col-info .end-bow{margin:0 auto 28px}
+    .col-info .calc-frame{width:96%;max-width:440px;height:520px;min-height:0;flex:none;margin:8px auto 32px}
     .col-third{overflow:hidden;height:100%;position:relative}
     .col-third .col-fillings,.col-third .col-delivery{position:absolute;inset:0;height:auto;overflow-y:auto}
     .col-third .col-delivery{display:none;flex-direction:column}
     .cake-page.is-delivery .col-third .col-delivery{display:flex}
     .cake-page.is-delivery .col-third .col-fillings{display:none}
-    .delivery-back{position:absolute;width:64px;height:64px}
-    .delivery-back svg{width:42px;height:42px}
+    .delivery-back{position:absolute;right:18px;bottom:18px;left:auto;width:36px;height:36px}
+    .delivery-back svg{width:100%;height:100%}
   }
 </style>
 </head>
 <body>
 
-<button class="menu-btn" id="menu-toggle" aria-label="меню" type="button">
+<a class="menu-btn" id="menu-toggle" href="../index.html" aria-label="каталог">
   <svg viewBox="0 0 54 65" xmlns="http://www.w3.org/2000/svg">
     <path d="M21.5183 26.4696C21.6112 26.4696 21.7061 26.4146 21.7357 26.3215C22.5312 23.2215 24.6898 15.7815 26.055 13.0814C27.8169 9.58359 30.7331 4.22365 35.8564 2.85457C44.0267 0.670814 49.705 4.96003 50.952 9.56666C51.9818 13.3692 50.0173 17.6881 47.5295 20.1067C45.0417 22.5317 37.9074 25.8348 32.9023 28.3847C27.397 31.1863 24.8164 29.8786 30.9694 31.4275C38.0108 33.1966 47.3818 32.5998 52.2856 43.9863C53.7437 47.3825 53.9146 52.9371 52.3553 56.4202C49.5087 62.8127 39.4668 67.9759 31.1003 61.45C26.7176 58.0305 24.2931 51.7712 23.4132 45.8018C23.0165 43.1568 22.3286 37.6635 22.1345 36.1611C22.1113 35.9897 21.9467 35.8797 21.7757 35.9114H21.7378C21.5901 35.9432 21.4951 36.0765 21.5035 36.2246C21.7209 38.7512 21.7694 40.262 21.9002 42.3273C22.1429 45.9648 22.6324 49.5811 22.835 53.2186C22.9047 54.5644 22.6557 56.0117 22.2336 57.311C19.8935 64.5881 11.9722 66.2619 6.8025 60.629C3.83149 57.3893 2.10965 53.5085 1.39222 49.2531C-0.93944 35.3951 -0.667231 21.7339 4.72195 8.51076C5.30645 7.06338 5.89095 5.56945 6.81939 4.32521C8.65939 1.87695 11.3266 -0.376626 14.9833 0.0529308C18.5156 0.467676 20.6912 2.71279 21.5099 5.93764C22.0627 8.14468 21.9066 10.5549 21.877 12.8783C21.8538 14.3955 21.4318 24.1293 21.2145 26.2348C21.206 26.3511 21.2841 26.4464 21.3938 26.4527C21.4318 26.4527 21.4803 26.4527 21.5183 26.4612H21.5099L21.5183 26.4696Z"/>
   </svg>
-  <span class="menu-label">меню</span>
-</button>
-<ul class="menu-list" id="menu-list">
-  <li><a href="../index.html">каталог</a></li>
-  <li><a href="../../../calculator/delivery/preview.html">доставка</a></li>
-  <li><a href="../about.html">о нас</a></li>
-  <li class="menu-note">наш оператор ответит на все вопросы и подберёт лучший вариант</li>
-  <li class="menu-telegram"><a href="https://t.me/kosmoscake" target="_blank" rel="noopener" aria-label="написать в Telegram">telegram</a></li>
-  <li class="menu-phone"><a href="tel:+79037696965">+7 (903) 769-69-65</a></li>
-  <li class="menu-close-item"><button class="menu-close" type="button" aria-label="закрыть меню"></button></li>
-</ul>
+</a>
+
+<a class="back-to-catalog" href="../index.html" aria-label="вернуться в каталог">
+  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M14.7 4.3a1 1 0 0 1 0 1.4L9.4 11H20a1 1 0 1 1 0 2H9.4l5.3 5.3a1 1 0 1 1-1.4 1.4l-7-7a1 1 0 0 1 0-1.4l7-7a1 1 0 0 1 1.4 0Z"/>
+  </svg>
+</a>
 
 <div class="cake-page">
 
@@ -68,15 +64,14 @@
     <iframe class="calc-frame"
             src="../../../calculator/cakes-mobile/weight/totoro.html"
             title="калькулятор тоторо"></iframe>
-    <img class="end-bow" src="../../assets/bow.svg" alt="" aria-hidden="true">
   </section>
 
   <section class="cake-col col-third" aria-label="третья колонка">
     <div class="col-fillings" id="fillings-col" data-fillings="PLUS_CHEESECAKE"></div>
     <div class="col-delivery" id="delivery-col" aria-hidden="true">
-      <button class="delivery-back" id="delivery-back" type="button" aria-label="назад к начинкам">
-        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <path d="M14.7 4.3a1 1 0 0 1 0 1.4L9.4 11H20a1 1 0 1 1 0 2H9.4l5.3 5.3a1 1 0 1 1-1.4 1.4l-7-7a1 1 0 0 1 0-1.4l7-7a1 1 0 0 1 1.4 0Z"/>
+      <button class="delivery-back" id="delivery-back" type="button" aria-label="закрыть доставку">
+        <svg viewBox="0 0 22 21" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M0.877209 0.877275C2.04698 -0.292499 3.94367 -0.292351 5.11354 0.877275L10.5657 6.32942L16.012 0.883134C17.1818 -0.286425 19.0785 -0.286409 20.2483 0.883134C21.4181 2.05291 21.4179 3.9496 20.2483 5.11946L14.802 10.5658L20.1174 15.8812C21.2873 17.051 21.2873 18.9477 20.1174 20.1175C18.9476 21.2872 17.0509 21.2873 15.8811 20.1175L10.5657 14.8021L5.2444 20.1234C4.07455 21.2932 2.17792 21.2932 1.00807 20.1234C-0.161545 18.9535 -0.161701 17.0568 1.00807 15.887L6.32936 10.5658L0.877209 5.1136C-0.292372 3.94378 -0.292433 2.04706 0.877209 0.877275Z"/>
         </svg>
       </button>
       <iframe class="delivery-frame"
@@ -89,16 +84,7 @@
 
 <script src="../../fillings/data.js"></script>
 <script>
-  const menuBtn  = document.getElementById('menu-toggle');
-  const menuList = document.getElementById('menu-list');
-  menuBtn.addEventListener('click', (e) => { e.stopPropagation(); menuList.classList.toggle('is-open'); });
-  menuList.querySelector('.menu-close').addEventListener('click', (e) => {
-    e.stopPropagation();
-    menuList.classList.remove('is-open');
-  });
-  document.addEventListener('click', (e) => {
-    if (!menuList.contains(e.target) && e.target !== menuBtn && !menuBtn.contains(e.target)) menuList.classList.remove('is-open');
-  });
+  /* Меню удалено: кнопка «К» теперь — простая ссылка-каталог (см. шаблон). */
 
   (function fitCakeTitle(){
     const title = document.querySelector('.cake-title');
@@ -215,70 +201,141 @@
     dot.setAttribute('aria-label', name + ' — описание');
     dot.innerHTML = SPARKLE;
     wrap.appendChild(dot);
-    dot.addEventListener('click', () => openWrap(wrap, name));
     return wrap;
   }
 
+  /* Делегирование кликов по точкам начинок: работает и для оригиналов,
+     и для клонов (которые добавляются автокаруселью для бесшовного цикла). */
+  function bindFillingDelegation(container){
+    if (!container || container.__kDeleg) return;
+    container.__kDeleg = true;
+    container.addEventListener('click', (e) => {
+      const dot = e.target.closest('.info-dot');
+      if (!dot) return;
+      const wrap = dot.closest('.slice-wrap');
+      if (!wrap) return;
+      const name = wrap.dataset.filling;
+      if (!name) return;
+      openWrap(wrap, name);
+    });
+  }
+
   const col = document.getElementById('fillings-col');
-  resolveFillings(col.dataset.fillings).forEach(name => col.appendChild(buildSlice(name)));
+  if (col && col.dataset.fillings){
+    resolveFillings(col.dataset.fillings).forEach(name => col.appendChild(buildSlice(name)));
+    bindFillingDelegation(col);
+  }
 
   const page = document.querySelector('.cake-page');
   const deliveryCol = document.getElementById('delivery-col');
+  /* Прокидываем kosmos-cake от калькулятора в iframe доставки. BroadcastChannel
+     не работает на file://, поэтому без этого моста для ярусных тортов не
+     прятался кружок самовывоза. */
+  const deliveryFrames = Array.prototype.slice.call(document.querySelectorAll('.delivery-frame, .mob-delivery-frame'));
   window.addEventListener('message', (e) => {
     const d = e.data;
-    if (d && typeof d === 'object' && d.type === 'kosmos-next'){
-      page.classList.add('is-delivery');
-      deliveryCol.setAttribute('aria-hidden','false');
+    if (!d || typeof d !== 'object') return;
+    if (d.type === 'kosmos-cake'){
+      deliveryFrames.forEach(f => {
+        if (f.contentWindow && f.contentWindow !== e.source){
+          try { f.contentWindow.postMessage(d, '*'); } catch(_){}
+        }
+      });
     }
   });
-  document.getElementById('delivery-back').addEventListener('click', () => {
-    page.classList.remove('is-delivery');
-    deliveryCol.setAttribute('aria-hidden','true');
-  });
+  if (page && deliveryCol){
+    window.addEventListener('message', (e) => {
+      const d = e.data;
+      if (d && typeof d === 'object' && d.type === 'kosmos-next'){
+        page.classList.add('is-delivery');
+        deliveryCol.setAttribute('aria-hidden','false');
+      }
+    });
+    const dBack = document.getElementById('delivery-back');
+    if (dBack){
+      dBack.addEventListener('click', () => {
+        page.classList.remove('is-delivery');
+        deliveryCol.setAttribute('aria-hidden','true');
+      });
+    }
+  }
 
   (function autoFitCalcIframe(){
     /* Калькулятор шлёт postMessage {type:'kosmos-calc-height', height}. Подгоняем
-       высоту iframe под контент — пропадает серая пустота перед бантиком. */
+       высоту iframe ровно под контент — бантик внутри iframe сразу под кнопкой
+       «далее», между ним и краем iframe пустоты нет. */
     const frames = Array.prototype.slice.call(document.querySelectorAll('.calc-frame, .mob-calc-frame'));
     if (!frames.length) return;
     window.addEventListener('message', (e) => {
       const d = e.data;
       if (!d || typeof d !== 'object' || d.type !== 'kosmos-calc-height') return;
-      const h = Math.max(360, Math.min(2000, parseInt(d.height, 10) || 0));
+      const h = Math.max(120, Math.min(2400, parseInt(d.height, 10) || 0));
       frames.forEach(f => {
         if (f.contentWindow === e.source) f.style.height = h + 'px';
       });
     });
   })();
 
-  (function kosmoPeekScroll(){
-    function bounce(el, vert){
-      if (!el) return;
-      function cap(){ return Math.max(0, vert ? el.scrollHeight - el.clientHeight : el.scrollWidth - el.clientWidth); }
-      if (cap() < 10) return;
-      var dir = 1, pause = 0, dead = 0;
-      var id = setInterval(function(){
-        if (dead) return;
-        if (pause > 0) { pause--; return; }
-        var m = cap();
-        if (m < 8) return;
-        var c = vert ? el.scrollTop : el.scrollLeft;
-        c += (vert ? 0.65 : 1) * dir;
-        if (c >= m) { c = m; dir = -1; pause = 75; }
-        else if (c <= 0) { c = 0; dir = 1; pause = 90; }
-        if (vert) el.scrollTop = c; else el.scrollLeft = c;
-      }, 40);
-      function kill(){ dead = 1; clearInterval(id); }
-      el.addEventListener('touchstart', kill, {passive:true});
-      el.addEventListener('wheel', kill, {passive:true});
-      el.addEventListener('pointerdown', kill, {passive:true});
+  /* Бесконечная авто-карусель: клонируем оригинальный набор детей один раз
+     и крутим только в одну сторону. При прохождении длины оригинала вычитаем
+     её — позиция «обнуляется» без рывка, потому что клон выглядит идентично.
+     Используется и для горизонтальных карусели (mob-photos, mob-fillings),
+     и для вертикальной «колбасы» начинок и фото на десктопе. */
+  function kosmoLoop(el, vert, speed){
+    if (!el) return null;
+    if (el.__kLoop) return el.__kLoop;
+    var kids = Array.prototype.slice.call(el.children);
+    if (!kids.length) return null;
+    function origSize(){
+      var t = 0;
+      for (var i = 0; i < kids.length; i++) t += vert ? kids[i].offsetHeight : kids[i].offsetWidth;
+      return t;
     }
-    bounce(document.getElementById('mob-photos'), false);
-    bounce(document.getElementById('mob-fillings'), false);
+    function viewSize(){ return vert ? el.clientHeight : el.clientWidth; }
+    /* Клонируем, пока общая длина не превысит видимую область как минимум в 2 раза,
+       иначе при wrap-around будут мелькать пустоты на широких контейнерах. */
+    var safety = 0;
+    while (origSize() < viewSize() * 2 + 4 && safety++ < 8){
+      kids.forEach(function(c){ el.appendChild(c.cloneNode(true)); });
+    }
+    var dead = 0, sp = speed || (vert ? 0.55 : 0.9);
+    var id = setInterval(function(){
+      if (dead) return;
+      var sz = origSize();
+      if (sz < 8) return;
+      var c = vert ? el.scrollTop : el.scrollLeft;
+      c += sp;
+      if (c >= sz) c -= sz;
+      if (vert) el.scrollTop = c; else el.scrollLeft = c;
+    }, 30);
+    function kill(){ dead = 1; clearInterval(id); }
+    el.addEventListener('touchstart', kill, {passive:true});
+    el.addEventListener('wheel', kill, {passive:true});
+    el.addEventListener('pointerdown', kill, {passive:true});
+    el.__kLoop = { kids: kids, origSize: origSize, kill: kill };
+    return el.__kLoop;
+  }
+
+  (function kosmoLoopScroll(){
+    var ph = document.getElementById('mob-photos');
+    if (ph) kosmoLoop(ph, false, 1.0);
+    var mf = document.getElementById('mob-fillings');
+    if (mf) {
+      kosmoLoop(mf, false, 0.9);
+      bindFillingDelegation(mf);
+    }
     var cp = document.querySelector('.col-photo');
-    if (cp) bounce(cp, true);
+    if (cp) kosmoLoop(cp, true, 0.55);
     var fc = document.getElementById('fillings-col');
-    if (fc) bounce(fc, true);
+    if (fc) {
+      /* Тирамису: третья колонка — фото-стек (.col-fillings--photos),
+         тоже бесшовно прокручивается. У обычных тортов — колбаса начинок. */
+      if (fc.classList.contains('col-fillings--photos')) {
+        kosmoLoop(fc, true, 0.55);
+      } else if (fc.dataset.fillings) {
+        kosmoLoop(fc, true, 0.55);
+      }
+    }
   })();
 
 </script>

@@ -68,19 +68,18 @@ html::-webkit-scrollbar,
 body::-webkit-scrollbar{display:none;width:0;height:0}
 
 /* мобильный режим — компактный по высоте, без скролла внутри iframe.
-   Используется и на телефонах, и в правой колонке десктопной страницы торта:
-   плотная вёрстка, чтобы калькулятор целиком умещался в одно окно.
-   .calc-scroll — flex-колонка с min-height:100%, чтобы «стоимость торта»
-   прижималась к низу и совпадала по высоте с «итоговой стоимостью» в
-   соседнем iframe доставки. */
+   Используется и на телефонах, и в правой колонке десктопной страницы торта.
+   ВАЖНО: высота .calc-scroll = высоте контента (никаких min-height:100vh
+   и margin-top:auto). Иначе iframe раздувается на весь экран, и между
+   «далее» и бантиком на странице торта появляется серая пустота. */
 body.mobile,
-body.mobile html{min-height:100%;height:auto}
-body.mobile .calc-frame{height:auto;overflow:visible;min-height:100%}
+body.mobile html{min-height:0;height:auto}
+body.mobile .calc-frame{height:auto;overflow:visible;min-height:0}
 body.mobile .calc-scroll{
   height:auto;overflow:visible;padding:14px 16px 18px;
-  display:flex;flex-direction:column;min-height:100vh;
+  display:flex;flex-direction:column;min-height:0;
 }
-body.mobile .total-wrap{margin-top:auto}
+body.mobile .total-wrap{margin-top:14px}
 body.mobile .label{font-size:19px;margin:8px 0 0}
 body.mobile .cake-desc{font-size:22px}
 body.mobile .stepper{gap:10px}
@@ -124,7 +123,7 @@ body.mobile .fill-class{margin-top:8px}
 .cake-subtitle{
   margin:0;
   font-family:var(--text);font-weight:400;
-  font-size:11px;line-height:1.05;
+  font-size:15px;line-height:1.25;
   color:var(--red);
 }
 
@@ -302,9 +301,12 @@ body.mobile .fill-class{margin-top:8px}
   width:180px;height:60px;
   background:no-repeat center / contain;
 }
-.fill-class__ico.is-base   {background-image:url('assets/class-base.svg')}
-.fill-class__ico.is-classic{background-image:url('assets/class-classic.svg')}
-.fill-class__ico.is-lux    {background-image:url('assets/class-lux.svg')}
+/* Cache-bust версия после ?v= автоматически обновляется build_site_pages.py
+   по mtime файлов assets/class-*.svg, чтобы после ручной замены картинки
+   браузер сразу подгружал новую версию, а не отдавал из кэша. */
+.fill-class__ico.is-base   {background-image:url('assets/class-base.svg?v=1778577290')}
+.fill-class__ico.is-classic{background-image:url('assets/class-classic.svg?v=1778603836')}
+.fill-class__ico.is-lux    {background-image:url('assets/class-lux.svg?v=1778577290')}
 
 /* В ярусных — три рядом, чуть мельче чтобы умещались в одну линию */
 .fill-class--all{gap:12px;margin-top:18px}
@@ -318,6 +320,17 @@ body.mobile .fill-class{margin-top:8px}
 
 /* ============ NEXT BUTTON («далее») — в одну визуальную линию с .label ============ */
 .send-row{margin-top:10px;display:flex;justify-content:center}
+
+/* Бантик, который рендерится последним блоком в .calc-scroll
+   (см. endBowHTML в core.js). Прижат прямо к кнопке «далее»,
+   без серой пустоты сверху. */
+.calc-scroll .end-bow{
+  display:block;width:92px;height:auto;
+  margin:6px auto 0;
+}
+body.mobile .calc-scroll .end-bow{
+  width:84px;margin:4px auto 0;
+}
 .next-btn{
   background:none;border:0;padding:0;cursor:pointer;
   font-family:var(--display);font-weight:900;

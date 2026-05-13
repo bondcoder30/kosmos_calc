@@ -204,11 +204,11 @@ img{display:block;max-width:100%}
 }
 
 /* ============ ГЛАВНАЯ — ГРИД ОБЛОЖЕК ============
-   Сетка без зазоров, картинки плотно встык. Никаких ховер-эффектов
-   и параллакса. Названия тортов всегда видны, центрированы по центру
-   плитки белым display-шрифтом с тенью для читаемости. */
+   Сетка без зазоров и без верхней «серой полосы»: фото плотно встык от самого верха.
+   Название появляется по hover в нижней трети плитки, шириной с фото; точный размер
+   шрифта под каждое имя подбирается из JS (см. fitCovers в index.html). */
 .cover-grid{
-  padding:64px 0 0;
+  padding:0;
   display:grid;
   grid-template-columns:repeat(3, 1fr);
   gap:0;
@@ -223,19 +223,26 @@ img{display:block;max-width:100%}
   width:100%;height:100%;object-fit:cover;display:block;
 }
 .cover .cover-name{
-  position:absolute;inset:0;
-  display:flex;align-items:center;justify-content:center;
-  text-align:center;padding:12px 14px;
+  position:absolute;left:0;right:0;bottom:0;
+  display:flex;align-items:flex-end;justify-content:center;
+  padding:0 14px 18px;
   font-family:var(--display);font-weight:900;color:#fff;
   font-size:clamp(20px, 2.2vw, 30px);line-height:.95;letter-spacing:.2px;
   text-transform:lowercase;
-  text-shadow:0 2px 14px rgba(0,0,0,.55), 0 0 24px rgba(0,0,0,.35);
   pointer-events:none;
+  opacity:0;transition:opacity .2s ease;
 }
+.cover:hover .cover-name,
+.cover:focus-within .cover-name{opacity:1}
 
+/* Сенсорные экраны и узкая мобилка — название всегда видно, потому что
+   hover не работает на тач-устройствах. */
+@media (hover:none){
+  .cover .cover-name{opacity:1}
+}
 @media (max-width:780px){
-  .cover-grid{grid-template-columns:repeat(2, 1fr);padding:56px 0 0}
-  .cover .cover-name{font-size:18px;padding:10px 12px}
+  .cover-grid{grid-template-columns:repeat(2, 1fr);padding:0}
+  .cover .cover-name{opacity:1;font-size:18px;padding:0 12px 14px}
 }
 
 /* ============ СТРАНИЦА «О НАС» ============ */
@@ -370,7 +377,11 @@ body.about-page{
 .col-info{
   padding:0 22px 40px;display:flex;flex-direction:column;align-items:center;gap:0;
   min-height:0;overflow-y:auto;overflow-x:hidden;
+  /* Прячем системный скроллбар: иначе он занимает ~15px справа,
+     визуально сдвигая весь калькулятор от центра колонки. */
+  scrollbar-width:none;-ms-overflow-style:none;
 }
+.col-info::-webkit-scrollbar{display:none;width:0;height:0}
 .col-info .cake-title{
   position:sticky;top:0;z-index:50;
   background:var(--bg);
@@ -394,22 +405,35 @@ body.about-page{
 .col-info .cake-desc::first-letter{text-transform:uppercase}
 .col-info .cake-sub{
   font-family:var(--text);font-weight:400;
-  font-size:11px;line-height:1.05;color:var(--red);text-align:center;
-  margin:6px 0 4px;max-width:380px;
+  font-size:15px;line-height:1.2;color:var(--red);text-align:center;
+  margin:8px 0 6px;max-width:420px;
 }
 .col-info .calc-frame{
   /* Уже колонки: не ползёт на соседнюю колонку начинок даже при сужении окна.
-     Высоту JS подгоняет под содержимое iframe (postMessage из calculator/core.js). */
+     Стартовая высота — приблизительная (чтобы не было прыжка с 150px дефолта).
+     JS подгоняет точно под содержимое iframe (postMessage из calculator/core.js).
+     ВНУТРИ iframe рендерятся и калькулятор, и бантик — поэтому здесь больше нет
+     отдельного <img class="end-bow"> в .col-info. */
   width:96%;max-width:440px;flex:none;
-  height:720px;border:0;background:transparent;display:block;
-  margin:8px auto 0;
+  height:520px;min-height:0;
+  border:0;background:transparent;display:block;
+  margin:8px auto 32px;
   pointer-events:auto;
 }
-/* сразу под калькулятором: бантик прижат к нему, без визуального гэпа */
-.col-info .end-bow{
-  flex:none;display:block;
-  width:92px;height:auto;margin:0 auto 28px;
+
+/* Стрелка «назад в каталог» — фиксированная, в левом нижнем углу страницы торта.
+   Стилизована единообразно с .delivery-back из третьей колонки. */
+.back-to-catalog{
+  position:fixed;left:18px;bottom:18px;z-index:60;
+  width:64px;height:64px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:transparent;border:0;cursor:pointer;
+  text-decoration:none;color:var(--pink);
 }
+.back-to-catalog svg{
+  width:42px;height:42px;fill:var(--pink);
+}
+.back-to-catalog:hover svg{fill:var(--rose)}
 
 /* ----- колонка 3: «колбаса» начинок + оверлей доставки -----
    Контейнер col-third содержит два слоя: длинную колонку срезов и
@@ -436,17 +460,20 @@ body.about-page{
 
 /* «назад к начинкам» — белая стрелка влево в нижнем левом углу
    (визуально как на макете) */
+/* Закрыть доставку — красный крестик в правом нижнем углу третьей колонки.
+   Тот же визуал, что у .filling-bubble .close (см. CLOSE_X SVG в build). */
 .delivery-back{
-  position:absolute;left:14px;bottom:18px;z-index:3;
-  width:64px;height:64px;border:0;background:none;padding:0;
+  position:absolute;right:18px;bottom:18px;z-index:3;
+  width:36px;height:36px;border:0;background:none;padding:0;
   display:flex;align-items:center;justify-content:center;
-  color:#fff;
+  color:var(--red);
   transition:transform .12s ease, color .15s ease;
   cursor:url('assets/cursor.svg') 8 8, pointer;
 }
-.delivery-back:hover{color:var(--pink)}
-.delivery-back:active{transform:scale(.92)}
-.delivery-back svg{width:42px;height:42px;display:block;fill:currentColor}
+.delivery-back:hover{color:var(--rose)}
+.delivery-back:active{transform:scale(.9)}
+.delivery-back svg{width:100%;height:100%;display:block;overflow:visible}
+.delivery-back svg path{fill:currentColor}
 
 .col-delivery .delivery-frame{
   flex:1 1 auto;width:100%;height:100%;
@@ -454,6 +481,26 @@ body.about-page{
 }
 
 .col-fillings{padding:0;background:var(--bg)}
+
+/* Третья колонка как 2×2 сетка фото (используется для тирамису:
+   у него только одна начинка, вместо «колбасы» начинок — четыре фото). */
+/* Тирамису (и любые «фото-only» торты): третья колонка отдаёт всю свою высоту
+   под полноразмерные фото, такая же логика как у левой колонки .col-photo. */
+.col-fillings--photos{
+  display:block;height:100%;overflow-y:auto;background:var(--bg);padding:0;
+}
+.col-fillings--photos img{
+  display:block;width:100%;height:auto;object-fit:cover;margin:0;
+}
+
+/* Мобильный аналог для тирамису: вертикальный стек больших фото на всю ширину
+   экрана — вместо горизонтальной карусели начинок. */
+.mob-photos-grid{
+  display:block;width:100%;padding:0;background:var(--bg);
+}
+.mob-photos-grid img{
+  display:block;width:100%;height:auto;object-fit:cover;margin:0;
+}
 
 /* ============ УНИВЕРСАЛЬНЫЙ СРЕЗ НАЧИНКИ (.slice-wrap) ============
    Используется и в вертикальной «колбасе» десктопа (.col-fillings),
@@ -574,12 +621,23 @@ body.about-page.mob-page{height:100vh;overflow:hidden}
   aspect-ratio:1/1.25;object-fit:cover;
   scroll-snap-align:start;display:block;
 }
-.mob-swipe-hint{
-  position:absolute;right:14px;bottom:10px;margin:0;
-  font-family:var(--text);font-weight:500;font-size:11px;color:#fff;
-  background:rgba(0,0,0,.35);padding:4px 10px;border-radius:999px;
-  pointer-events:none;letter-spacing:.2px;
+.mob-swipe-hint{display:none}
+
+/* Точки-индикаторы под мобильными каруселями (фото и начинки).
+   Количество точек = количеству исходных слайдов (без клонов цикла).
+   Активная точка — текущая. */
+.mob-dots{
+  display:flex;justify-content:center;align-items:center;gap:8px;
+  padding:10px 0 6px;width:100%;
+  pointer-events:none;
 }
+.mob-dots .dot{
+  width:8px;height:8px;border-radius:50%;
+  background:rgba(0,0,0,.22);
+  transition:background-color .2s ease, transform .2s ease;
+}
+.mob-dots .dot.active{background:var(--pink);transform:scale(1.25)}
+.mob-dots:empty{display:none}
 
 /* (2) шапка торта */
 .mob-head{padding:22px 18px 4px;text-align:center}
@@ -597,8 +655,8 @@ body.about-page.mob-page{height:100vh;overflow:hidden}
 .mob-head .cake-desc::first-letter{text-transform:uppercase}
 .mob-head .cake-sub{
   font-family:var(--text);font-weight:400;
-  font-size:11px;line-height:1.05;color:var(--red);text-align:center;
-  margin:6px auto 0;max-width:300px;
+  font-size:14px;line-height:1.25;color:var(--red);text-align:center;
+  margin:8px auto 0;max-width:320px;
 }
 
 /* (3) «что внутри?» + хинт */
@@ -631,17 +689,15 @@ body.about-page.mob-page{height:100vh;overflow:hidden}
 
 /* (5) калькулятор + (6) доставка — фикс-высота iframes без скролла */
 .mob-calc-frame{
-  display:block;width:100%;height:720px;border:0;background:transparent;
-  margin:0;
+  display:block;width:100%;height:520px;min-height:0;
+  border:0;background:transparent;margin:0;
 }
 .mob-delivery-frame{
   display:block;width:100%;height:780px;border:0;background:transparent;
   margin:0;
 }
-/* (7) финальный бантик — ближе к блоку доставки/калькулятору */
-.mob-page .end-bow{
-  display:block;width:96px;height:auto;margin:-6px auto 0;
-}
+/* (7) Бантик теперь рендерится внутри iframe калькулятора, отдельного
+   <img class="end-bow"> в мобильной странице больше нет. */
 
 @media (max-width:900px){
   .mob-page .menu-btn{top:14px;left:14px}
@@ -699,6 +755,6 @@ body.about-page.mob-page{height:100vh;overflow:hidden}
   .col-third .col-delivery{display:none;min-height:80vh}
   .cake-page.is-delivery .col-third .col-fillings{display:none}
   .cake-page.is-delivery .col-third .col-delivery{display:flex}
-  .delivery-back{position:fixed;left:14px;bottom:14px;width:54px;height:54px}
-  .delivery-back svg{width:34px;height:34px}
+  .delivery-back{position:fixed;right:14px;bottom:14px;left:auto;width:30px;height:30px}
+  .delivery-back svg{width:100%;height:100%}
 }

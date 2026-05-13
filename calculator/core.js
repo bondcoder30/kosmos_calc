@@ -233,6 +233,13 @@ function nextBtnHTML(){
   `;
 }
 
+/* Бантик идёт сразу после кнопки «далее» внутри самого калькулятора.
+   Так бантик гарантированно «прилипает» к «далее» — даже если родительская
+   страница торта кэшировала старую версию стилей. */
+function endBowHTML(){
+  return '<img class="end-bow" src="../../assets/bow.svg" alt="" aria-hidden="true">';
+}
+
 function totalHTML(total){
   return `
     <div class="total-wrap">
@@ -270,6 +277,18 @@ function postDraw(root){
         }
       } catch(_){}
     });
+  }
+  // После каждой перерисовки и после подгрузки бантика — пересчитываем
+  // высоту iframe в родителе, чтобы внутри не оставалось пустого места.
+  const bow = root.querySelector('.end-bow');
+  if (bow && !bow.dataset.bound){
+    bow.dataset.bound = '1';
+    bow.addEventListener('load', () => {
+      if (typeof window.__kosmosPostHeight === 'function') window.__kosmosPostHeight();
+    }, { once:true });
+  }
+  if (typeof window.__kosmosPostHeight === 'function'){
+    requestAnimationFrame(window.__kosmosPostHeight);
   }
 }
 
@@ -315,6 +334,7 @@ window.renderTieredCake = function(cake){
       <div class="hint hint--big">Стоимость начинки в ярусных тортах фиксированная — 3&nbsp;200&nbsp;р/кг.</div>
       ${totalHTML(r.total)}
       ${nextBtnHTML()}
+      ${endBowHTML()}
     `;
 
     root.querySelectorAll('button[data-act]').forEach(b => {
@@ -375,6 +395,7 @@ window.renderFixedCake = function(cake){
       ${classBadge(fillingClass(state.filling))}
       ${totalHTML(r.total)}
       ${nextBtnHTML()}
+      ${endBowHTML()}
     `;
     root.querySelectorAll('.fixed-row[data-w]').forEach(row => {
       row.onclick = () => { state.weight = parseFloat(row.dataset.w); draw(); };
@@ -437,6 +458,7 @@ window.renderWeightCake = function(cake){
       ` : ''}
       ${totalHTML(r.total)}
       ${nextBtnHTML()}
+      ${endBowHTML()}
     `;
     root.querySelectorAll('button[data-act]').forEach(b => {
       b.onclick = () => {

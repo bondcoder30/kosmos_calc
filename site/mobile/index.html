@@ -6,48 +6,19 @@
 <title>kosmos cake — каталог</title>
 <link rel="stylesheet" href="../style.css">
 <style>
-  /* мобилка: всегда 2 столбца, плитки встык без зазоров,
-     подписи по центру каждой плитки. */
-  .cover-grid{grid-template-columns:repeat(2, 1fr);gap:0;padding:56px 0 0;max-width:none}
+  /* Мобилка: 2 колонки встык, без верхней серой полосы. На тач-устройствах
+     hover не работает — подписи показаны всегда (см. site/style.css). */
+  .cover-grid{grid-template-columns:repeat(2, 1fr);gap:0;padding:0;max-width:none}
   .cover{aspect-ratio:1/1.25}
-  .cover img{transition:none}
-  .cover:hover img{transform:none;filter:none}
 </style>
 </head>
 <body>
 
-<button class="menu-btn" id="menu-toggle" aria-label="меню" type="button">
+<a class="menu-btn" id="menu-toggle" href="index.html" aria-label="каталог">
   <svg viewBox="0 0 54 65" xmlns="http://www.w3.org/2000/svg">
     <path d="M21.5183 26.4696C21.6112 26.4696 21.7061 26.4146 21.7357 26.3215C22.5312 23.2215 24.6898 15.7815 26.055 13.0814C27.8169 9.58359 30.7331 4.22365 35.8564 2.85457C44.0267 0.670814 49.705 4.96003 50.952 9.56666C51.9818 13.3692 50.0173 17.6881 47.5295 20.1067C45.0417 22.5317 37.9074 25.8348 32.9023 28.3847C27.397 31.1863 24.8164 29.8786 30.9694 31.4275C38.0108 33.1966 47.3818 32.5998 52.2856 43.9863C53.7437 47.3825 53.9146 52.9371 52.3553 56.4202C49.5087 62.8127 39.4668 67.9759 31.1003 61.45C26.7176 58.0305 24.2931 51.7712 23.4132 45.8018C23.0165 43.1568 22.3286 37.6635 22.1345 36.1611C22.1113 35.9897 21.9467 35.8797 21.7757 35.9114H21.7378C21.5901 35.9432 21.4951 36.0765 21.5035 36.2246C21.7209 38.7512 21.7694 40.262 21.9002 42.3273C22.1429 45.9648 22.6324 49.5811 22.835 53.2186C22.9047 54.5644 22.6557 56.0117 22.2336 57.311C19.8935 64.5881 11.9722 66.2619 6.8025 60.629C3.83149 57.3893 2.10965 53.5085 1.39222 49.2531C-0.93944 35.3951 -0.667231 21.7339 4.72195 8.51076C5.30645 7.06338 5.89095 5.56945 6.81939 4.32521C8.65939 1.87695 11.3266 -0.376626 14.9833 0.0529308C18.5156 0.467676 20.6912 2.71279 21.5099 5.93764C22.0627 8.14468 21.9066 10.5549 21.877 12.8783C21.8538 14.3955 21.4318 24.1293 21.2145 26.2348C21.206 26.3511 21.2841 26.4464 21.3938 26.4527C21.4318 26.4527 21.4803 26.4527 21.5183 26.4612H21.5099L21.5183 26.4696Z"/>
   </svg>
-  <span class="menu-label">меню</span>
-</button>
-<ul class="menu-list" id="menu-list">
-  <li class="menu-cake-shell" aria-hidden="true">
-    <div class="menu-cake-stack">
-      <img class="menu-cake-tier menu-cake-tier--bottom" src="../assets/menubottomtier.svg" alt="">
-      <img class="menu-cake-tier menu-cake-tier--top" src="../assets/caketier1.svg" alt="">
-      <img class="menu-cake-k" src="../assets/K.svg" alt="">
-      <img class="menu-cake-bow menu-cake-bow--1" src="../assets/bow.svg" alt="">
-      <img class="menu-cake-bow menu-cake-bow--2" src="../assets/bow.svg" alt="">
-      <img class="menu-cake-bow menu-cake-bow--3" src="../assets/bow.svg" alt="">
-      <span class="menu-cake-cherry menu-cake-cherry--1"></span>
-      <span class="menu-cake-cherry menu-cake-cherry--2"></span>
-      <span class="menu-cake-cherry menu-cake-cherry--3"></span>
-      <span class="menu-cake-cherry menu-cake-cherry--4"></span>
-      <span class="menu-cake-cherry menu-cake-cherry--5"></span>
-      <span class="menu-cake-cherry menu-cake-cherry--6"></span>
-    </div>
-  </li>
-  <li><a href="index.html">каталог</a></li>
-  <li><a href="../../calculator/delivery/preview.html">доставка</a></li>
-  <li><a href="about.html">о нас</a></li>
-  <li class="menu-note">наш оператор ответит на все вопросы и подберет лучший тортик</li>
-  <li class="menu-telegram"><a href="https://t.me/kosmoscake" target="_blank" rel="noopener" aria-label="написать в Telegram">telegram</a></li>
-  <li class="menu-phone"><a href="tel:+79037696965">+7 (903) 769-69-65</a></li>
-  <li class="menu-close-item"><button class="menu-close" type="button" aria-label="закрыть меню"></button></li>
-</ul>
-
+  </a>
 <!-- Каталог: порядок — CATALOG_ORDER в site/build_site_pages.py; подписи и ссылки — из calculator/build_cakes.py (поле name, id). -->
 <main class="cover-grid">
   <a class="cover" href="cakes/fairy-cake.html"><img src="../photos/fairy-cake/cover.jpg" alt="fairy cake" loading="lazy"><div class="cover-name">fairy cake</div></a>
@@ -81,18 +52,7 @@
   <a class="cover" href="cakes/blueberry-hill.html"><img src="../photos/blueberry-hill/cover.jpg" alt="blueberry hill" loading="lazy"><div class="cover-name">blueberry hill</div></a>
 </main>
 
-<script>
-  const btn = document.getElementById('menu-toggle');
-  const list = document.getElementById('menu-list');
-  btn.addEventListener('click', (e) => { e.stopPropagation(); list.classList.toggle('is-open'); });
-  list.querySelector('.menu-close').addEventListener('click', (e) => {
-    e.stopPropagation();
-    list.classList.remove('is-open');
-  });
-  document.addEventListener('click', (e) => {
-    if (!list.contains(e.target) && e.target !== btn && !btn.contains(e.target)) list.classList.remove('is-open');
-  });
-</script>
+
 
 </body>
 </html>
