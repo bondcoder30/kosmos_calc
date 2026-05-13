@@ -111,9 +111,9 @@ body.mobile .fill-class{margin-top:8px}
   line-height:.9;
 }
 .cake-desc{
-  margin:0 0 10px;
+  margin:0 0 6px;
   font-family:var(--display);font-weight:900;
-  font-size:24px;line-height:1.15;letter-spacing:.2px;
+  font-size:24px;line-height:1;letter-spacing:.2px;
   color:#fff;
   text-transform:lowercase;
 }
@@ -121,7 +121,7 @@ body.mobile .fill-class{margin-top:8px}
 .cake-subtitle{
   margin:0;
   font-family:var(--text);font-weight:400;
-  font-size:11px;line-height:1.35;
+  font-size:11px;line-height:1.05;
   color:var(--red);
 }
 
@@ -186,14 +186,14 @@ body.mobile .fill-class{margin-top:8px}
 /* ============ HINT ============ */
 .hint{
   text-align:center;color:var(--red);font-size:12px;
-  margin:8px 8px 4px;line-height:1.35;
+  margin:6px 8px 2px;line-height:1.05;
   font-family:var(--text);
 }
 .hint--big{
   font-family:var(--text);font-weight:400;
-  font-size:14px;line-height:1.4;
+  font-size:14px;line-height:1.05;
   color:var(--red);
-  margin:18px 12px 8px;
+  margin:12px 12px 6px;
 }
 
 /* ============ TIERS (мелкая подпись «начинка N ярус») ============ */

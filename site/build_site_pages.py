@@ -33,6 +33,36 @@ CATALOG_ORDER = [
     "sailor-moon", "apollo", "blueberry-hill",
 ]
 
+# При регенерации каталога: если в <head>… меню ещё без сборки торта — вставить первым пунктом.
+CATALOG_MENU_CAKE_SHELL = """  <li class="menu-cake-shell" aria-hidden="true">
+    <div class="menu-cake-stack">
+      <img class="menu-cake-tier menu-cake-tier--bottom" src="../assets/menubottomtier.svg" alt="">
+      <img class="menu-cake-tier menu-cake-tier--top" src="../assets/caketier1.svg" alt="">
+      <img class="menu-cake-k" src="../assets/K.svg" alt="">
+      <img class="menu-cake-bow menu-cake-bow--1" src="../assets/bow.svg" alt="">
+      <img class="menu-cake-bow menu-cake-bow--2" src="../assets/bow.svg" alt="">
+      <img class="menu-cake-bow menu-cake-bow--3" src="../assets/bow.svg" alt="">
+      <span class="menu-cake-cherry menu-cake-cherry--1"></span>
+      <span class="menu-cake-cherry menu-cake-cherry--2"></span>
+      <span class="menu-cake-cherry menu-cake-cherry--3"></span>
+      <span class="menu-cake-cherry menu-cake-cherry--4"></span>
+      <span class="menu-cake-cherry menu-cake-cherry--5"></span>
+      <span class="menu-cake-cherry menu-cake-cherry--6"></span>
+    </div>
+  </li>
+"""
+
+
+def ensure_menu_cake_shell(head: str) -> str:
+    if "menu-cake-shell" in head:
+        return head
+    return re.sub(
+        r'(<ul\s+class="menu-list"\s+id="menu-list">\s*)',
+        r"\1" + CATALOG_MENU_CAKE_SHELL + "\n",
+        head,
+        count=1,
+    )
+
 
 def load_cakes():
     src = BC.read_text(encoding="utf-8")
@@ -146,21 +176,23 @@ DESKTOP_HEAD = """<!doctype html>
 <title>__PAGE_TITLE__</title>
 <link rel="stylesheet" href="../../style.css">
 <style>
-  /* Узкий iframe/окно: третья колонка (начинки) сужается сильнее центра и фото */
+  /* Узкий iframe/окно: страница торта остаётся в три равные трети.
+     Заголовок ужимается JS-ом, начинки не заходят на колонку калькулятора. */
   @media (max-width:900px){
     .cake-page{
-      grid-template-columns:minmax(0,1fr) minmax(0,1.22fr) minmax(0,0.26fr);
+      grid-template-columns:repeat(3, minmax(0, 1fr));
       grid-template-rows:minmax(0,1fr);
     }
     .cake-col{height:100%}
     .col-photo,.col-third{overflow-y:auto}
-    .col-info{padding:0 22px 24px;overflow-y:auto;display:flex;flex-direction:column;align-items:center;gap:10px}
+    .col-info{padding:0 22px 40px;overflow-y:auto;display:flex;flex-direction:column;align-items:center;gap:0}
     .col-info .cake-title{
       position:sticky;top:0;z-index:5;background:var(--bg);
       font-size:56px;line-height:.7;margin:0 -22px;padding:18px 22px 14px;width:calc(100% + 44px);
     }
     .cake-title .word{line-height:.7;padding-bottom:.05em}
-    .col-info .calc-frame{height:720px;flex:none}
+    .col-info .calc-frame{width:96%;max-width:440px;height:720px;flex:none;margin:8px auto 0}
+    .col-info .end-bow{margin:0 auto 28px}
     .col-third{overflow:hidden;height:100%;position:relative}
     .col-third .col-fillings,.col-third .col-delivery{position:absolute;inset:0;height:auto;overflow-y:auto;transition:transform .4s ease}
     .col-third .col-delivery{display:flex;transform:translateX(100%)}
@@ -180,6 +212,22 @@ DESKTOP_HEAD = """<!doctype html>
   <span class="menu-label">меню</span>
 </button>
 <ul class="menu-list" id="menu-list">
+  <li class="menu-cake-shell" aria-hidden="true">
+    <div class="menu-cake-stack">
+      <img class="menu-cake-tier menu-cake-tier--bottom" src="../../assets/menubottomtier.svg" alt="">
+      <img class="menu-cake-tier menu-cake-tier--top" src="../../assets/caketier1.svg" alt="">
+      <img class="menu-cake-k" src="../../assets/K.svg" alt="">
+      <img class="menu-cake-bow menu-cake-bow--1" src="../../assets/bow.svg" alt="">
+      <img class="menu-cake-bow menu-cake-bow--2" src="../../assets/bow.svg" alt="">
+      <img class="menu-cake-bow menu-cake-bow--3" src="../../assets/bow.svg" alt="">
+      <span class="menu-cake-cherry menu-cake-cherry--1"></span>
+      <span class="menu-cake-cherry menu-cake-cherry--2"></span>
+      <span class="menu-cake-cherry menu-cake-cherry--3"></span>
+      <span class="menu-cake-cherry menu-cake-cherry--4"></span>
+      <span class="menu-cake-cherry menu-cake-cherry--5"></span>
+      <span class="menu-cake-cherry menu-cake-cherry--6"></span>
+    </div>
+  </li>
   <li><a href="../index.html">каталог</a></li>
   <li><a href="../../../calculator/delivery/preview.html">доставка</a></li>
   <li><a href="../about.html">о нас</a></li>
@@ -247,6 +295,22 @@ MOBILE_BODY = """<!doctype html>
   <span class="menu-label">меню</span>
 </button>
 <ul class="menu-list" id="menu-list">
+  <li class="menu-cake-shell" aria-hidden="true">
+    <div class="menu-cake-stack">
+      <img class="menu-cake-tier menu-cake-tier--bottom" src="../../assets/menubottomtier.svg" alt="">
+      <img class="menu-cake-tier menu-cake-tier--top" src="../../assets/caketier1.svg" alt="">
+      <img class="menu-cake-k" src="../../assets/K.svg" alt="">
+      <img class="menu-cake-bow menu-cake-bow--1" src="../../assets/bow.svg" alt="">
+      <img class="menu-cake-bow menu-cake-bow--2" src="../../assets/bow.svg" alt="">
+      <img class="menu-cake-bow menu-cake-bow--3" src="../../assets/bow.svg" alt="">
+      <span class="menu-cake-cherry menu-cake-cherry--1"></span>
+      <span class="menu-cake-cherry menu-cake-cherry--2"></span>
+      <span class="menu-cake-cherry menu-cake-cherry--3"></span>
+      <span class="menu-cake-cherry menu-cake-cherry--4"></span>
+      <span class="menu-cake-cherry menu-cake-cherry--5"></span>
+      <span class="menu-cake-cherry menu-cake-cherry--6"></span>
+    </div>
+  </li>
   <li><a href="../index.html">каталог</a></li>
   <li><a href="../../../calculator/delivery/preview.html">доставка</a></li>
   <li><a href="../about.html">о нас</a></li>
@@ -841,6 +905,7 @@ def write_catalog(path: Path, by_id: dict):
     head = parts[0]
     rest = parts[1].split("</main>", 1)
     foot = rest[1]
+    head = ensure_menu_cake_shell(head)
     # актуальный комментарий вместо старого «только fairy-cake»
     head = re.sub(
         r"<!-- Каталог тортов\.[\s\S]*?-->\s*\n",
