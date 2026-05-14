@@ -271,13 +271,16 @@ def list_cake_image_files(cid: str) -> list[Path]:
 
 def pick_cover_path(cid: str) -> Path | None:
     """Обложка: cover.* или первый файл, не slice-N.* (как после import_photos_raw)."""
-    d = PH / cid
     files = list_cake_image_files(cid)
     if not files:
         return None
-    for ext in PHOTO_EXT:
-        p = d / f"cover{ext}"
-        if p.exists():
+    # Важно: на Windows path.exists() case-insensitive и может вернуть True
+    # для несуществующего по регистру имени (cover.jpg при реальном cover.JPG).
+    # Поэтому ищем через фактические имена из списка файлов и возвращаем
+    # именно реальный Path.
+    cover_names = {f"cover{ext}" for ext in PHOTO_EXT}
+    for p in files:
+        if p.name.lower() in cover_names:
             return p
     for p in files:
         if not re.match(r"slice-\d+\.", p.name, re.I):
@@ -311,6 +314,36 @@ def cover_filename(cid: str) -> str:
         return p.name
     # Фолбэк тоже в uppercase — чаще всего у нас именно такой cover.
     return "cover.JPG"
+
+
+def normalize_cover_filenames(cids: list[str]) -> None:
+    """Приводит имя обложки к каноническому виду cover.<ext> (lowercase).
+    Это устраняет плавающий баг на GitHub Pages, когда то /cover.jpg, то /cover.JPG.
+    На Linux это разные пути -> периодические 404 в каталоге.
+    """
+    for cid in cids:
+        p = pick_cover_path(cid)
+        if p is None:
+            continue
+        ext = p.suffix.lower()
+        # jpg/jpeg сводим к одному канону cover.jpg
+        if ext in (".jpg", ".jpeg"):
+            canon_name = "cover.jpg"
+        else:
+            canon_name = f"cover{ext}"
+        canon = p.with_name(canon_name)
+        if p.name == canon_name:
+            continue
+        # Для case-only rename на Windows нужен промежуточный шаг.
+        tmp = p.with_name(f"__cover_tmp__{cid}{ext}")
+        i = 0
+        while tmp.exists():
+            i += 1
+            tmp = p.with_name(f"__cover_tmp__{cid}_{i}{ext}")
+        p.rename(tmp)
+        if canon.exists():
+            canon.unlink()
+        tmp.rename(canon)
 
 
 def photo_paths(cid: str) -> tuple[list[str], list[str]]:
@@ -1005,7 +1038,7 @@ def sync_kosmos_filling_sets() -> None:
 
 
 def write_site_preview_index(cakes: list, by_id: dict) -> None:
-    """Полное превью site/index.html — все страницы тортов (десктоп + мобилка)."""
+    """Полное превью site/preview.html — все страницы тортов (десктоп + мобилка)."""
     base = "https://ab-aacoop.github.io/kosmos_calc/site"
     oc = ordered_cakes(cakes, by_id)
 
@@ -1242,8 +1275,42 @@ function flash(id){{
 </body>
 </html>
 """
+    (SITE / "preview.html").write_text(html_out, encoding="utf-8")
+    print(f"OK: site/preview.html — превью всех {len(oc)} тортов + главные")
+
+
+def write_unified_catalog_entrypoint() -> None:
+    """Единый вход site/index.html: редиректит на mobile или desktop каталог.
+    Это финальная «главная» для публикации.
+    """
+    html_out = """<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>kosmos cake — каталог</title>
+<style>
+  html,body{height:100%;margin:0}
+  body{
+    display:grid;place-items:center;
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    background:#cfcfcf;color:#222;
+  }
+  .hint{font-size:14px;opacity:.8}
+</style>
+<script>
+  (function(){
+    var isMobile = window.matchMedia && window.matchMedia('(max-width: 900px)').matches;
+    var target = isMobile ? './mobile/index.html' : './desktop/index.html';
+    window.location.replace(target);
+  })();
+</script>
+</head>
+<body><div class="hint">Открываем каталог…</div></body>
+</html>
+"""
     (SITE / "index.html").write_text(html_out, encoding="utf-8")
-    print(f"OK: site/index.html — превью всех {len(oc)} тортов + главные")
+    print("OK: site/index.html — единый вход (mobile/desktop)")
 
 
 def patch_static_page(path: Path, catalog_href: str):
@@ -1305,6 +1372,9 @@ def main():
         (desk_dir / f"{cid}.html").write_text(render_desktop(cake), encoding="utf-8")
         (mob_dir / f"{cid}.html").write_text(render_mobile(cake), encoding="utf-8")
 
+    # Канонизируем cover.* до cover.jpg / cover.png / cover.webp.
+    normalize_cover_filenames([c["id"] for c in cakes])
+
     write_catalog(SITE / "desktop" / "index.html", by_id)
     write_catalog(SITE / "mobile" / "index.html", by_id)
 
@@ -1317,6 +1387,7 @@ def main():
     bust_calc_iframe_cache()
     sync_kosmos_filling_sets()
     write_site_preview_index(cakes, by_id)
+    write_unified_catalog_entrypoint()
     (SITE / "photos raw").mkdir(parents=True, exist_ok=True)
 
     print(f"OK: {len(cakes)} тортов → desktop/cakes + mobile/cakes")
