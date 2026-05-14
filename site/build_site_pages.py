@@ -304,7 +304,13 @@ def slice_paths_after_cover(cid: str, cover: Path | None) -> list[Path]:
 def cover_filename(cid: str) -> str:
     """Имя файла обложки для каталога (реальный файл в photos/<id>/)."""
     p = pick_cover_path(cid)
-    return p.name if p else "cover.jpg"
+    # В проде (Linux) файловая система case-sensitive. Если подставить
+    # "cover.jpg", а реально на диске "cover.JPG", картинка 404.
+    # Поэтому всегда используем реальное имя найденного файла.
+    if p:
+        return p.name
+    # Фолбэк тоже в uppercase — чаще всего у нас именно такой cover.
+    return "cover.JPG"
 
 
 def photo_paths(cid: str) -> tuple[list[str], list[str]]:

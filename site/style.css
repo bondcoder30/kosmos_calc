@@ -633,6 +633,9 @@ body.about-page.mob-page{height:100vh;overflow:hidden}
 }
 .mob-dots .dot{
   width:9px;height:9px;border-radius:50%;
+  border:0;outline:0;box-shadow:none;
+  appearance:none;-webkit-appearance:none;
+  padding:0;
   background:rgba(210,54,60,.28);
   transition:background-color .2s ease, transform .2s ease, width .2s ease, height .2s ease;
 }
