@@ -942,7 +942,9 @@ def mobile_fill_block_html(cake: dict) -> str:
         )
     return (
         '<div class="mob-fill-head">\n'
-        '  <h2 class="mob-section-title">Что внутри?</h2>\n'
+        '  <h2 class="mob-section-title">Что внутри?'
+        '<img class="mob-section-cherry" src="../../assets/cherry.svg" alt="" aria-hidden="true">'
+        '</h2>\n'
         '</div>\n\n'
         f'<section class="mob-fillings" id="mob-fillings" data-fillings="{fill}" aria-label="начинки"></section>\n'
         '<div class="mob-dots mob-dots--small" id="mob-fillings-dots" aria-hidden="true"></div>'
@@ -978,7 +980,10 @@ def render_mobile(cake: dict) -> str:
     cid = cake["id"]
     typ = cake["type"]
     name = cake["name"]
-    calc = f"../../../calculator/cakes-mobile/{typ}/{cid}.html"
+    # ctx=mobile — флаг для core.js: не рисовать «далее»+«бантик», а
+    # вывести надпись о доставке. Десктопная cake-страница использует
+    # тот же iframe без этого query — поэтому на ней всё по-старому.
+    calc = f"../../../calculator/cakes-mobile/{typ}/{cid}.html?ctx=mobile"
     page_title = html.escape(f"{name} — kosmos")
     h1 = html.escape(name)
     desc = html.escape(cake.get("desc") or "")
@@ -1279,38 +1284,89 @@ function flash(id){{
     print(f"OK: site/preview.html — превью всех {len(oc)} тортов + главные")
 
 
-def write_unified_catalog_entrypoint() -> None:
-    """Единый вход site/index.html: редиректит на mobile или desktop каталог.
-    Это финальная «главная» для публикации.
+def write_unified_catalog_entrypoint(by_id: dict) -> None:
+    """Единый адаптивный каталог site/index.html — одна страница и для десктопа,
+    и для мобилки. Сетка перестраивается живьём через @media-запросы, без
+    редиректа (раньше уход на mobile/ или desktop/ фиксировался при первой
+    загрузке и не реагировал на ресайз). Ссылки на cake-страницы выбираются
+    тоже через @media в CSS: span.cover-link[data-d][data-m] — JS подставит
+    нужный href при ресайзе. Это даёт нам ровно одну точку входа для прода.
     """
-    html_out = """<!doctype html>
+    rows: list[str] = []
+    for cid in CATALOG_ORDER:
+        c = by_id.get(cid)
+        if c is None:
+            continue
+        nm = html.escape(c["name"])
+        cov = html.escape(cover_filename(cid))
+        cid_esc = html.escape(cid)
+        # data-d / data-m — относительные ссылки на десктоп/мобильную cake-страницу.
+        rows.append(
+            f'  <a class="cover" href="desktop/cakes/{cid_esc}.html" '
+            f'data-d="desktop/cakes/{cid_esc}.html" data-m="mobile/cakes/{cid_esc}.html">'
+            f'<img src="photos/{cid_esc}/{cov}" alt="{nm}" loading="lazy" '
+            f'onerror="if(!this.dataset.fbk){{this.dataset.fbk=1;'
+            f'this.src=this.src.replace(/cover\\.(jpg|jpeg|png|webp)$/i,'
+            f"'cover.' + ((RegExp.$1||'jpg').toUpperCase()));}}\">"
+            f'<div class="cover-name">{nm}</div></a>'
+        )
+    grid = "\n".join(rows)
+    # SVG-буква К (тот же знак, что в шаблонах)
+    k_svg = (
+        '<svg viewBox="0 0 54 65" xmlns="http://www.w3.org/2000/svg">'
+        '<path d="M21.5183 26.4696C21.6112 26.4696 21.7061 26.4146 21.7357 26.3215C22.5312 23.2215 24.6898 15.7815 26.055 13.0814C27.8169 9.58359 30.7331 4.22365 35.8564 2.85457C44.0267 0.670814 49.705 4.96003 50.952 9.56666C51.9818 13.3692 50.0173 17.6881 47.5295 20.1067C45.0417 22.5317 37.9074 25.8348 32.9023 28.3847C27.397 31.1863 24.8164 29.8786 30.9694 31.4275C38.0108 33.1966 47.3818 32.5998 52.2856 43.9863C53.7437 47.3825 53.9146 52.9371 52.3553 56.4202C49.5087 62.8127 39.4668 67.9759 31.1003 61.45C26.7176 58.0305 24.2931 51.7712 23.4132 45.8018C23.0165 43.1568 22.3286 37.6635 22.1345 36.1611C22.1113 35.9897 21.9467 35.8797 21.7757 35.9114H21.7378C21.5901 35.9432 21.4951 36.0765 21.5035 36.2246C21.7209 38.7512 21.7694 40.262 21.9002 42.3273C22.1429 45.9648 22.6324 49.5811 22.835 53.2186C22.9047 54.5644 22.6557 56.0117 22.2336 57.311C19.8935 64.5881 11.9722 66.2619 6.8025 60.629C3.83149 57.3893 2.10965 53.5085 1.39222 49.2531C-0.93944 35.3951 -0.667231 21.7339 4.72195 8.51076C5.30645 7.06338 5.89095 5.56945 6.81939 4.32521C8.65939 1.87695 11.3266 -0.376626 14.9833 0.0529308C18.5156 0.467676 20.6912 2.71279 21.5099 5.93764C22.0627 8.14468 21.9066 10.5549 21.877 12.8783C21.8538 14.3955 21.4318 24.1293 21.2145 26.2348C21.206 26.3511 21.2841 26.4464 21.3938 26.4527C21.4318 26.4527 21.4803 26.4527 21.5183 26.4612H21.5099L21.5183 26.4696Z"/>'
+        '</svg>'
+    )
+    html_out = f"""<!doctype html>
 <html lang="ru">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>kosmos cake — каталог</title>
+<link rel="stylesheet" href="style.css">
 <style>
-  html,body{height:100%;margin:0}
-  body{
-    display:grid;place-items:center;
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-    background:#cfcfcf;color:#222;
-  }
-  .hint{font-size:14px;opacity:.8}
+  /* Адаптивный единый каталог: 3 колонки → 2 при ширине ≤900px.
+     Живой ресайз без перезагрузки страницы. */
+  .cover-grid{{grid-template-columns:repeat(3, 1fr);gap:0;padding:0;max-width:100%}}
+  @media (max-width:900px){{
+    .cover-grid{{grid-template-columns:repeat(2, 1fr)}}
+    .cover{{aspect-ratio:1/1.25}}
+  }}
 </style>
-<script>
-  (function(){
-    var isMobile = window.matchMedia && window.matchMedia('(max-width: 900px)').matches;
-    var target = isMobile ? './mobile/index.html' : './desktop/index.html';
-    window.location.replace(target);
-  })();
-</script>
 </head>
-<body><div class="hint">Открываем каталог…</div></body>
+<body>
+
+<a class="menu-btn" id="menu-toggle" href="index.html" aria-label="каталог">
+  {k_svg}
+</a>
+
+<main class="cover-grid">
+{grid}
+</main>
+
+<script>
+  /* Переключаем href cover-карточки между mobile/* и desktop/* в зависимости
+     от ширины окна. Это даёт правильный целевой URL при ресайзе в реальном
+     времени — пользователь не «застревает» на не-той версии. */
+  (function(){{
+    var mq = window.matchMedia('(max-width: 900px)');
+    function apply(){{
+      var mob = mq.matches;
+      document.querySelectorAll('.cover[data-d][data-m]').forEach(function(a){{
+        a.setAttribute('href', mob ? a.dataset.m : a.dataset.d);
+      }});
+    }}
+    apply();
+    if (mq.addEventListener) mq.addEventListener('change', apply);
+    else if (mq.addListener) mq.addListener(apply);
+  }})();
+</script>
+
+</body>
 </html>
 """
     (SITE / "index.html").write_text(html_out, encoding="utf-8")
-    print("OK: site/index.html — единый вход (mobile/desktop)")
+    print("OK: site/index.html — адаптивный единый каталог")
 
 
 def patch_static_page(path: Path, catalog_href: str):
@@ -1387,7 +1443,7 @@ def main():
     bust_calc_iframe_cache()
     sync_kosmos_filling_sets()
     write_site_preview_index(cakes, by_id)
-    write_unified_catalog_entrypoint()
+    write_unified_catalog_entrypoint(by_id)
     (SITE / "photos raw").mkdir(parents=True, exist_ok=True)
 
     print(f"OK: {len(cakes)} тортов → desktop/cakes + mobile/cakes")

@@ -54,22 +54,72 @@ window.sendOrder = (payload) => {
 /* высота калькулятора → родительской странице.
    Родитель (страница торта) подгоняет iframe под содержимое — так пропадает
    серая пустота между концом «далее» и бантиком в десктоп- и мобильной версии. */
+/* ================================================================
+   ДИНАМИЧЕСКИЙ МАСШТАБ КАЛЬКУЛЯТОРА
+   Калькулятор рассчитан на «базовую» ширину BASE_W (см. ниже). Если
+   iframe оказался уже (например, родительская колонка сжалась, или
+   пользователь поставил нестандартный zoom браузера), мы пропорционально
+   уменьшаем весь .calc-scroll через transform: scale(...), а его width
+   фиксируем как BASE_W — иначе элементы (большая цифра «2», тотал, кнопки
+   stepper) вылазили за границу iframe и калькулятор «уплывал» вправо.
+   ================================================================ */
+var KOSMOS_BASE_W = 380;
+window.__kosmosApplyScale = function(){
+  try {
+    var root = document.getElementById('root') || document.querySelector('.calc-scroll');
+    if (!root) return;
+    var w = (document.documentElement && document.documentElement.clientWidth) || window.innerWidth || 0;
+    if (!w) return;
+    if (w >= KOSMOS_BASE_W){
+      root.style.transform = '';
+      root.style.transformOrigin = '';
+      root.style.width = '';
+      root.style.marginLeft = '';
+      if (document.body){ document.body.style.height = ''; document.body.style.minHeight = ''; }
+    } else {
+      var k = w / KOSMOS_BASE_W;
+      root.style.transformOrigin = 'top center';
+      root.style.transform = 'scale(' + k.toFixed(4) + ')';
+      root.style.width = KOSMOS_BASE_W + 'px';
+      /* offsetLeft при transform: scale не меняется, поэтому центруем
+         руками — двигаем root через margin-left. */
+      var left = Math.max(0, (w - KOSMOS_BASE_W) / 2);
+      root.style.marginLeft = left + 'px';
+    }
+  } catch(_){}
+};
+
 window.__kosmosPostHeight = function(){
   try {
     if (!window.parent || window.parent === window) return;
+    /* Сначала пересчитаем скейл — иначе сообщим неправильную высоту. */
+    if (typeof window.__kosmosApplyScale === 'function') window.__kosmosApplyScale();
+    var root = document.getElementById('root') || document.querySelector('.calc-scroll');
+    /* getBoundingClientRect учитывает transform: scale — это и есть реальная
+       визуальная высота. Прибиваем body к ней, иначе iframe «торчит» под
+       уменьшенным контентом. */
+    var rh = root ? Math.ceil(root.getBoundingClientRect().height) : 0;
+    if (rh && document.body){
+      document.body.style.height = rh + 'px';
+      document.body.style.minHeight = rh + 'px';
+    }
     var doc = document.documentElement, body = document.body;
-    var h = Math.max(
+    var h = rh || Math.max(
       body ? body.scrollHeight : 0,
-      doc ? doc.scrollHeight : 0,
-      body ? body.offsetHeight : 0,
-      doc ? doc.offsetHeight : 0
+      doc ? doc.scrollHeight : 0
     );
     window.parent.postMessage({ type:'kosmos-calc-height', height: h }, '*');
   } catch(_){}
 };
 window.addEventListener('load',  window.__kosmosPostHeight);
-window.addEventListener('resize', window.__kosmosPostHeight);
-document.addEventListener('DOMContentLoaded', window.__kosmosPostHeight);
+window.addEventListener('resize', function(){
+  if (typeof window.__kosmosApplyScale === 'function') window.__kosmosApplyScale();
+  window.__kosmosPostHeight();
+});
+document.addEventListener('DOMContentLoaded', function(){
+  if (typeof window.__kosmosApplyScale === 'function') window.__kosmosApplyScale();
+  window.__kosmosPostHeight();
+});
 try {
   var __koMo = new MutationObserver(function(){
     if (window.__kosmosHTimer) cancelAnimationFrame(window.__kosmosHTimer);
@@ -231,11 +281,27 @@ function renderHeader(cake){
 }
 
 /* ================================================================
-   КНОПКА «ДАЛЕЕ» — розовая, такого же размера как заголовок-label
-   («Сколько килограмм?»). Эмитит kosmos-next родительской странице
-   через postMessage, чтобы та могла открыть блок доставки.
+   На мобильной cake-странице (родительский iframe загружает калькулятор
+   с ?ctx=mobile) мы НЕ показываем «далее» и «бантик», а заменяем их
+   единственным неинтерактивным заголовком «мы бережно доставляем
+   тортики». Блок доставки на мобильной странице уже виден сразу под
+   калькулятором — отдельный iframe (.mob-delivery-frame). На десктопе
+   ничего не меняется: там «далее» открывает блок доставки в третьей
+   колонке.
    ================================================================ */
+function isMobileCtx(){
+  try { return new URLSearchParams(location.search).get('ctx') === 'mobile'; }
+  catch(_) { return false; }
+}
+
 function nextBtnHTML(){
+  if (isMobileCtx()) {
+    return `
+      <div class="mob-delivery-headline" aria-hidden="false">
+        мы бережно доставляем тортики
+      </div>
+    `;
+  }
   return `
     <div class="send-row">
       <button id="send" class="next-btn" type="button">далее</button>
@@ -245,8 +311,10 @@ function nextBtnHTML(){
 
 /* Бантик идёт сразу после кнопки «далее» внутри самого калькулятора.
    Так бантик гарантированно «прилипает» к «далее» — даже если родительская
-   страница торта кэшировала старую версию стилей. */
+   страница торта кэшировала старую версию стилей. На мобильной cake-странице
+   бантик не нужен — там сразу под калькулятором идёт блок доставки. */
 function endBowHTML(){
+  if (isMobileCtx()) return '';
   return '<img class="end-bow" src="../../assets/bow.svg" alt="" aria-hidden="true">';
 }
 

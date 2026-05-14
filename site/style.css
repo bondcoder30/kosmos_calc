@@ -644,9 +644,14 @@ body.about-page.mob-page{height:100vh;overflow:hidden}
   width:11px;height:11px;
 }
 .mob-dots:empty{display:none}
-/* Начинок обычно много — точки мельче чтобы ряд помещался */
-.mob-dots--small .dot{width:6px;height:6px;gap:5px}
-.mob-dots--small .dot.active{width:8px;height:8px}
+/* Под начинками точки чуть меньше фото-точек, но достаточно крупные
+   для тач-таргета (8/10px) — пользователь жмёт на конкретную начинку. */
+.mob-dots--small{gap:9px;padding:12px 0 8px}
+.mob-dots--small .dot{
+  width:8px;height:8px;
+  pointer-events:auto;cursor:pointer;
+}
+.mob-dots--small .dot.active{width:10px;height:10px}
 
 /* (2) шапка торта */
 .mob-head{padding:22px 18px 4px;text-align:center}
@@ -670,9 +675,17 @@ body.about-page.mob-page{height:100vh;overflow:hidden}
 
 /* (3) «что внутри?» + хинт */
 .mob-fill-head{padding:22px 18px 10px;text-align:center}
+/* «Что внутри?» — белым + рядом маленькая вишенка из assets/cherry.svg.
+   Вишенка идёт инлайном после текста, в один ряд (display:inline-flex),
+   чтобы не ломать центрирование заголовка. */
 .mob-section-title{
-  font-family:var(--display);font-weight:900;color:var(--pink);
+  font-family:var(--display);font-weight:900;color:#fff;
   font-size:30px;line-height:1;text-transform:lowercase;margin:0;
+  display:inline-flex;align-items:center;gap:8px;
+}
+.mob-section-cherry{
+  display:inline-block;width:34px;height:auto;flex:0 0 auto;
+  transform:translateY(2px);
 }
 .mob-section-title::first-letter{text-transform:uppercase}
 .mob-section-hint{

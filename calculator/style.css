@@ -331,6 +331,18 @@ body.mobile .fill-class{margin-top:8px}
 body.mobile .calc-scroll .end-bow{
   width:84px;margin:4px auto 0;
 }
+
+/* Заголовок-замена «далее»+бантика на мобильной cake-странице.
+   Появляется в режиме ?ctx=mobile (см. core.js → nextBtnHTML). */
+.mob-delivery-headline{
+  text-align:center;
+  font-family:var(--display);font-weight:900;
+  color:#fff;
+  font-size:24px;line-height:1.1;
+  text-transform:lowercase;
+  margin:18px auto 4px;
+  max-width:280px;
+}
 .next-btn{
   background:none;border:0;padding:0;cursor:pointer;
   font-family:var(--display);font-weight:900;
