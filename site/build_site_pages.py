@@ -1283,7 +1283,9 @@ def write_catalog(path: Path, by_id: dict):
         cov = cover_filename(cid)
         rows.append(
             f'  <a class="cover" href="cakes/{html.escape(cid)}.html">'
-            f'<img src="../photos/{html.escape(cid)}/{html.escape(cov)}" alt="{nm}" loading="lazy">'
+            f'<img src="../photos/{html.escape(cid)}/{html.escape(cov)}" alt="{nm}" loading="lazy" '
+            f'onerror="if(!this.dataset.fbk){{this.dataset.fbk=1;this.src=this.src.replace(/cover\\.(jpg|jpeg|png|webp)$/i,'
+            f'\'cover.\' + ((RegExp.$1||\'jpg\').toUpperCase()));}}">'
             f'<div class="cover-name">{nm}</div></a>'
         )
     body = "<main class=\"cover-grid\">\n" + "\n".join(rows) + "\n</main>"
