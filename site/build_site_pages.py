@@ -25,6 +25,17 @@ PH = SITE / "photos"
 CALC = ROOT / "calculator"
 
 
+def get_class_assets_version() -> int:
+    """Максимальный mtime среди class-base/classic/lux.svg — используется для
+    cache-bust bb-class img src в filling bubble JS (placeholder __CLASS_V__)."""
+    v = 0
+    for name in ("class-base.svg", "class-classic.svg", "class-lux.svg"):
+        f = CALC / "assets" / name
+        if f.exists():
+            v = max(v, int(f.stat().st_mtime))
+    return v
+
+
 def bust_class_svg_cache():
     """Подменяет ?v=... в calculator/style.css на mtime соответствующего SVG-файла,
     чтобы после ручной замены картинки в assets/ браузер не отдавал старую версию
@@ -505,7 +516,13 @@ SHARED_JS = r"""  /* Меню удалено: кнопка «К» теперь �
     const title = document.querySelector('.cake-title');
     if (!title) return;
     const raw = title.textContent.trim();
-    title.innerHTML = raw.split(/\s+/).map(w => `<span class="word">${w}</span>`).join('');
+    const ws = raw.split(/\s+/);
+    /* 4+ слов → объединяем в пары ("big cherry" / "fairy cake"), иначе
+       заголовок занимает всю высоту колонки и калькулятор не помещается. */
+    const groups = (ws.length >= 4)
+      ? ws.reduce((a, w, i) => { if (i % 2 === 0) a.push([w]); else a[a.length-1].push(w); return a; }, []).map(g => g.join('\u00a0'))
+      : ws;
+    title.innerHTML = groups.map(w => `<span class="word">${w}</span>`).join('');
     const MAX = 160, MIN = 28, TARGET = 0.96;
     function fit(){
       const cw = title.clientWidth;
@@ -560,8 +577,9 @@ SHARED_JS = r"""  /* Меню удалено: кнопка «К» теперь �
     if (slug){
       const cls = document.createElement('img');
       cls.className = 'bb-class';
-      cls.src = `../../assets/class-${slug}.svg`;
+      cls.src = `../../assets/class-${slug}.svg?v=__CLASS_V__`;
       cls.alt = f.cls;
+      cls.title = f.cls;
       bubble.appendChild(cls);
     }
     const price = document.createElement('p');
@@ -888,7 +906,7 @@ def mobile_fill_block_html(cake: dict) -> str:
         '  <h2 class="mob-section-title">Что внутри?</h2>\n'
         '</div>\n\n'
         f'<section class="mob-fillings" id="mob-fillings" data-fillings="{fill}" aria-label="начинки"></section>\n'
-        '<div class="mob-dots" id="mob-fillings-dots" aria-hidden="true"></div>'
+        '<div class="mob-dots mob-dots--small" id="mob-fillings-dots" aria-hidden="true"></div>'
     )
 
 
@@ -913,7 +931,7 @@ def render_desktop(cake: dict) -> str:
         .replace("__CALC_SRC__", html.escape(calc))
         .replace("__IFRAME_TITLE__", iframe_title)
         .replace("__THIRD_COL_INNER__", third)
-        .replace("__SHARED_JS__", SHARED_JS)
+        .replace("__SHARED_JS__", SHARED_JS.replace("__CLASS_V__", str(get_class_assets_version())))
     )
 
 
@@ -938,7 +956,7 @@ def render_mobile(cake: dict) -> str:
         .replace("__CALC_SRC__", html.escape(calc))
         .replace("__IFRAME_TITLE__", iframe_title)
         .replace("__MOBILE_FILL_BLOCK__", fill_block)
-        .replace("__SHARED_JS_MOBILE__", SHARED_JS_MOBILE)
+        .replace("__SHARED_JS_MOBILE__", SHARED_JS_MOBILE.replace("__CLASS_V__", str(get_class_assets_version())))
     )
 
 

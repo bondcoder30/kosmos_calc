@@ -55,7 +55,13 @@
     const title = document.querySelector('.cake-title');
     if (!title) return;
     const raw = title.textContent.trim();
-    title.innerHTML = raw.split(/\s+/).map(w => `<span class="word">${w}</span>`).join('');
+    const ws = raw.split(/\s+/);
+    /* 4+ слов → объединяем в пары ("big cherry" / "fairy cake"), иначе
+       заголовок занимает всю высоту колонки и калькулятор не помещается. */
+    const groups = (ws.length >= 4)
+      ? ws.reduce((a, w, i) => { if (i % 2 === 0) a.push([w]); else a[a.length-1].push(w); return a; }, []).map(g => g.join('\u00a0'))
+      : ws;
+    title.innerHTML = groups.map(w => `<span class="word">${w}</span>`).join('');
     const MAX = 200, MIN = 32, TARGET = 0.94;
     function fit(){
       const cw = title.clientWidth;
@@ -110,8 +116,9 @@
     if (slug){
       const cls = document.createElement('img');
       cls.className = 'bb-class';
-      cls.src = `../../assets/class-${slug}.svg`;
+      cls.src = `../../assets/class-${slug}.svg?v=1778603836`;
       cls.alt = f.cls;
+      cls.title = f.cls;
       bubble.appendChild(cls);
     }
     const price = document.createElement('p');

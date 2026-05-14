@@ -115,13 +115,20 @@ function fillingClass(filling){
   return 'base';
 }
 
+const CLASS_TIPS = {
+  base:    'космос база — от 2\u202f800\u00a0р/кг',
+  classic: 'космос классика — от 3\u202f000\u00a0р/кг',
+  lux:     'космос люкс — от 3\u202f600\u00a0р/кг'
+};
+
 function classBadge(cls){
-  return `<div class="fill-class"><div class="fill-class__ico is-${cls}" aria-label="класс начинки: ${cls}"></div></div>`;
+  const tip = CLASS_TIPS[cls] || cls;
+  return `<div class="fill-class"><div class="fill-class__ico is-${cls}" title="${tip}" aria-label="класс начинки: ${cls}"></div></div>`;
 }
 
 function classBadgeAll(){
   return `<div class="fill-class fill-class--all">
-    ${CLASS_ORDER.map(c => `<div class="fill-class__ico is-${c}" aria-label="класс начинки: ${c}"></div>`).join('')}
+    ${CLASS_ORDER.map(c => `<div class="fill-class__ico is-${c}" title="${CLASS_TIPS[c]||c}" aria-label="класс начинки: ${c}"></div>`).join('')}
   </div>`;
 }
 
@@ -131,8 +138,11 @@ function classBadgeAll(){
    ================================================================ */
 function buildTitleHTML(title){
   if (!title) return '';
-  const words = String(title).trim().split(/\s+/);
-  return words.map(w => `<span class="word">${w}</span>`).join('');
+  const ws = String(title).trim().split(/\s+/);
+  const groups = (ws.length >= 4)
+    ? ws.reduce((a, w, i) => { if (i % 2 === 0) a.push([w]); else a[a.length-1].push(w); return a; }, []).map(g => g.join('\u00a0'))
+    : ws;
+  return groups.map(w => `<span class="word">${w}</span>`).join('');
 }
 
 function fitTitle(titleEl, opts){

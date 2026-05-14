@@ -51,7 +51,7 @@ img{display:block;max-width:100%}
 }
 .menu-btn svg{display:block;width:46px;height:55px}
 .menu-btn svg path{fill:#fff;transition:fill .15s ease}
-.menu-btn:hover svg path{fill:var(--pink)}
+.menu-btn:hover svg path,.menu-btn:focus svg path{fill:#F16471}
 .menu-label{
   font-family:var(--display);font-weight:900;color:#fff;
   font-size:14px;line-height:1;letter-spacing:.4px;text-transform:lowercase;
@@ -627,17 +627,23 @@ body.about-page.mob-page{height:100vh;overflow:hidden}
    Количество точек = количеству исходных слайдов (без клонов цикла).
    Активная точка — текущая. */
 .mob-dots{
-  display:flex;justify-content:center;align-items:center;gap:8px;
+  display:flex;justify-content:center;align-items:center;gap:7px;
   padding:10px 0 6px;width:100%;
   pointer-events:none;
 }
 .mob-dots .dot{
-  width:8px;height:8px;border-radius:50%;
-  background:rgba(0,0,0,.22);
-  transition:background-color .2s ease, transform .2s ease;
+  width:9px;height:9px;border-radius:50%;
+  background:rgba(210,54,60,.28);
+  transition:background-color .2s ease, transform .2s ease, width .2s ease, height .2s ease;
 }
-.mob-dots .dot.active{background:var(--pink);transform:scale(1.25)}
+.mob-dots .dot.active{
+  background:var(--red);
+  width:11px;height:11px;
+}
 .mob-dots:empty{display:none}
+/* Начинок обычно много — точки мельче чтобы ряд помещался */
+.mob-dots--small .dot{width:6px;height:6px;gap:5px}
+.mob-dots--small .dot.active{width:8px;height:8px}
 
 /* (2) шапка торта */
 .mob-head{padding:22px 18px 4px;text-align:center}
