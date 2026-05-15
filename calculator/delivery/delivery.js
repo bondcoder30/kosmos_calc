@@ -27,12 +27,12 @@
   var MAP_SRC = 'https://yandex.ru/map-widget/v1/?um=constructor%3Aee06b09908881d0ce064970f14ef714b8a4b7933a37782ec96d3e0c4c7e4b9ab&source=constructor';
 
   var ZONES = [
-    {key:'orange', cls:'dlv-z-orange', rate:1500, name:'оранжевая зона'},
-    {key:'green',  cls:'dlv-z-green',  rate:1000, name:'зелёная зона'},
+    {key:'orange', cls:'dlv-z-orange', rate:1000, name:'оранжевая зона'},
+    {key:'green',  cls:'dlv-z-green',  rate:600, name:'зелёная зона'},
     {key:'purple', cls:'dlv-z-purple', rate:0,    name:'самовывоз', pickup:true},
     {key:'brown',  cls:'dlv-z-brown',  rate:3500, name:'коричневая зона'},
-    {key:'blue',   cls:'dlv-z-blue',   rate:2500, name:'голубая зона'},
-    {key:'red',    cls:'dlv-z-red',    rate:2000, name:'красная зона'}
+    {key:'blue',   cls:'dlv-z-blue',   rate:2000, name:'голубая зона'},
+    {key:'red',    cls:'dlv-z-red',    rate:1500, name:'красная зона'}
   ];
 
   function fmtRub(n){
