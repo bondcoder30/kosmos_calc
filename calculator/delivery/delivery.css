@@ -47,12 +47,16 @@
 
 /* шесть зон в один ряд — компактнее, чтобы блок не разъезжался по высоте */
 .dlv-zones{
-  display:grid;grid-template-columns:repeat(6, minmax(0,1fr));
+  /* display:grid;grid-template-columns:repeat(6, minmax(0,1fr)); */
+  display: flex;
   gap:8px;justify-content:center;align-items:center;
   margin:0 auto;width:100%;max-width:300px;
 }
 .dlv-zone{
-  aspect-ratio:1/1;width:100%;border-radius:50%;
+  aspect-ratio:1/1;
+  /* width:100%; */
+  width: 43px;
+  border-radius:50%;
   border:0;outline:0;padding:0;
   display:flex;align-items:center;justify-content:center;
   font-family:var(--display);font-weight:900;color:#fff;font-size:16px;
