@@ -427,7 +427,7 @@ DESKTOP_HEAD = """<!doctype html>
     .col-info::-webkit-scrollbar{display:none;width:0;height:0}
     .col-info .cake-title{
       position:sticky;top:0;z-index:50;background:var(--bg);
-      font-size:56px;line-height:.7;margin:0 -22px;padding:18px 22px 14px;width:calc(100% + 44px);
+      font-size:56px;line-height:.7;padding:18px 0px 14px;width:100%;
     }
     .cake-title .word{line-height:.7;padding-bottom:.05em}
     .col-info .calc-frame{width:96%;max-width:440px;height:520px;min-height:0;flex:none;margin:8px auto 32px}

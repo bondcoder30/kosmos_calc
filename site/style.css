@@ -387,7 +387,8 @@ body.about-page{
   background:var(--bg);
   font-family:var(--display);font-weight:900;color:var(--pink);
   font-size:56px;line-height:.7;text-transform:lowercase;letter-spacing:-1px;
-  margin:0 -22px;padding:18px 22px 14px;width:calc(100% + 44px);
+  padding:18px 0px 14px;
+  width: 100%;
   text-align:center;
 }
 /* каждое слово на отдельной строке. JS подбирает font-size так, чтобы
