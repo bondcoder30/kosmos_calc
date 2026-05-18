@@ -396,14 +396,17 @@ body.about-page{
    плотные, контент при скролле резко уезжает под огромный заголовок. */
 .cake-title .word{
   display:block;line-height:.7;white-space:nowrap;letter-spacing:-1px;
+  padding-bottom:.05em;
 }
 .col-info .cake-desc{
   font-family:var(--display);font-weight:900;color:#fff;
+  font-size:20px;line-height:1;text-align:center;
   margin:10px 0 0;text-transform:lowercase;max-width:380px;
 }
 .col-info .cake-desc::first-letter{text-transform:uppercase}
 .col-info .cake-sub{
   font-family:var(--text);font-weight:400;
+  font-size:15px;line-height:1.2;color:var(--red);text-align:center;
   margin:8px 0 6px;max-width:420px;
 }
 .col-info .calc-frame{
@@ -662,8 +665,8 @@ body.about-page.mob-page{height:100vh;overflow:hidden}
 }
 .mob-head .cake-desc{
   font-family:var(--display);font-weight:900;color:#fff;
+  font-size:20px;line-height:1;text-align:center;
   margin:10px auto 0;text-transform:lowercase;max-width:300px;
-  font-size:30px;line-height:1;text-align:center;
 }
 .mob-head .cake-desc::first-letter{text-transform:uppercase}
 .mob-head .cake-sub{
