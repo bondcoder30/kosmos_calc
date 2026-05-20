@@ -920,7 +920,7 @@ def sync_kosmos_filling_sets() -> None:
     fs_end = core.index("window.fmtMoney", fs_start)
     filling_sets = core[fs_start:fs_end].strip()
     filling_sets = filling_sets.replace("window.FILLING_SETS", "window.KOSMOS_FILLING_SETS", 1)
-    extracted = base_block + "\n\n" + filling_sets
+    extracted = filling_sets
     data_path = SITE / "fillings" / "data.js"
     data = data_path.read_text(encoding="utf-8")
     m_start = "/* >>> SYNC_FILLING_SETS"
