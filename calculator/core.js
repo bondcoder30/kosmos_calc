@@ -42,26 +42,33 @@ window.sendOrder = (payload) => {
    Каналы:
      1) CustomEvent 'kosmos-cake' на window — если калькулятор и доставка
         живут на ОДНОЙ странице (мобильная объединённая версия).
-     2) BroadcastChannel('kosmos-cake') — между двумя iframe-ами на одном
-        origin (типичный случай Tilda/Readymag: калькулятор-iframe и
-        блок-доставки-iframe на одной странице сайта).
+     2) BroadcastChannel('kosmos-cake') — между блоками на одной странице.
      3) window.parent.postMessage — на случай, если родительская страница
         сама ловит и роняет в доставку.
 
    Payload:
      { type:'kosmos-cake', total, cake, weight, tiers, pieces, filling, tiered }
    ================================================================ */
-/* высота калькулятора → родительской странице.
-   Родитель (страница торта) подгоняет iframe под содержимое — так пропадает
-   серая пустота между концом «далее» и бантиком в десктоп- и мобильной версии. */
 /* ================================================================
-   ДИНАМИЧЕСКИЙ МАСШТАБ КАЛЬКУЛЯТОРА
-   Калькулятор рассчитан на «базовую» ширину BASE_W (см. ниже). Если
-   iframe оказался уже (например, родительская колонка сжалась, или
-   пользователь поставил нестандартный zoom браузера), мы пропорционально
-   уменьшаем весь .calc-scroll через transform: scale(...), а его width
-   фиксируем как BASE_W — иначе элементы (большая цифра «2», тотал, кнопки
-   stepper) вылазили за границу iframe и калькулятор «уплывал» вправо.
+   БАЗА ПУТЕЙ К assets/ (bow, class-icons) — от каталога core.js
+   ================================================================ */
+function kosmosCalcBase(){
+  if (window.KOSMOS_CALC_BASE){
+    return String(window.KOSMOS_CALC_BASE).replace(/\/$/, '');
+  }
+  var s = document.querySelector('script[src*="core.js"]');
+  if (s && s.src){
+    return s.src.replace(/\/core\.js(?:\?.*)?$/i, '');
+  }
+  return '';
+}
+function kosmosAssetUrl(file){
+  var base = kosmosCalcBase();
+  return (base ? base + '/assets/' : 'assets/') + file;
+}
+
+/* ================================================================
+   ДИНАМИЧЕСКИЙ МАСШТАБ КАЛЬКУЛЯТОРА (узкая колонка / мобилка)
    ================================================================ */
 var KOSMOS_BASE_W = 380;
 window.__kosmosApplyScale = function(){
@@ -88,45 +95,12 @@ window.__kosmosApplyScale = function(){
     }
   } catch(_){}
 };
-
-window.__kosmosPostHeight = function(){
-  try {
-    if (!window.parent || window.parent === window) return;
-    /* Сначала пересчитаем скейл — иначе сообщим неправильную высоту. */
-    if (typeof window.__kosmosApplyScale === 'function') window.__kosmosApplyScale();
-    var root = document.getElementById('root') || document.querySelector('.calc-scroll');
-    /* getBoundingClientRect учитывает transform: scale — это и есть реальная
-       визуальная высота. Прибиваем body к ней, иначе iframe «торчит» под
-       уменьшенным контентом. */
-    var rh = root ? Math.ceil(root.getBoundingClientRect().height) : 0;
-    if (rh && document.body){
-      document.body.style.height = rh + 'px';
-      document.body.style.minHeight = rh + 'px';
-    }
-    var doc = document.documentElement, body = document.body;
-    var h = rh || Math.max(
-      body ? body.scrollHeight : 0,
-      doc ? doc.scrollHeight : 0
-    );
-    window.parent.postMessage({ type:'kosmos-calc-height', height: h }, '*');
-  } catch(_){}
-};
-window.addEventListener('load',  window.__kosmosPostHeight);
 window.addEventListener('resize', function(){
   if (typeof window.__kosmosApplyScale === 'function') window.__kosmosApplyScale();
-  window.__kosmosPostHeight();
 });
 document.addEventListener('DOMContentLoaded', function(){
   if (typeof window.__kosmosApplyScale === 'function') window.__kosmosApplyScale();
-  window.__kosmosPostHeight();
 });
-try {
-  var __koMo = new MutationObserver(function(){
-    if (window.__kosmosHTimer) cancelAnimationFrame(window.__kosmosHTimer);
-    window.__kosmosHTimer = requestAnimationFrame(window.__kosmosPostHeight);
-  });
-  __koMo.observe(document.documentElement, { childList:true, subtree:true, characterData:true, attributes:true });
-} catch(_){}
 
 window.__kosmosBC = null;
 window.broadcastCake = function(payload){
@@ -281,18 +255,21 @@ function renderHeader(cake){
 }
 
 /* ================================================================
-   На мобильной cake-странице (родительский iframe загружает калькулятор
-   с ?ctx=mobile) мы НЕ показываем «далее» и «бантик», а заменяем их
-   единственным неинтерактивным заголовком «мы бережно доставляем
-   тортики». Блок доставки на мобильной странице уже виден сразу под
-   калькулятором — отдельный iframe (.mob-delivery-frame). На десктопе
-   ничего не меняется: там «далее» открывает блок доставки в третьей
-   колонке.
+   На узком экране (≤900px) вместо «далее» — заголовок «мы бережно
+   доставляем тортики». На десктопе «далее» открывает блок доставки.
    ================================================================ */
 function isMobileCtx(){
-  try { return new URLSearchParams(location.search).get('ctx') === 'mobile'; }
-  catch(_) { return false; }
+  try {
+    if (window.__kosmosForceMobile) return true;
+    return new URLSearchParams(location.search).get('ctx') === 'mobile';
+  } catch(_) { return false; }
 }
+window.setKosmosMobileCtx = function(on){
+  var next = !!on;
+  if (window.__kosmosForceMobile === next) return;
+  window.__kosmosForceMobile = next;
+  if (typeof window.__kosmosRedraw === 'function') window.__kosmosRedraw();
+};
 
 function nextBtnHTML(){
   if (isMobileCtx()) {
@@ -315,7 +292,7 @@ function nextBtnHTML(){
    бантик не нужен — там сразу под калькулятором идёт блок доставки. */
 function endBowHTML(){
   if (isMobileCtx()) return '';
-  return '<img class="end-bow" src="../../assets/bow.svg" alt="" aria-hidden="true">';
+  return '<img class="end-bow" src="' + kosmosAssetUrl('bow.svg') + '" alt="" aria-hidden="true">';
 }
 
 function totalHTML(total){
@@ -349,24 +326,11 @@ function postDraw(root){
   if (send && !send.dataset.bound){
     send.dataset.bound = '1';
     send.addEventListener('click', () => {
-      try {
-        if (window.parent && window.parent !== window){
-          window.parent.postMessage({ type:'kosmos-next' }, '*');
-        }
-      } catch(_){}
+      try { window.dispatchEvent(new CustomEvent('kosmos-next')); } catch(_){}
     });
   }
-  // После каждой перерисовки и после подгрузки бантика — пересчитываем
-  // высоту iframe в родителе, чтобы внутри не оставалось пустого места.
-  const bow = root.querySelector('.end-bow');
-  if (bow && !bow.dataset.bound){
-    bow.dataset.bound = '1';
-    bow.addEventListener('load', () => {
-      if (typeof window.__kosmosPostHeight === 'function') window.__kosmosPostHeight();
-    }, { once:true });
-  }
-  if (typeof window.__kosmosPostHeight === 'function'){
-    requestAnimationFrame(window.__kosmosPostHeight);
+  if (typeof window.__kosmosApplyScale === 'function'){
+    requestAnimationFrame(window.__kosmosApplyScale);
   }
 }
 
@@ -430,6 +394,7 @@ window.renderTieredCake = function(cake){
       weight: fmtWeight(state.weight), tiers: state.tiers,
       tiered: true
     });
+    window.__kosmosRedraw = draw;
     postDraw(root);
   }
 
@@ -484,6 +449,7 @@ window.renderFixedCake = function(cake){
       weight: fmtWeight(state.weight), filling: state.filling,
       tiered: false
     });
+    window.__kosmosRedraw = draw;
     postDraw(root);
   }
   draw();
@@ -553,6 +519,7 @@ window.renderWeightCake = function(cake){
       weight: fmtWeight(state.weight), filling: state.filling,
       tiered: false
     });
+    window.__kosmosRedraw = draw;
     postDraw(root);
   }
   draw();

@@ -1,9 +1,9 @@
 """
 Берёт тортоначинки.xlsx, добавляет 2 колонки:
   - URL  (прямая ссылка на калькулятор торта)
-  - IFRAME (готовый сниппет для вставки в редимаг / передачи верстальщику)
+  - INLINE HTML (готовый сниппет для вставки в редимаг / передачи верстальщику)
 
-Сохраняет рядом как тортоначинки_with_iframes.xlsx.
+Сохраняет рядом как тортоначинки_with_inline.xlsx.
 """
 
 import sys, io, re, shutil
@@ -18,10 +18,9 @@ ROOT = Path(__file__).parent
 # в C:\Users\A\Desktop\kosmos\kosmos_calc\calculator\build_iframe_table.py
 # поэтому поднимаемся на 2 уровня (kosmos_calc → kosmos)
 SRC  = ROOT.parent.parent / "tortonachinki.xlsx"
-DST  = ROOT.parent.parent / "тортоначинки_with_iframes.xlsx"
+DST  = ROOT.parent.parent / "тортоначинки_with_inline.xlsx"
 
-BASE_URL   = "https://ab-aacoop.github.io/kosmos_calc/calculator/cakes"
-BASE_URL_M = "https://ab-aacoop.github.io/kosmos_calc/calculator/cakes-mobile"
+GITHUB_CALC = "https://ab-aacoop.github.io/kosmos_calc/calculator"
 
 # Маппинг: имя в xlsx → (тип папки, id файла) ─────────────────────
 CAKE_MAP = {
@@ -70,21 +69,14 @@ def lookup(name):
             return val
     return None
 
-def iframe_for(type_, cid):
-    url = f"{BASE_URL}/{type_}/{cid}.html"
-    return (
-        f'<iframe src="{url}" '
-        f'style="width:100%;height:100%;border:0;display:block;background:#cfcfcf" '
-        f'loading="lazy"></iframe>'
-    )
+def _load_cakes():
+    bc = ROOT / "build_cakes.py"
+    src = bc.read_text(encoding="utf-8")
+    cut = src.index("#  ГЕНЕРАЦИЯ")
+    ns: dict = {}
+    exec(compile(src[:cut], str(bc), "exec"), ns)
+    return ns["CAKES"], ns
 
-def iframe_for_mobile(type_, cid):
-    url = f"{BASE_URL_M}/{type_}/{cid}.html"
-    return (
-        f'<iframe src="{url}" '
-        f'style="width:100%;height:620px;border:0;display:block;background:#cfcfcf" '
-        f'loading="lazy"></iframe>'
-    )
 
 # ───────────────────────────────────────────────────────────────
 shutil.copyfile(SRC, DST)
@@ -95,22 +87,27 @@ ws = wb.active
 last_col = ws.max_column
 
 URL_COL      = last_col + 1
-IFRAME_COL   = last_col + 2
+INLINE_COL   = last_col + 2
 URL_M_COL    = last_col + 3
-IFRAME_M_COL = last_col + 4
+INLINE_M_COL = last_col + 4
 
 ws.cell(row=1, column=URL_COL,      value="URL десктоп")
-ws.cell(row=1, column=IFRAME_COL,   value="IFRAME десктоп")
+ws.cell(row=1, column=INLINE_COL,   value="INLINE HTML десктоп")
 ws.cell(row=1, column=URL_M_COL,    value="URL мобильный")
-ws.cell(row=1, column=IFRAME_M_COL, value="IFRAME мобильный")
+ws.cell(row=1, column=INLINE_M_COL, value="INLINE HTML мобильный")
 
 header_font = Font(bold=True, color="FFFFFF")
 header_fill = PatternFill("solid", fgColor="D2363C")
-for col in (URL_COL, IFRAME_COL, URL_M_COL, IFRAME_M_COL):
+for col in (URL_COL, INLINE_COL, URL_M_COL, INLINE_M_COL):
     cell = ws.cell(row=1, column=col)
     cell.font = header_font
     cell.fill = header_fill
     cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+
+cakes_list, bc_ns = _load_cakes()
+cakes_by_id = {c["id"]: c for c in cakes_list}
+css_v = str(int((ROOT / "style.css").stat().st_mtime)) if (ROOT / "style.css").exists() else ""
+js_v = str(int((ROOT / "core.js").stat().st_mtime)) if (ROOT / "core.js").exists() else ""
 
 found, missing = [], []
 for row_idx in range(2, ws.max_row + 1):
@@ -120,26 +117,28 @@ for row_idx in range(2, ws.max_row + 1):
     match = lookup(name)
     if match:
         type_, cid = match
-        url   = f"{BASE_URL}/{type_}/{cid}.html"
-        url_m = f"{BASE_URL_M}/{type_}/{cid}.html"
+        url   = f"{GITHUB_CALC}/cakes/{type_}/{cid}.html"
+        url_m = f"{GITHUB_CALC}/cakes/{type_}/{cid}.html?ctx=mobile"
+        cake = cakes_by_id.get(cid)
+        snip = bc_ns["calc_embed_snippet"](cake, css_v, js_v) if cake else ""
         ws.cell(row=row_idx, column=URL_COL,      value=url)
-        ws.cell(row=row_idx, column=IFRAME_COL,   value=iframe_for(type_, cid))
+        ws.cell(row=row_idx, column=INLINE_COL,   value=snip)
         ws.cell(row=row_idx, column=URL_M_COL,    value=url_m)
-        ws.cell(row=row_idx, column=IFRAME_M_COL, value=iframe_for_mobile(type_, cid))
-        for col in (URL_COL, IFRAME_COL, URL_M_COL, IFRAME_M_COL):
+        ws.cell(row=row_idx, column=INLINE_M_COL, value=snip)
+        for col in (URL_COL, INLINE_COL, URL_M_COL, INLINE_M_COL):
             ws.cell(row=row_idx, column=col).alignment = Alignment(wrap_text=True, vertical="center")
         found.append(str(name).strip())
     else:
-        ws.cell(row=row_idx, column=IFRAME_COL,   value="— (нет данных по торту)")
-        ws.cell(row=row_idx, column=IFRAME_M_COL, value="— (нет данных по торту)")
+        ws.cell(row=row_idx, column=INLINE_COL,   value="— (нет данных по торту)")
+        ws.cell(row=row_idx, column=INLINE_M_COL, value="— (нет данных по торту)")
         missing.append(str(name).strip())
 
 # Ширина новых колонок
 from openpyxl.utils import get_column_letter
 ws.column_dimensions[get_column_letter(URL_COL)].width      = 55
-ws.column_dimensions[get_column_letter(IFRAME_COL)].width   = 80
+ws.column_dimensions[get_column_letter(INLINE_COL)].width   = 80
 ws.column_dimensions[get_column_letter(URL_M_COL)].width    = 55
-ws.column_dimensions[get_column_letter(IFRAME_M_COL)].width = 80
+ws.column_dimensions[get_column_letter(INLINE_M_COL)].width = 80
 
 wb.save(DST)
 print(f"Сохранено: {DST}")

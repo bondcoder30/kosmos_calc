@@ -410,16 +410,12 @@ body.about-page{
   margin:8px 0 6px;max-width:420px;
 }
 .col-info .calc-frame{
-  /* Уже колонки: не ползёт на соседнюю колонку начинок даже при сужении окна.
-     Стартовая высота — приблизительная (чтобы не было прыжка с 150px дефолта).
-     JS подгоняет точно под содержимое iframe (postMessage из calculator/core.js).
-     ВНУТРИ iframe рендерятся и калькулятор, и бантик — поэтому здесь больше нет
-     отдельного <img class="end-bow"> в .col-info. */
+  /* Inline-калькулятор: высота по контенту. */
   width:96%;max-width:440px;flex:none;
-  height:520px;min-height:0;
+  height:auto;min-height:0;
   border:0;background:transparent;display:block;
   margin:8px auto 32px;
-  pointer-events:auto;
+  pointer-events:auto;overflow:visible;
 }
 
 /* Стрелка «назад в каталог» — фиксированная, в левом нижнем углу страницы торта.
@@ -476,8 +472,8 @@ body.about-page{
 .delivery-back svg{width:100%;height:100%;display:block;overflow:visible}
 .delivery-back svg path{fill:currentColor}
 
-.col-delivery .delivery-frame{
-  flex:1 1 auto;width:100%;height:100%;
+.col-delivery .delivery-inline{
+  flex:1 1 auto;width:100%;min-height:0;
   border:0;background:transparent;display:block;
 }
 
@@ -598,14 +594,56 @@ body.about-page{
   stroke-linejoin:round;vector-effect:non-scaling-stroke;
 }
 
-/* ============ МОБИЛЬНАЯ СТРАНИЦА ТОРТА (вертикальный стек) ============
-   body.mob-page — отдельный layout, не использует grid из .cake-page.
-   Сверху вниз: карусель фото → заголовок/описание → «что внутри» →
-   горизонтальная карусель начинок → калькулятор → доставка. */
+/* ============ АДАПТИВНАЯ СТРАНИЦА ТОРТА (site/cakes/*.html) ============
+   Один .cake-page: ≥901px — три колонки, ≤900px — вертикальный стек. */
+body.cake-page-body{height:auto;min-height:100%;overflow-x:hidden;padding-bottom:max(28px, env(safe-area-inset-bottom, 0px))}
+@media (min-width:901px){
+  body.cake-page-body{height:100%;overflow:hidden;padding-bottom:0}
+}
+
+/* «Что внутри?» — только на узком экране */
+.cake-fill-head{display:none}
+.cake-photo-dots,.cake-fillings-dots{display:none}
+
+/* Лента фото: на мобилке — горизонтальная карусель */
+.cake-photos{display:block}
+.cake-photos .photo{display:block;width:100%;height:auto;object-fit:cover;margin:0}
+
+@media (max-width:900px){
+  .cake-fill-head{display:block}
+  .cake-photo-dots{display:flex}
+  .cake-fillings-dots{display:flex}
+  .col-photo{padding:0;overflow:visible}
+  .cake-photos{
+    display:flex;width:100vw;overflow-x:auto;
+    scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;
+    scroll-padding-inline:20px;
+  }
+  .cake-photos::after{
+    content:'';flex:0 0 28px;width:28px;scroll-snap-align:end;
+  }
+  .cake-photos .photo{
+    flex:0 0 100%;width:100vw;
+    aspect-ratio:1/1.25;scroll-snap-align:start;
+  }
+  #fillings-col.col-fillings:not(.col-fillings--photos){
+    position:relative;width:100vw;display:flex;overflow-x:auto;
+    scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;
+    scroll-padding-inline:20px;
+  }
+  #fillings-col.col-fillings:not(.col-fillings--photos)::after{
+    content:'';flex:0 0 28px;width:28px;scroll-snap-align:end;
+  }
+  #fillings-col.col-fillings:not(.col-fillings--photos) .slice-wrap{
+    flex:0 0 100vw;width:100vw;scroll-snap-align:start;
+  }
+}
+
+/* ============ МОБИЛЬНАЯ СТРАНИЦА ТОРТА (legacy mob-page) ============ */
 body.mob-page{height:auto;min-height:100%;overflow-x:hidden;padding-bottom:max(28px, env(safe-area-inset-bottom, 0px))}
 body.about-page.mob-page{height:100vh;overflow:hidden}
-.mob-page .menu-btn{top:14px;left:14px}
-.mob-page .menu-list{top:80px;left:14px}
+body.mob-page .menu-btn{top:14px;left:14px}
+body.mob-page .menu-list{top:80px;left:14px}
 
 /* (1) карусель фото — на всю ширину, листается свайпом.
    Снизу мелким красным Golos — подсказка про свайп. */
@@ -711,18 +749,6 @@ body.about-page.mob-page{height:100vh;overflow:hidden}
   scroll-snap-align:start;
 }
 
-/* (5) калькулятор + (6) доставка — фикс-высота iframes без скролла */
-.mob-calc-frame{
-  display:block;width:100%;height:520px;min-height:0;
-  border:0;background:transparent;margin:0;
-}
-.mob-delivery-frame{
-  display:block;width:100%;height:780px;border:0;background:transparent;
-  margin:0;
-}
-/* (7) Бантик теперь рендерится внутри iframe калькулятора, отдельного
-   <img class="end-bow"> в мобильной странице больше нет. */
-
 @media (max-width:900px){
   .mob-page .menu-btn{top:14px;left:14px}
   .mob-page .menu-list,
@@ -762,10 +788,14 @@ body.about-page.mob-page{height:100vh;overflow:hidden}
   .about-clouds{bottom:-18px}
   .about-mobile-only{display:none}
 
-  .cake-page{grid-template-columns:1fr;grid-template-rows:auto auto auto}
+  .cake-page{
+    position:relative;inset:auto;
+    grid-template-columns:1fr;grid-template-rows:auto auto auto;
+  }
   .cake-col{height:auto;overflow:visible}
   .col-info{padding:24px 18px 40px}
   .col-info .cake-title{font-size:48px}
+  .col-info .calc-frame{width:100%;max-width:100%;margin:8px 0 0}
 
   /* третья «колонка» в мобиле — обычный стек, без оверлей-анимации:
      по «далее» просто прячем начинки и показываем доставку, кнопка «назад»

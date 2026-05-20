@@ -1,21 +1,22 @@
 # -*- coding: utf-8 -*-
 """
-Генерирует страницы тортов site/desktop/cakes/*.html и site/mobile/cakes/*.html
-по данным calculator/build_cakes.py (поле name, desc, subtitle, fillings, type, id).
+Генерирует адаптивные страницы тортов site/cakes/*.html (десктоп + мобилка в одном HTML)
+по данным calculator/build_cakes.py.
 
-Также перезаписывает site/desktop/index.html и site/mobile/index.html —
-порядок обложек как в CATALOG_ORDER, подписи = name из документа.
+Перед сборкой страниц вызывает calculator/build_cakes.py (единые калькуляторы).
+
+Также: site/index.html (каталог), site/preview.html, синхрон fillings/data.js.
 
 Запуск из корня репозитория kosmos_calc:
+  python build.py
   python site/build_site_pages.py
-
-Также: синхронизирует window.KOSMOS_FILLING_SETS в fillings/data.js с window.FILLING_SETS
-из calculator/core.js; пересобирает site/index.html (превью всех страниц тортов).
 """
 from __future__ import annotations
 
 import html
+import importlib.util
 import re
+import shutil
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -57,16 +58,47 @@ def bust_class_svg_cache():
     css.write_text(text, encoding="utf-8")
 
 
-def bust_calc_iframe_cache():
-    """Дописывает ?v=<mtime> к ссылкам на ../../style.css и ../../core.js во всех
-    iframe-страницах калькулятора (cakes-mobile/* и cakes-mobile-full/*). Иначе
-    браузер удерживает старую версию CSS/JS даже после обновления исходников. """
+def import_build_cakes():
+    spec = importlib.util.spec_from_file_location("build_cakes_inline", BC)
+    assert spec and spec.loader
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def calc_asset_versions() -> tuple[str, str, str, str]:
+    css = CALC / "style.css"
+    js = CALC / "core.js"
+    dcss = CALC / "delivery" / "delivery.css"
+    djs = CALC / "delivery" / "delivery.js"
+    return tuple(
+        str(int(p.stat().st_mtime)) if p.exists() else ""
+        for p in (css, js, dcss, djs)
+    )
+
+
+def page_embed_snippet(rel_path: str, public_site: str) -> str:
+    """Тело страницы для вставки в Tilda: абсолютные URL на GitHub Pages."""
+    path = SITE / rel_path
+    if not path.exists():
+        return ""
+    text = path.read_text(encoding="utf-8")
+    m = re.search(r"<body[^>]*>([\s\S]*)</body>", text, re.IGNORECASE)
+    body = m.group(1).strip() if m else text
+    repo = public_site.rstrip("/").rsplit("/site", 1)[0]
+    body = body.replace("../../calculator/", f"{repo}/calculator/")
+    body = body.replace("../", f"{public_site.rstrip('/')}/")
+    return body
+
+
+def bust_calc_asset_cache():
+    """Дописывает ?v=<mtime> к style.css / core.js в отдельных страницах калькулятора."""
     css = CALC / "style.css"
     js = CALC / "core.js"
     css_v = int(css.stat().st_mtime) if css.exists() else 0
     js_v = int(js.stat().st_mtime) if js.exists() else 0
     targets: list[Path] = []
-    for sub in ("cakes-mobile", "cakes-mobile-full"):
+    for sub in ("cakes",):
         d = CALC / sub
         if d.is_dir():
             targets.extend(d.rglob("*.html"))
@@ -346,12 +378,15 @@ def normalize_cover_filenames(cids: list[str]) -> None:
         tmp.rename(canon)
 
 
-def photo_paths(cid: str) -> tuple[list[str], list[str]]:
+PHOTO_REL = "../photos"
+
+
+def photo_paths(cid: str, rel: str = PHOTO_REL) -> tuple[list[str], list[str]]:
     """Десктоп: cover + slice-…; мобилка: slice-… + cover в конце."""
-    rel = f"../../photos/{cid}"
+    rel = f"{rel}/{cid}"
     cov = pick_cover_path(cid)
     if cov is None:
-        fb = "../../photos/fairy-cake/cover.jpg"
+        fb = f"{PHOTO_REL}/fairy-cake/cover.jpg"
         return ([fb], [fb])
     slices = slice_paths_after_cover(cid, cov)
     desk = [f"{rel}/{cov.name}"] + [f"{rel}/{p.name}" for p in slices]
@@ -359,26 +394,8 @@ def photo_paths(cid: str) -> tuple[list[str], list[str]]:
     return desk, mob
 
 
-def desktop_photos_html(cid: str, cname: str) -> str:
-    # Для PHOTO_GRID_CAKES левая колонка получает только первую половину фото
-    # (вторая половина уходит в третью колонку — see third_col_inner_html).
-    if cid in PHOTO_GRID_CAKES:
-        paths, _ = photo_paths(cid)
-        half = max(1, (len(paths) + 1) // 2)
-        paths = paths[:half]
-    else:
-        paths, _ = photo_paths(cid)
-    lines = []
-    for i, p in enumerate(paths):
-        if i == 0 and "cover" in p:
-            alt = cname
-        else:
-            alt = f"{cname} — деталь"
-        lines.append(f'    <img class="photo" src="{html.escape(p)}" alt="{html.escape(alt)}">')
-    return "\n".join(lines)
-
-
-def mobile_photos_html(cid: str, cname: str) -> str:
+def cake_photos_html(cid: str, cname: str) -> str:
+    """Одна лента фото: на десктопе — вертикальный скролл, на мобилке — карусель."""
     if cid in PHOTO_GRID_CAKES:
         _, paths = photo_paths(cid)
         half = max(1, (len(paths) + 1) // 2)
@@ -387,13 +404,13 @@ def mobile_photos_html(cid: str, cname: str) -> str:
         _, paths = photo_paths(cid)
     lines = []
     for i, p in enumerate(paths):
-        if "cover" in p.split("/")[-1]:
-            alt = f"{cname} — обложка"
+        if "cover" in p.split("/")[-1].lower():
+            alt = cname if i == len(paths) - 1 and paths[-1] == p else f"{cname} — обложка"
         else:
             alt = f"{cname} — деталь"
         load = "eager" if i == 0 else "lazy"
         lines.append(
-            f'    <img src="{html.escape(p)}" alt="{html.escape(alt)}" loading="{load}">'
+            f'      <img class="photo" src="{html.escape(p)}" alt="{html.escape(alt)}" loading="{load}">'
         )
     return "\n".join(lines)
 
@@ -405,17 +422,18 @@ def subtitle_html(cake: dict) -> str:
     return " ".join(x for x in parts if x).strip()
 
 
-DESKTOP_HEAD = """<!doctype html>
+UNIFIED_PAGE = """<!doctype html>
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=1280">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>__PAGE_TITLE__</title>
-<link rel="stylesheet" href="../../style.css">
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../../calculator/style.css?v=__CALC_CSS_V__">
+<link rel="stylesheet" href="../../calculator/delivery/delivery.css?v=__DLV_CSS_V__">
 <style>
-  /* Узкий iframe/окно: страница торта остаётся в три равные трети.
-     Заголовок ужимается JS-ом, начинки не заходят на колонку калькулятора. */
-  @media (max-width:900px){
+  /* Узкая колонка: три колонки остаются в ряд. */
+  @media (min-width:901px) and (max-width:1280px){
     .cake-page{
       grid-template-columns:repeat(3, minmax(0, 1fr));
       grid-template-rows:minmax(0,1fr);
@@ -427,10 +445,10 @@ DESKTOP_HEAD = """<!doctype html>
     .col-info::-webkit-scrollbar{display:none;width:0;height:0}
     .col-info .cake-title{
       position:sticky;top:0;z-index:50;background:var(--bg);
-      font-size:56px;line-height:.7;padding:18px 0px 14px;width:100%;
+      font-size:56px;line-height:.7;padding:18px 0 14px;width:100%;
     }
     .cake-title .word{line-height:.7;padding-bottom:.05em}
-    .col-info .calc-frame{width:96%;max-width:440px;height:520px;min-height:0;flex:none;margin:8px auto 32px}
+    .col-info .calc-frame{width:96%;max-width:440px;height:auto;min-height:0;flex:none;margin:8px auto 32px}
     .col-third{overflow:hidden;height:100%;position:relative}
     .col-third .col-fillings,.col-third .col-delivery{position:absolute;inset:0;height:auto;overflow-y:auto}
     .col-third .col-delivery{display:none;flex-direction:column}
@@ -441,9 +459,7 @@ DESKTOP_HEAD = """<!doctype html>
   }
 </style>
 </head>
-<body>
-
- 
+<body class="cake-page-body">
 
 <a class="back-to-catalog" href="../index.html" aria-label="вернуться в каталог">
 <svg width="64" height="81" viewBox="0 0 64 81" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -454,108 +470,73 @@ DESKTOP_HEAD = """<!doctype html>
 <div class="cake-page">
 
   <section class="cake-col col-photo" aria-label="фото торта">
-__PHOTOS_DESKTOP__
+    <div class="cake-photos" id="cake-photos">
+__PHOTOS__
+    </div>
+    <div class="cake-photo-dots mob-dots" id="cake-photo-dots" aria-hidden="true"></div>
   </section>
 
   <section class="cake-col col-info" aria-label="параметры торта">
     <h1 class="cake-title">__H1__</h1>
     <p class="cake-desc">__DESC__</p>
     <p class="cake-sub">__SUB__</p>
-    <iframe class="calc-frame"
-            src="__CALC_SRC__"
-            title="__IFRAME_TITLE__"></iframe>
+    <div class="calc-frame">
+      <div class="calc-scroll" id="root"></div>
+    </div>
   </section>
 
   <section class="cake-col col-third" aria-label="третья колонка">
-__THIRD_COL_INNER__
+__FILL_HEAD____THIRD_COL_INNER__
+    <div class="cake-fillings-dots mob-dots mob-dots--small" id="cake-fillings-dots" aria-hidden="true"></div>
     <div class="col-delivery" id="delivery-col" aria-hidden="true">
       <button class="delivery-back" id="delivery-back" type="button" aria-label="закрыть доставку">
         <svg viewBox="0 0 22 21" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path d="M0.877209 0.877275C2.04698 -0.292499 3.94367 -0.292351 5.11354 0.877275L10.5657 6.32942L16.012 0.883134C17.1818 -0.286425 19.0785 -0.286409 20.2483 0.883134C21.4181 2.05291 21.4179 3.9496 20.2483 5.11946L14.802 10.5658L20.1174 15.8812C21.2873 17.051 21.2873 18.9477 20.1174 20.1175C18.9476 21.2872 17.0509 21.2873 15.8811 20.1175L10.5657 14.8021L5.2444 20.1234C4.07455 21.2932 2.17792 21.2932 1.00807 20.1234C-0.161545 18.9535 -0.161701 17.0568 1.00807 15.887L6.32936 10.5658L0.877209 5.1136C-0.292372 3.94378 -0.292433 2.04706 0.877209 0.877275Z"/>
         </svg>
       </button>
-      <iframe class="delivery-frame"
-              src="../../../calculator/delivery/index.html"
-              title="доставка"></iframe>
+      <div class="delivery-inline" id="dlv-root"></div>
     </div>
   </section>
 
 </div>
 
-<script src="../../fillings/data.js"></script>
+<script src="../../calculator/core.js?v=__CALC_JS_V__"></script>
 <script>
-__SHARED_JS__
+__CALC_INIT__
 </script>
-
+<script src="../../calculator/delivery/delivery.js?v=__DLV_JS_V__"></script>
+<script>Kosmos.mountDelivery(document.getElementById('dlv-root'));</script>
+<script src="../fillings/data.js"></script>
+<script>
+__PAGE_JS__
+</script>
 </body>
 </html>
 """
 
-MOBILE_BODY = """<!doctype html>
-<html lang="ru">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>__PAGE_TITLE__</title>
-<link rel="stylesheet" href="../../style.css">
-</head>
-<body class="mob-page">
-
- 
-
-<section class="mob-photos-wrap" aria-label="фото торта">
-  <div class="mob-photos" id="mob-photos">
-__PHOTOS_MOBILE__
-  </div>
-  <div class="mob-dots" id="mob-photo-dots" aria-hidden="true"></div>
-</section>
-
-<header class="mob-head">
-  <h1 class="cake-title">__H1__</h1>
-  <p class="cake-desc">__DESC__</p>
-  <p class="cake-sub">__SUB__</p>
-</header>
-
-__MOBILE_FILL_BLOCK__
-
-<iframe class="mob-calc-frame"
-        src="__CALC_SRC__"
-        title="__IFRAME_TITLE__"></iframe>
-
-<iframe class="mob-delivery-frame" id="mob-delivery"
-        src="../../../calculator/delivery/index.html"
-        title="доставка"></iframe>
-
-<a class="back-to-catalog" href="../index.html" aria-label="вернуться в каталог">
-<svg width="64" height="81" viewBox="0 0 64 81" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M44.9803 79.3892C42.8039 81.537 39.2754 81.5369 37.099 79.3892L1.6323 44.3888C-0.544105 42.2411 -0.544105 38.7589 1.6323 36.6111L37.099 1.61081C39.2754 -0.536903 42.8039 -0.536951 44.9803 1.61081C47.1567 3.75858 47.1567 7.24072 44.9803 9.38851L19.0273 35.0002L58.427 35.0002C61.5049 35.0002 64 37.4626 64 40.5C64 43.5374 61.5049 45.9998 58.427 45.9998L19.0273 45.9998L44.9803 71.6115C47.1566 73.7593 47.1567 77.2414 44.9803 79.3892Z" fill="white"/>
-</svg>
-</a>
-
-<script src="../../fillings/data.js"></script>
-<script>
-__SHARED_JS_MOBILE__
-</script>
-
-</body>
-</html>
-"""
+FILL_HEAD_HTML = (
+    '    <div class="cake-fill-head">\n'
+    '      <h2 class="mob-section-title">Что внутри?'
+    '<img class="mob-section-cherry" src="../assets/cherry.svg" alt="" aria-hidden="true">'
+    '</h2>\n'
+    '    </div>\n'
+)
 
 SHARED_JS = r"""  /* Меню удалено: кнопка «К» теперь — простая ссылка-каталог (см. шаблон). */
 
   (function fitCakeTitle(){
-    const title = document.querySelector('.cake-title');
+    const title = document.querySelector('.col-info .cake-title');
     if (!title) return;
     const raw = title.textContent.trim();
     const ws = raw.split(/\s+/);
-    /* 4+ слов → объединяем в пары ("big cherry" / "fairy cake"), иначе
-       заголовок занимает всю высоту колонки и калькулятор не помещается. */
     const groups = (ws.length >= 4)
       ? ws.reduce((a, w, i) => { if (i % 2 === 0) a.push([w]); else a[a.length-1].push(w); return a; }, []).map(g => g.join('\u00a0'))
       : ws;
     title.innerHTML = groups.map(w => `<span class="word">${w}</span>`).join('');
-    const MAX = 160, MIN = 28, TARGET = 0.96;
+    const mq = window.matchMedia('(max-width: 900px)');
     function fit(){
+      const isMob = mq.matches;
+      const MAX = isMob ? 200 : 160, MIN = isMob ? 32 : 28, TARGET = isMob ? 0.94 : 0.96;
       const cw = title.clientWidth;
       if (!cw) return;
       title.querySelectorAll('.word').forEach(word => {
@@ -569,6 +550,8 @@ SHARED_JS = r"""  /* Меню удалено: кнопка «К» теперь �
     }
     fit();
     window.addEventListener('resize', fit);
+    if (mq.addEventListener) mq.addEventListener('change', fit);
+    else if (mq.addListener) mq.addListener(fit);
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit).catch(()=>{});
   })();
 
@@ -608,7 +591,7 @@ SHARED_JS = r"""  /* Меню удалено: кнопка «К» теперь �
     if (slug){
       const cls = document.createElement('img');
       cls.className = 'bb-class';
-      cls.src = `../../assets/class-${slug}.svg?v=__CLASS_V__`;
+      cls.src = `../assets/class-${slug}.svg?v=__CLASS_V__`;
       cls.alt = f.cls;
       cls.title = f.cls;
       bubble.appendChild(cls);
@@ -657,8 +640,8 @@ SHARED_JS = r"""  /* Меню удалено: кнопка «К» теперь �
     const img = document.createElement('img');
     img.className = 'slice'; img.alt = name; img.loading = 'lazy';
     img.src = f && f.photo
-      ? `../../fillings/photos/${f.photo}`
-      : '../../photos/fairy-cake/slice-1.jpg';
+      ? `../fillings/photos/${f.photo}`
+      : '../photos/fairy-cake/slice-1.jpg';
     wrap.appendChild(img);
     const dot = document.createElement('button');
     dot.type = 'button'; dot.className = 'info-dot';
@@ -684,37 +667,25 @@ SHARED_JS = r"""  /* Меню удалено: кнопка «К» теперь �
     });
   }
 
-  const col = document.getElementById('fillings-col');
-  if (col && col.dataset.fillings){
-    resolveFillings(col.dataset.fillings).forEach(name => col.appendChild(buildSlice(name)));
-    bindFillingDelegation(col);
+  function mountFillings(el){
+    if (!el || !el.dataset.fillings) return;
+    resolveFillings(el.dataset.fillings).forEach(name => el.appendChild(buildSlice(name)));
+    bindFillingDelegation(el);
   }
+  mountFillings(document.getElementById('fillings-col'));
 
   const page = document.querySelector('.cake-page');
   const deliveryCol = document.getElementById('delivery-col');
-  /* Прокидываем kosmos-cake от калькулятора в iframe доставки. BroadcastChannel
-     не работает на file://, поэтому без этого моста для ярусных тортов не
-     прятался кружок самовывоза. */
-  const deliveryFrames = Array.prototype.slice.call(document.querySelectorAll('.delivery-frame, .mob-delivery-frame'));
-  window.addEventListener('message', (e) => {
-    const d = e.data;
-    if (!d || typeof d !== 'object') return;
-    if (d.type === 'kosmos-cake'){
-      deliveryFrames.forEach(f => {
-        if (f.contentWindow && f.contentWindow !== e.source){
-          try { f.contentWindow.postMessage(d, '*'); } catch(_){}
-        }
-      });
+  function openDeliveryPanel(){
+    if (!page || !deliveryCol) return;
+    page.classList.add('is-delivery');
+    deliveryCol.setAttribute('aria-hidden','false');
+    if (window.matchMedia('(max-width:900px)').matches){
+      deliveryCol.scrollIntoView({behavior:'smooth', block:'start'});
     }
-  });
+  }
   if (page && deliveryCol){
-    window.addEventListener('message', (e) => {
-      const d = e.data;
-      if (d && typeof d === 'object' && d.type === 'kosmos-next'){
-        page.classList.add('is-delivery');
-        deliveryCol.setAttribute('aria-hidden','false');
-      }
-    });
+    window.addEventListener('kosmos-next', openDeliveryPanel);
     const dBack = document.getElementById('delivery-back');
     if (dBack){
       dBack.addEventListener('click', () => {
@@ -723,22 +694,6 @@ SHARED_JS = r"""  /* Меню удалено: кнопка «К» теперь �
       });
     }
   }
-
-  (function autoFitCalcIframe(){
-    /* Калькулятор шлёт postMessage {type:'kosmos-calc-height', height}. Подгоняем
-       высоту iframe ровно под контент — бантик внутри iframe сразу под кнопкой
-       «далее», между ним и краем iframe пустоты нет. */
-    const frames = Array.prototype.slice.call(document.querySelectorAll('.calc-frame, .mob-calc-frame'));
-    if (!frames.length) return;
-    window.addEventListener('message', (e) => {
-      const d = e.data;
-      if (!d || typeof d !== 'object' || d.type !== 'kosmos-calc-height') return;
-      const h = Math.max(120, Math.min(2400, parseInt(d.height, 10) || 0));
-      frames.forEach(f => {
-        if (f.contentWindow === e.source) f.style.height = h + 'px';
-      });
-    });
-  })();
 
   /* Бесконечная авто-карусель: клонируем оригинальный набор детей один раз
      и крутим только в одну сторону. При прохождении длины оригинала вычитаем
@@ -780,55 +735,37 @@ SHARED_JS = r"""  /* Меню удалено: кнопка «К» теперь �
     return el.__kLoop;
   }
 
-  (function kosmoLoopScroll(){
-    var ph = document.getElementById('mob-photos');
-    if (ph) kosmoLoop(ph, false, 1.0);
-    var mf = document.getElementById('mob-fillings');
-    if (mf) {
-      kosmoLoop(mf, false, 0.9);
-      bindFillingDelegation(mf);
-    }
-    var cp = document.querySelector('.col-photo');
-    if (cp) kosmoLoop(cp, true, 0.55);
-    var fc = document.getElementById('fillings-col');
-    if (fc) {
-      /* Тирамису: третья колонка — фото-стек (.col-fillings--photos),
-         тоже бесшовно прокручивается. У обычных тортов — колбаса начинок. */
-      if (fc.classList.contains('col-fillings--photos')) {
-        kosmoLoop(fc, true, 0.55);
-      } else if (fc.dataset.fillings) {
-        kosmoLoop(fc, true, 0.55);
-      }
-    }
-  })();
-"""
-
-
-def fix_mobile_js():
-    """Мобильный скрипт: тот же общий блок (десктоп-делая защита внутри `if (page && deliveryCol)`
-    сама обходит мобилку), плюс: рендер начинок в #mob-fillings, скролл к доставке
-    по событию 'kosmos-next', точки-индикаторы под мобильными каруселями. """
-    base = SHARED_JS
-    base = base.replace(
-        "const col = document.getElementById('fillings-col');",
-        "const col = document.getElementById('mob-fillings');",
-    )
-    base = base.replace("const MAX = 160, MIN = 28, TARGET = 0.96;", "const MAX = 200, MIN = 32, TARGET = 0.94;")
-    tail = r"""
-  /* «далее» в калькуляторе — листаем страницу к блоку доставки на мобилке. */
-  const dlv = document.getElementById('mob-delivery');
-  if (dlv){
-    window.addEventListener('message', (e) => {
-      const d = e.data;
-      if (d && typeof d === 'object' && d.type === 'kosmos-next'){
-        dlv.scrollIntoView({behavior:'smooth', block:'start'});
-      }
+  var _loopMq = window.matchMedia('(max-width:900px)');
+  var _loopHandles = [];
+  function killLoops(){
+    _loopHandles.forEach(h => { if (h.kill) h.kill(); });
+    _loopHandles = [];
+    ['cake-photos','fillings-col'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) delete el.__kLoop;
     });
+    const cp = document.querySelector('.col-photo');
+    if (cp) delete cp.__kLoop;
   }
+  function kosmoLoopScroll(){
+    killLoops();
+    var ph = document.getElementById('cake-photos');
+    var cp = document.querySelector('.col-photo');
+    var fc = document.getElementById('fillings-col');
+    if (_loopMq.matches){
+      if (ph){ var h = kosmoLoop(ph, false, 1.0); if (h) _loopHandles.push(h); }
+      if (fc && fc.dataset.fillings){ var h2 = kosmoLoop(fc, false, 0.9); if (h2) _loopHandles.push(h2); }
+    } else {
+      if (cp){ var h3 = kosmoLoop(cp, true, 0.55); if (h3) _loopHandles.push(h3); }
+      if (fc && (fc.classList.contains('col-fillings--photos') || fc.dataset.fillings)){
+        var h4 = kosmoLoop(fc, true, 0.55); if (h4) _loopHandles.push(h4);
+      }
+    }
+  }
+  kosmoLoopScroll();
+  if (_loopMq.addEventListener) _loopMq.addEventListener('change', kosmoLoopScroll);
+  else if (_loopMq.addListener) _loopMq.addListener(kosmoLoopScroll);
 
-  /* Точки-индикаторы под mob-photos и mob-fillings. Количество точек равно
-     числу ИСХОДНЫХ слайдов (без клонов, добавленных kosmoLoop для бесшовного цикла).
-     Активная точка — текущий слайд, по нажатию — плавный переход к слайду. */
   function kosmoDots(carouselId, dotsId){
     const car = document.getElementById(carouselId);
     const dotsBox = document.getElementById(dotsId);
@@ -868,16 +805,27 @@ def fix_mobile_js():
       window.requestAnimationFrame(update);
     }, {passive:true});
   }
-  /* Запускаем после kosmoLoop, чтобы он успел расставить клоны и записать meta. */
   setTimeout(() => {
-    kosmoDots('mob-photos', 'mob-photo-dots');
-    kosmoDots('mob-fillings', 'mob-fillings-dots');
+    if (window.matchMedia('(max-width:900px)').matches){
+      kosmoDots('cake-photos', 'cake-photo-dots');
+      kosmoDots('fillings-col', 'cake-fillings-dots');
+    }
   }, 30);
+
+  (function syncCalcMobileCtx(){
+    const mq = window.matchMedia('(max-width: 900px)');
+    function apply(){
+      if (typeof window.setKosmosMobileCtx === 'function'){
+        window.setKosmosMobileCtx(mq.matches);
+      }
+    }
+    apply();
+    if (mq.addEventListener) mq.addEventListener('change', apply);
+    else if (mq.addListener) mq.addListener(apply);
+  })();
 """
-    return base + tail
 
-
-SHARED_JS_MOBILE = fix_mobile_js()
+PAGE_JS = SHARED_JS
 
 
 PHOTO_GRID_CAKES = {"tiramisu"}
@@ -901,7 +849,7 @@ def third_col_inner_html(cake: dict) -> str:
     if cid in PHOTO_GRID_CAKES:
         _left, right, _, _ = photo_paths_split(cid)
         if not right:
-            right = _left[-1:] or ["../../photos/fairy-cake/cover.jpg"]
+            right = _left[-1:] or [f"{PHOTO_REL}/fairy-cake/cover.jpg"]
         items = "\n".join(
             f'      <img class="photo" src="{html.escape(p)}" alt="{html.escape(cake["name"])}">'
             for p in right
@@ -914,85 +862,38 @@ def third_col_inner_html(cake: dict) -> str:
     return f'    <div class="col-fillings" id="fillings-col" data-fillings="{fill}"></div>'
 
 
-def mobile_fill_block_html(cake: dict) -> str:
-    """Блок «что внутри?» + начинки для мобилки.
-    Для PHOTO_GRID_CAKES блок начинок заменяется на вертикальный стек больших фото. """
-    cid = cake["id"]
-    fill = html.escape(cake.get("fillings") or "BASE")
-    if cid in PHOTO_GRID_CAKES:
-        _, _, _left, right = photo_paths_split(cid)
-        if not right:
-            right = _left[-1:] or ["../../photos/fairy-cake/cover.jpg"]
-        items = "\n".join(
-            f'  <img src="{html.escape(p)}" alt="{html.escape(cake["name"])}">'
-            for p in right
-        )
-        return (
-            '<section class="mob-photos-grid" aria-label="фото торта">\n'
-            f"{items}\n"
-            '</section>'
-        )
-    return (
-        '<div class="mob-fill-head">\n'
-        '  <h2 class="mob-section-title">Что внутри?'
-        '<img class="mob-section-cherry" src="../../assets/cherry.svg" alt="" aria-hidden="true">'
-        '</h2>\n'
-        '</div>\n\n'
-        f'<section class="mob-fillings" id="mob-fillings" data-fillings="{fill}" aria-label="начинки"></section>\n'
-        '<div class="mob-dots mob-dots--small" id="mob-fillings-dots" aria-hidden="true"></div>'
-    )
+def fill_head_html(cake: dict) -> str:
+    if cake["id"] in PHOTO_GRID_CAKES:
+        return ""
+    return FILL_HEAD_HTML
 
 
-def render_desktop(cake: dict) -> str:
+def render_cake_page(cake: dict) -> str:
+    bc = import_build_cakes()
+    render_fn, data_js = bc.cake_render_js(cake)
+    css_v, js_v, dcss_v, djs_v = calc_asset_versions()
     cid = cake["id"]
-    typ = cake["type"]
     name = cake["name"]
-    calc = f"../../../calculator/cakes-mobile/{typ}/{cid}.html"
     page_title = html.escape(f"{name} — kosmos")
     h1 = html.escape(name)
     desc = html.escape(cake.get("desc") or "")
     sub = subtitle_html(cake)
-    iframe_title = html.escape(f"калькулятор {name}")
-    photos = desktop_photos_html(cid, name)
-    third = third_col_inner_html(cake)
+    calc_init = f"{render_fn}({data_js});"
+    js = PAGE_JS.replace("__CLASS_V__", str(get_class_assets_version()))
     return (
-        DESKTOP_HEAD.replace("__PAGE_TITLE__", page_title)
-        .replace("__PHOTOS_DESKTOP__", photos)
+        UNIFIED_PAGE.replace("__PAGE_TITLE__", page_title)
+        .replace("__PHOTOS__", cake_photos_html(cid, name))
         .replace("__H1__", h1)
         .replace("__DESC__", desc)
         .replace("__SUB__", sub)
-        .replace("__CALC_SRC__", html.escape(calc))
-        .replace("__IFRAME_TITLE__", iframe_title)
-        .replace("__THIRD_COL_INNER__", third)
-        .replace("__SHARED_JS__", SHARED_JS.replace("__CLASS_V__", str(get_class_assets_version())))
-    )
-
-
-def render_mobile(cake: dict) -> str:
-    cid = cake["id"]
-    typ = cake["type"]
-    name = cake["name"]
-    # ctx=mobile — флаг для core.js: не рисовать «далее»+«бантик», а
-    # вывести надпись о доставке. Десктопная cake-страница использует
-    # тот же iframe без этого query — поэтому на ней всё по-старому.
-    calc = f"../../../calculator/cakes-mobile/{typ}/{cid}.html?ctx=mobile"
-    page_title = html.escape(f"{name} — kosmos")
-    h1 = html.escape(name)
-    desc = html.escape(cake.get("desc") or "")
-    sub = subtitle_html(cake)
-    iframe_title = html.escape(f"калькулятор {name}")
-    photos = mobile_photos_html(cid, name)
-    fill_block = mobile_fill_block_html(cake)
-    return (
-        MOBILE_BODY.replace("__PAGE_TITLE__", page_title)
-        .replace("__PHOTOS_MOBILE__", photos)
-        .replace("__H1__", h1)
-        .replace("__DESC__", desc)
-        .replace("__SUB__", sub)
-        .replace("__CALC_SRC__", html.escape(calc))
-        .replace("__IFRAME_TITLE__", iframe_title)
-        .replace("__MOBILE_FILL_BLOCK__", fill_block)
-        .replace("__SHARED_JS_MOBILE__", SHARED_JS_MOBILE.replace("__CLASS_V__", str(get_class_assets_version())))
+        .replace("__CALC_INIT__", calc_init)
+        .replace("__CALC_CSS_V__", css_v)
+        .replace("__CALC_JS_V__", js_v)
+        .replace("__DLV_CSS_V__", dcss_v)
+        .replace("__DLV_JS_V__", djs_v)
+        .replace("__FILL_HEAD__", fill_head_html(cake))
+        .replace("__THIRD_COL_INNER__", third_col_inner_html(cake))
+        .replace("__PAGE_JS__", js)
     )
 
 
@@ -1035,24 +936,24 @@ def sync_kosmos_filling_sets() -> None:
 
 
 def write_site_preview_index(cakes: list, by_id: dict) -> None:
-    """Полное превью site/preview.html — все страницы тортов (десктоп + мобилка)."""
+    """Полное превью site/preview.html — адаптивные страницы тортов."""
     base = "https://ab-aacoop.github.io/kosmos_calc/site"
     oc = ordered_cakes(cakes, by_id)
 
-    def card_dsk(c: dict) -> str:
+    def card_cake(c: dict) -> str:
         cid, nm = c["id"], html.escape(c["name"])
-        sn = f"snip-dsk-{cid}"
-        url = f"{base}/desktop/cakes/{cid}.html"
+        sn = f"snip-{cid}"
+        snippet = html.escape(page_embed_snippet(f"cakes/{cid}.html", base))
         return (
             f'  <div class="card">\n'
             f'    <header>\n'
-            f'      <span class="type">desktop</span>\n'
+            f'      <span class="type">адаптив</span>\n'
             f'      <span class="name">{nm}</span>\n'
-            f'      <a class="open" href="desktop/cakes/{html.escape(cid)}.html" target="_blank">↗</a>\n'
+            f'      <a class="open" href="cakes/{html.escape(cid)}.html" target="_blank">↗</a>\n'
             f"    </header>\n"
-            f'    <div class="frame-wrap"><iframe src="desktop/cakes/{html.escape(cid)}.html" loading="lazy" title="{nm}"></iframe></div>\n'
+            f'    <div class="frame-wrap"><object data="cakes/{html.escape(cid)}.html" type="text/html" title="{nm}"></object></div>\n'
             f'    <div class="snip">\n'
-            f'      <textarea readonly id="{sn}"><iframe src="{html.escape(url)}" width="1280" height="800" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>\n'
+            f'      <textarea readonly id="{sn}">{snippet}</textarea>\n'
             f'      <div class="snip-row">\n'
             f'        <button type="button" data-copy="{sn}">копировать сниппет</button>\n'
             f'        <span class="ok" data-ok="{sn}">✓ скопировано</span>\n'
@@ -1061,30 +962,7 @@ def write_site_preview_index(cakes: list, by_id: dict) -> None:
             f"  </div>"
         )
 
-    def card_mob(c: dict) -> str:
-        cid, nm = c["id"], html.escape(c["name"])
-        sn = f"snip-mob-{cid}"
-        url = f"{base}/mobile/cakes/{cid}.html"
-        return (
-            f'  <div class="card">\n'
-            f'    <header>\n'
-            f'      <span class="type">mobile</span>\n'
-            f'      <span class="name">{nm}</span>\n'
-            f'      <a class="open" href="mobile/cakes/{html.escape(cid)}.html" target="_blank">↗</a>\n'
-            f"    </header>\n"
-            f'    <div class="frame-wrap"><iframe src="mobile/cakes/{html.escape(cid)}.html" loading="lazy" title="{nm}"></iframe></div>\n'
-            f'    <div class="snip">\n'
-            f'      <textarea readonly id="{sn}"><iframe src="{html.escape(url)}" width="380" height="780" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>\n'
-            f'      <div class="snip-row">\n'
-            f'        <button type="button" data-copy="{sn}">копировать сниппет</button>\n'
-            f'        <span class="ok" data-ok="{sn}">✓ скопировано</span>\n'
-            f"      </div>\n"
-            f"    </div>\n"
-            f"  </div>"
-        )
-
-    dsk_rows = "\n".join(card_dsk(c) for c in oc)
-    mob_rows = "\n".join(card_mob(c) for c in oc)
+    cake_rows = "\n".join(card_cake(c) for c in oc)
 
     html_out = f"""<!doctype html>
 <html lang="ru">
@@ -1123,7 +1001,7 @@ def write_site_preview_index(cakes: list, by_id: dict) -> None:
   .grid-dsk .frame-wrap{{aspect-ratio:1280/800}}
   .grid-cakes .frame-wrap{{aspect-ratio:1280/800}}
   .grid-cakes.grid-mob .frame-wrap{{aspect-ratio:380/780}}
-  .frame-wrap iframe{{display:block;width:100%;height:100%;border:0}}
+  .frame-wrap object{{display:block;width:100%;height:100%;border:0}}
 
   .snip{{padding:10px 12px;border-top:1px solid #eee;background:#fafafa;display:flex;flex-direction:column;gap:6px}}
   .snip textarea{{
@@ -1145,103 +1023,59 @@ def write_site_preview_index(cakes: list, by_id: dict) -> None:
 
 <h1>Kosmos cake — превью страниц сайта</h1>
 <p class="lead">
-  Каждая страница — готовый HTML для iframe (Tilda / Readymag и т.д.).
-  Ниже — главные, страница «о нас» и <strong>все страницы тортов</strong> (десктоп и мобилка), с кнопкой копирования сниппета.
+  Каждая страница — готовый inline HTML для Tilda / Readymag (без iframe).
+  Ниже — главная, «о нас» и <strong>все страницы тортов</strong> (одна адаптивная версия), с кнопкой копирования сниппета.
   Фото торта: положите файлы в <code>site/photos raw/&lt;id&gt;/</code> и выполните
   <code>python site/import_photos_raw.py</code>, затем <code>python site/build_site_pages.py</code>.
 </p>
 
 <div class="topbar">
-  <a class="primary" href="../calculator/cakes/">↗ калькуляторы — десктоп</a>
-  <a href="../calculator/cakes-mobile/">↗ калькуляторы — мобилка</a>
-  <a href="../calculator/cakes-mobile-full/">↗ мобилка всё-в-одном</a>
+  <a class="primary" href="../calculator/cakes/">↗ калькуляторы</a>
+  <a href="cakes/">↗ страницы тортов</a>
   <a href="../calculator/delivery/preview.html">↗ блок доставки</a>
 </div>
 
-<h2>Главная — десктоп</h2>
+<h2>Главная (каталог)</h2>
 <div class="grid-dsk">
   <div class="card">
     <header>
-      <span class="type">desktop</span>
-      <span class="name">главная (каталог)</span>
-      <a class="open" href="desktop/index.html" target="_blank">↗</a>
+      <span class="type">каталог</span>
+      <span class="name">главная</span>
+      <a class="open" href="index.html" target="_blank">↗</a>
     </header>
-    <div class="frame-wrap"><iframe src="desktop/index.html" loading="lazy" title="главная — десктоп"></iframe></div>
+    <div class="frame-wrap"><object data="index.html" type="text/html" title="главная"></object></div>
     <div class="snip">
-      <textarea readonly id="snip-dsk-home"><iframe src="{base}/desktop/index.html" width="1280" height="800" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <textarea readonly id="snip-home">{html.escape(page_embed_snippet("index.html", base))}</textarea>
       <div class="snip-row">
-        <button type="button" data-copy="snip-dsk-home">копировать сниппет</button>
-        <span class="ok" data-ok="snip-dsk-home">✓ скопировано</span>
+        <button type="button" data-copy="snip-home">копировать сниппет</button>
+        <span class="ok" data-ok="snip-home">✓ скопировано</span>
       </div>
     </div>
   </div>
 </div>
 
-<h2>Главная — мобилка</h2>
-<div class="grid-mob">
-  <div class="card">
-    <header>
-      <span class="type">mobile</span>
-      <span class="name">главная (каталог)</span>
-      <a class="open" href="mobile/index.html" target="_blank">↗</a>
-    </header>
-    <div class="frame-wrap"><iframe src="mobile/index.html" loading="lazy" title="главная — мобилка"></iframe></div>
-    <div class="snip">
-      <textarea readonly id="snip-mob-home"><iframe src="{base}/mobile/index.html" width="380" height="780" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
-      <div class="snip-row">
-        <button type="button" data-copy="snip-mob-home">копировать сниппет</button>
-        <span class="ok" data-ok="snip-mob-home">✓ скопировано</span>
-      </div>
-    </div>
-  </div>
-</div>
-
-<h2>О нас — десктоп</h2>
+<h2>О нас</h2>
 <div class="grid-dsk">
   <div class="card">
     <header>
-      <span class="type">desktop</span>
+      <span class="type">о нас</span>
       <span class="name">о нас</span>
-      <a class="open" href="desktop/about.html" target="_blank">↗</a>
+      <a class="open" href="about.html" target="_blank">↗</a>
     </header>
-    <div class="frame-wrap"><iframe src="desktop/about.html" loading="lazy" title="о нас — десктоп"></iframe></div>
+    <div class="frame-wrap"><object data="about.html" type="text/html" title="о нас"></object></div>
     <div class="snip">
-      <textarea readonly id="snip-dsk-about"><iframe src="{base}/desktop/about.html" width="1280" height="800" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
+      <textarea readonly id="snip-about">{html.escape(page_embed_snippet("about.html", base))}</textarea>
       <div class="snip-row">
-        <button type="button" data-copy="snip-dsk-about">копировать сниппет</button>
-        <span class="ok" data-ok="snip-dsk-about">✓ скопировано</span>
+        <button type="button" data-copy="snip-about">копировать сниппет</button>
+        <span class="ok" data-ok="snip-about">✓ скопировано</span>
       </div>
     </div>
   </div>
 </div>
 
-<h2>О нас — мобилка</h2>
-<div class="grid-mob">
-  <div class="card">
-    <header>
-      <span class="type">mobile</span>
-      <span class="name">о нас</span>
-      <a class="open" href="mobile/about.html" target="_blank">↗</a>
-    </header>
-    <div class="frame-wrap"><iframe src="mobile/about.html" loading="lazy" title="о нас — мобилка"></iframe></div>
-    <div class="snip">
-      <textarea readonly id="snip-mob-about"><iframe src="{base}/mobile/about.html" width="380" height="780" frameborder="0" style="border:0;max-width:100%"></iframe></textarea>
-      <div class="snip-row">
-        <button type="button" data-copy="snip-mob-about">копировать сниппет</button>
-        <span class="ok" data-ok="snip-mob-about">✓ скопировано</span>
-      </div>
-    </div>
-  </div>
-</div>
-
-<h2>Все страницы тортов — десктоп</h2>
+<h2>Все страницы тортов</h2>
 <div class="grid-cakes">
-{dsk_rows}
-</div>
-
-<h2>Все страницы тортов — мобилка</h2>
-<div class="grid-cakes grid-mob">
-{mob_rows}
+{cake_rows}
 </div>
 
 <script>
@@ -1277,13 +1111,7 @@ function flash(id){{
 
 
 def write_unified_catalog_entrypoint(by_id: dict) -> None:
-    """Единый адаптивный каталог site/index.html — одна страница и для десктопа,
-    и для мобилки. Сетка перестраивается живьём через @media-запросы, без
-    редиректа (раньше уход на mobile/ или desktop/ фиксировался при первой
-    загрузке и не реагировал на ресайз). Ссылки на cake-страницы выбираются
-    тоже через @media в CSS: span.cover-link[data-d][data-m] — JS подставит
-    нужный href при ресайзе. Это даёт нам ровно одну точку входа для прода.
-    """
+    """Единый адаптивный каталог site/index.html."""
     rows: list[str] = []
     for cid in CATALOG_ORDER:
         c = by_id.get(cid)
@@ -1292,10 +1120,8 @@ def write_unified_catalog_entrypoint(by_id: dict) -> None:
         nm = html.escape(c["name"])
         cov = html.escape(cover_filename(cid))
         cid_esc = html.escape(cid)
-        # data-d / data-m — относительные ссылки на десктоп/мобильную cake-страницу.
         rows.append(
-            f'  <a class="cover" href="desktop/cakes/{cid_esc}.html" '
-            f'data-d="desktop/cakes/{cid_esc}.html" data-m="mobile/cakes/{cid_esc}.html">'
+            f'  <a class="cover" href="cakes/{cid_esc}.html">'
             f'<img src="photos/{cid_esc}/{cov}" alt="{nm}" loading="lazy" '
             f'onerror="if(!this.dataset.fbk){{this.dataset.fbk=1;'
             f'this.src=this.src.replace(/cover\\.(jpg|jpeg|png|webp)$/i,'
@@ -1328,31 +1154,9 @@ def write_unified_catalog_entrypoint(by_id: dict) -> None:
 </head>
 <body>
 
-<a class="menu-btn" id="menu-toggle" href="index.html" aria-label="каталог">
-  {k_svg}
-</a>
-
 <main class="cover-grid">
 {grid}
 </main>
-
-<script>
-  /* Переключаем href cover-карточки между mobile/* и desktop/* в зависимости
-     от ширины окна. Это даёт правильный целевой URL при ресайзе в реальном
-     времени — пользователь не «застревает» на не-той версии. */
-  (function(){{
-    var mq = window.matchMedia('(max-width: 900px)');
-    function apply(){{
-      var mob = mq.matches;
-      document.querySelectorAll('.cover[data-d][data-m]').forEach(function(a){{
-        a.setAttribute('href', mob ? a.dataset.m : a.dataset.d);
-      }});
-    }}
-    apply();
-    if (mq.addEventListener) mq.addEventListener('change', apply);
-    else if (mq.addListener) mq.addListener(apply);
-  }})();
-</script>
 
 </body>
 </html>
@@ -1362,84 +1166,80 @@ def write_unified_catalog_entrypoint(by_id: dict) -> None:
 
 
 def patch_static_page(path: Path, catalog_href: str):
-    """Чистит popup-меню и его JS на «статичных» страницах сайта (about/каталог
-    без cover-grid). Идемпотентно — повторный вызов ничего не ломает. """
+    """Чистит popup-меню на статичных страницах. Идемпотентно."""
     if not path.exists():
         return
     text = path.read_text(encoding="utf-8")
-    new = text
-    new = strip_menu_list(new)
-    new = convert_menu_btn_to_link(new, href=catalog_href)
-    new = strip_menu_js(new)
+    new = patch_static_page_content(text, catalog_href)
     if new != text:
         path.write_text(new, encoding="utf-8")
 
 
-def write_catalog(path: Path, by_id: dict):
+def build_calculators() -> None:
+    spec = importlib.util.spec_from_file_location("build_cakes_mod", BC)
+    mod = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(mod)
+    mod.main()
+    print("OK: calculator/build_cakes.py")
+
+
+def write_unified_about() -> None:
+    """Патчит site/about.html (адаптивный viewport, без popup-меню)."""
+    path = SITE / "about.html"
+    if not path.exists():
+        return
     text = path.read_text(encoding="utf-8")
-    parts = text.split('<main class="cover-grid">', 1)
-    head = parts[0]
-    rest = parts[1].split("</main>", 1)
-    foot = rest[1]
-    head = patch_catalog_head(head)
-    foot = strip_fit_script(foot)
-    # актуальный комментарий вместо старого «только fairy-cake»
-    head = re.sub(
-        r"<!-- Каталог тортов\.[\s\S]*?-->\s*\n",
-        "<!-- Каталог: порядок — CATALOG_ORDER в site/build_site_pages.py; "
-        "подписи и ссылки — из calculator/build_cakes.py (поле name, id). -->\n",
-        head,
-        count=1,
+    new = text.replace(
+        'content="width=1280"',
+        'content="width=device-width, initial-scale=1, viewport-fit=cover"',
     )
-    rows = []
-    for cid in CATALOG_ORDER:
-        c = by_id[cid]
-        nm = html.escape(c["name"])
-        cov = cover_filename(cid)
-        rows.append(
-            f'  <a class="cover" href="cakes/{html.escape(cid)}.html">'
-            f'<img src="../photos/{html.escape(cid)}/{html.escape(cov)}" alt="{nm}" loading="lazy" '
-            f'onerror="if(!this.dataset.fbk){{this.dataset.fbk=1;this.src=this.src.replace(/cover\\.(jpg|jpeg|png|webp)$/i,'
-            f'\'cover.\' + ((RegExp.$1||\'jpg\').toUpperCase()));}}">'
-            f'<div class="cover-name">{nm}</div></a>'
-        )
-    body = "<main class=\"cover-grid\">\n" + "\n".join(rows) + "\n</main>"
-    path.write_text(head + body + foot, encoding="utf-8")
+    new = patch_static_page_content(new, catalog_href="index.html")
+    if new != text:
+        path.write_text(new, encoding="utf-8")
+    print("OK: site/about.html")
+
+
+def patch_static_page_content(text: str, catalog_href: str) -> str:
+    text = strip_menu_list(text)
+    text = convert_menu_btn_to_link(text, href=catalog_href)
+    return strip_menu_js(text)
+
+
+def remove_extra_paths() -> None:
+    """Удаляет устаревшие дубли (desktop/mobile, старые калькуляторы, кэш)."""
+    for rel in ("desktop", "mobile"):
+        p = SITE / rel
+        if p.is_dir():
+            shutil.rmtree(p)
+    for p in (SITE / "__pycache__", CALC / "__pycache__"):
+        if p.is_dir():
+            shutil.rmtree(p)
 
 
 def main():
+    build_calculators()
     cakes = load_cakes()
     by_id = {c["id"]: c for c in cakes}
-    desk_dir = SITE / "desktop" / "cakes"
-    mob_dir = SITE / "mobile" / "cakes"
-    desk_dir.mkdir(parents=True, exist_ok=True)
-    mob_dir.mkdir(parents=True, exist_ok=True)
+    cakes_dir = SITE / "cakes"
+    cakes_dir.mkdir(parents=True, exist_ok=True)
 
     for cake in cakes:
-        cid = cake["id"]
-        (desk_dir / f"{cid}.html").write_text(render_desktop(cake), encoding="utf-8")
-        (mob_dir / f"{cid}.html").write_text(render_mobile(cake), encoding="utf-8")
+        (cakes_dir / f"{cake['id']}.html").write_text(render_cake_page(cake), encoding="utf-8")
 
-    # Канонизируем cover.* до cover.jpg / cover.png / cover.webp.
     normalize_cover_filenames([c["id"] for c in cakes])
-
-    write_catalog(SITE / "desktop" / "index.html", by_id)
-    write_catalog(SITE / "mobile" / "index.html", by_id)
-
-    # about-страницы и любые другие со старым popup-меню — вычищаем меню,
-    # кнопку «К» оставляем как ссылку на каталог.
-    patch_static_page(SITE / "desktop" / "about.html", catalog_href="index.html")
-    patch_static_page(SITE / "mobile" / "about.html", catalog_href="index.html")
+    remove_extra_paths()
 
     bust_class_svg_cache()
-    bust_calc_iframe_cache()
+    bust_calc_asset_cache()
     sync_kosmos_filling_sets()
-    write_site_preview_index(cakes, by_id)
     write_unified_catalog_entrypoint(by_id)
+    write_unified_about()
+    write_site_preview_index(cakes, by_id)
     (SITE / "photos raw").mkdir(parents=True, exist_ok=True)
 
-    print(f"OK: {len(cakes)} тортов → desktop/cakes + mobile/cakes")
-    print("OK: каталог desktop/index.html, mobile/index.html")
+    print(f"OK: {len(cakes)} тортов → site/cakes/")
+    print("OK: каталог site/index.html")
 
 
 if __name__ == "__main__":

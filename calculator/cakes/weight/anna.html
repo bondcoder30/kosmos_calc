@@ -4,13 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>анна — калькулятор</title>
-<link rel="stylesheet" href="../../style.css">
+<link rel="stylesheet" href="../../style.css?v=1779294400">
 </head>
-<body>
+<body class="mobile">
 <div class="calc-frame">
   <div class="calc-scroll" id="root"></div>
 </div>
-<script src="../../core.js"></script>
+<script src="../../core.js?v=1779294368"></script>
 <script>
 renderWeightCake({
   "id": "anna",
@@ -37,6 +37,7 @@ renderWeightCake({
   ],
   "minWeight": 4,
   "maxWeight": 20,
+  "mobile": true,
   "fillings": FILLING_SETS.BASE
 });
 </script>
