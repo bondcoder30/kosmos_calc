@@ -619,9 +619,6 @@ body.cake-page-body{height:auto;min-height:100%;overflow-x:hidden;padding-bottom
     scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;
     scroll-padding-inline:20px;
   }
-  .cake-photos::after{
-    content:'';flex:0 0 28px;width:28px;scroll-snap-align:end;
-  }
   .cake-photos .photo{
     flex:0 0 100%;width:100vw;
     aspect-ratio:1/1.25;scroll-snap-align:start;
@@ -630,9 +627,6 @@ body.cake-page-body{height:auto;min-height:100%;overflow-x:hidden;padding-bottom
     position:relative;width:100vw;display:flex;overflow-x:auto;
     scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;
     scroll-padding-inline:20px;
-  }
-  #fillings-col.col-fillings:not(.col-fillings--photos)::after{
-    content:'';flex:0 0 28px;width:28px;scroll-snap-align:end;
   }
   #fillings-col.col-fillings:not(.col-fillings--photos) .slice-wrap{
     flex:0 0 100vw;width:100vw;scroll-snap-align:start;
@@ -811,4 +805,16 @@ body.mob-page .menu-list{top:80px;left:14px}
   .cake-page.is-delivery .col-third .col-delivery{display:flex}
   .delivery-back{position:fixed;right:14px;bottom:14px;left:auto;width:30px;height:30px}
   .delivery-back svg{width:100%;height:100%}
+}
+
+@media (max-width: 960px){
+  .calc-scroll{
+    max-width: 380px;
+    width: 100% !important;
+  }
+
+  .cake-fill-head{
+    padding-left: 20px;
+    margin-bottom: 20px;
+  }
 }
