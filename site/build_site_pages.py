@@ -1153,7 +1153,6 @@ def write_unified_catalog_entrypoint(by_id: dict) -> None:
 </style>
 </head>
 <body>
-
 <main class="cover-grid">
 {grid}
 </main>
