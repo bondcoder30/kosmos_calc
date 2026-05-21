@@ -9,7 +9,7 @@
 
    Получает данные о торте через ЛЮБОЙ из 3-х каналов одновременно:
      1) URL params         (?total=..&cake=..&weight=..&tiers=..&filling=..&tiered=0|1)
-     2) BroadcastChannel   'kosmos-cake' — для двух iframe-ов на одном origin
+     2) BroadcastChannel   'kosmos-cake' — для блоков на одной странице
      3) window 'message'   — postMessage из родителя
      4) window 'kosmos-cake' CustomEvent — если калькулятор и доставка на одной странице
 
@@ -208,7 +208,7 @@
     // 1) CustomEvent — когда калькулятор живёт в той же window (full mobile)
     window.addEventListener('kosmos-cake', function(e){ setPayload(e.detail); });
 
-    // 2) BroadcastChannel — между разными iframe-ами на одном origin
+    // 2) BroadcastChannel — между блоками на одной странице
     try {
       var ch = new BroadcastChannel('kosmos-cake');
       ch.addEventListener('message', function(e){ setPayload(e.data); });

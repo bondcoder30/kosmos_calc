@@ -4,13 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>куинджи — калькулятор</title>
-<link rel="stylesheet" href="../../style.css">
+<link rel="stylesheet" href="../../style.css?v=1779295499">
 </head>
-<body>
+<body class="mobile">
 <div class="calc-frame">
   <div class="calc-scroll" id="root"></div>
 </div>
-<script src="../../core.js"></script>
+<script src="../../core.js?v=1779294368"></script>
 <script>
 renderTieredCake({
   "id": "kuinji",
@@ -22,6 +22,7 @@ renderTieredCake({
   "minWeight": 1.5,
   "minTiers": 1,
   "note": "Стоимость декора зависит от сложности — может быть выше.",
+  "mobile": true,
   "fillings": FILLING_SETS.BASE
 });
 </script>

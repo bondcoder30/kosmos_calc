@@ -6,7 +6,7 @@
     tiered/<id>.html
     fixed/<id>.html
     weight/<id>.html
-    index.html  ← превью всех тортов в iframes
+    index.html  ← превью всех тортов (inline HTML)
 
 Каждый файл — простая страница, которая:
   1. Подключает ../../style.css и ../../core.js
@@ -18,12 +18,8 @@
 import sys, io, json, re
 from pathlib import Path
 
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-
-ROOT   = Path(__file__).parent
-OUT    = ROOT / "cakes"
-OUT_M  = ROOT / "cakes-mobile"
-OUT_MF = ROOT / "cakes-mobile-full"  # мобилка-«всё-в-одном»: калькулятор + доставка
+ROOT = Path(__file__).parent
+OUT  = ROOT / "cakes"
 
 # ----------------------------------------------------------------
 #  ВСЕ ТОРТЫ. Описания взяты из «Вся инфа по тортикам.docx».
@@ -270,64 +266,129 @@ CAKES = [
 ]
 
 # ----------------------------------------------------------------
-#  ШАБЛОН СТРАНИЦЫ ТОРТА
+#  INLINE HTML (без iframe)
 # ----------------------------------------------------------------
-def cake_template(cake, mobile=False, full=False):
-    """
-    mobile=False, full=False — десктоп (cakes/)
-    mobile=True,  full=False — мобилка (cakes-mobile/), без доставки
-    mobile=True,  full=True  — мобилка-объединённая (cakes-mobile-full/),
-                               калькулятор + блок «Доставка» друг под другом.
-    """
-    # JS-объект с данными торта
+GITHUB_CALC = "https://ab-aacoop.github.io/kosmos_calc/calculator"
+
+
+def cake_render_js(cake: dict) -> tuple[str, str]:
+    """(имя render-функции, тело объекта для вызова)."""
     fillings = f"FILLING_SETS.{cake['fillings']}"
-    if cake['type'] == 'tiered':
+    if cake["type"] == "tiered":
         data = {
-            "id": cake['id'], "name": cake['name'],
-            "title": cake['title'], "desc": cake['desc'], "subtitle": cake.get('subtitle', ''),
-            "decorPerTier": cake['decorPerTier'],
-            "minWeight": cake['minWeight'], "minTiers": cake['minTiers']
+            "id": cake["id"],
+            "name": cake["name"],
+            "title": cake["title"],
+            "desc": cake["desc"],
+            "subtitle": cake.get("subtitle", ""),
+            "decorPerTier": cake["decorPerTier"],
+            "minWeight": cake["minWeight"],
+            "minTiers": cake["minTiers"],
         }
-        if 'note' in cake: data['note'] = cake['note']
+        if "note" in cake:
+            data["note"] = cake["note"]
         render = "renderTieredCake"
-    elif cake['type'] == 'fixed':
+    elif cake["type"] == "fixed":
         data = {
-            "id": cake['id'], "name": cake['name'],
-            "title": cake['title'], "desc": cake['desc'], "subtitle": cake.get('subtitle', ''),
-            "decor": {2.5: cake['decor']['2.5'], 3.5: cake['decor']['3.5']}
+            "id": cake["id"],
+            "name": cake["name"],
+            "title": cake["title"],
+            "desc": cake["desc"],
+            "subtitle": cake.get("subtitle", ""),
+            "decor": {2.5: cake["decor"]["2.5"], 3.5: cake["decor"]["3.5"]},
         }
         render = "renderFixedCake"
     else:
         data = {
-            "id": cake['id'], "name": cake['name'],
-            "title": cake['title'], "desc": cake['desc'], "subtitle": cake.get('subtitle', ''),
-            "decorTable": [{"min":r[0], "max":r[1], "price":r[2]} for r in cake['decorTable']],
-            "minWeight": cake['minWeight'], "maxWeight": cake['maxWeight']
+            "id": cake["id"],
+            "name": cake["name"],
+            "title": cake["title"],
+            "desc": cake["desc"],
+            "subtitle": cake.get("subtitle", ""),
+            "decorTable": [
+                {"min": r[0], "max": r[1], "price": r[2]} for r in cake["decorTable"]
+            ],
+            "minWeight": cake["minWeight"],
+            "maxWeight": cake["maxWeight"],
         }
         render = "renderWeightCake"
-
-    if mobile:
-        data["mobile"] = True
-
+    data["mobile"] = True
     data_json = json.dumps(data, ensure_ascii=False, indent=2)
-    # инжектим fillings как JS-выражение FILLING_SETS.XXX вместо строки
-    data_js = data_json.rstrip().rstrip('}').rstrip() + ',\n  "fillings": ' + fillings + '\n}'
+    data_js = data_json.rstrip().rstrip("}").rstrip() + ',\n  "fillings": ' + fillings + "\n}"
+    return render, data_js
 
-    body_class = ' class="mobile"' if mobile else ''
 
-    # Для full-мобилки добавляем блок «Доставка» прямо под калькулятором
-    delivery_part = ''
-    extra_styles = ''
-    if full:
-        delivery_part = (
-            '<div id="dlv-root"></div>\n'
-            '<script src="../../delivery/delivery.js"></script>\n'
-            '<script>Kosmos.mountDelivery(document.getElementById("dlv-root"));</script>\n'
-        )
-        extra_styles = '<link rel="stylesheet" href="../../delivery/delivery.css">\n'
-        # full-мобилка не должна иметь скролла внутри отдельной секции — пусть растёт по контенту
-        extra_styles += '<style>body.mobile .calc-frame{height:auto;overflow:visible}.calc-scroll{padding-bottom:8px}</style>\n'
+def _v(q: str, ver: str) -> str:
+    return f"{q}?v={ver}" if ver else q
 
+
+def calc_inline_block(
+    cake: dict,
+    *,
+    calc_prefix: str = "../../calculator",
+    css_v: str = "",
+    js_v: str = "",
+    with_stylesheet: bool = False,
+) -> str:
+    """Готовый HTML калькулятора для вставки в Tilda / на страницу торта."""
+    render, data_js = cake_render_js(cake)
+    css = _v(f"{calc_prefix}/style.css", css_v)
+    js = _v(f"{calc_prefix}/core.js", js_v)
+    link = f'<link rel="stylesheet" href="{css}">\n' if with_stylesheet else ""
+    return (
+        f"{link}<div class=\"calc-frame\">\n"
+        f"  <div class=\"calc-scroll\" id=\"root\"></div>\n"
+        f"</div>\n"
+        f'<script src="{js}"></script>\n'
+        f"<script>\n{render}({data_js});\n</script>"
+    )
+
+
+def delivery_inline_block(
+    *,
+    dlv_prefix: str = "../../calculator/delivery",
+    css_v: str = "",
+    js_v: str = "",
+    root_id: str = "dlv-root",
+    with_stylesheet: bool = False,
+) -> str:
+    css = _v(f"{dlv_prefix}/delivery.css", css_v)
+    js = _v(f"{dlv_prefix}/delivery.js", js_v)
+    link = f'<link rel="stylesheet" href="{css}">\n' if with_stylesheet else ""
+    return (
+        f"{link}<div class=\"delivery-inline\" id=\"{root_id}\"></div>\n"
+        f'<script src="{js}"></script>\n'
+        f"<script>Kosmos.mountDelivery(document.getElementById('{root_id}'));</script>"
+    )
+
+
+def calc_embed_snippet(cake: dict, css_v: str = "", js_v: str = "") -> str:
+    """Сниппет калькулятора с абсолютными URL (GitHub Pages)."""
+    return calc_inline_block(
+        cake,
+        calc_prefix=GITHUB_CALC,
+        css_v=css_v,
+        js_v=js_v,
+        with_stylesheet=True,
+    )
+
+
+def delivery_embed_snippet(css_v: str = "", js_v: str = "") -> str:
+    return delivery_inline_block(
+        dlv_prefix=f"{GITHUB_CALC}/delivery",
+        css_v=css_v,
+        js_v=js_v,
+        root_id="dlv-root",
+        with_stylesheet=True,
+    )
+
+
+# ----------------------------------------------------------------
+#  ШАБЛОН СТРАНИЦЫ ТОРТА
+# ----------------------------------------------------------------
+def cake_template(cake):
+    """Отдельная страница-калькулятор (inline HTML, без iframe)."""
+    block = calc_inline_block(cake, calc_prefix="../..", with_stylesheet=False)
     return f"""<!doctype html>
 <html lang="ru">
 <head>
@@ -335,15 +396,9 @@ def cake_template(cake, mobile=False, full=False):
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>{cake['name']} — калькулятор</title>
 <link rel="stylesheet" href="../../style.css">
-{extra_styles}</head>
-<body{body_class}>
-<div class="calc-frame">
-  <div class="calc-scroll" id="root"></div>
-</div>
-{delivery_part}<script src="../../core.js"></script>
-<script>
-{render}({data_js});
-</script>
+</head>
+<body class="mobile">
+{block}
 </body>
 </html>
 """
@@ -351,52 +406,34 @@ def cake_template(cake, mobile=False, full=False):
 # ----------------------------------------------------------------
 #  ПРЕВЬЮ-СТРАНИЦА
 # ----------------------------------------------------------------
-BASE_URL    = 'https://ab-aacoop.github.io/kosmos_calc/calculator/cakes'
-BASE_URL_M  = 'https://ab-aacoop.github.io/kosmos_calc/calculator/cakes-mobile'
-BASE_URL_MF = 'https://ab-aacoop.github.io/kosmos_calc/calculator/cakes-mobile-full'
+BASE_URL = 'https://ab-aacoop.github.io/kosmos_calc/calculator/cakes'
 
-def preview_page(cakes, mobile=False, full=False):
-    if full:
-        aspect = '360/1500'
-        iframe_w, iframe_h = 360, 1500
-        base = BASE_URL_MF
-        h1 = 'Все торты — мобилка «всё-в-одном» (калькулятор + доставка)'
-        lead = (
-            'Один iframe — внутри и калькулятор торта, и блок «Доставка» друг под другом. '
-            'Идеально для мобилки сайта: одной вставкой получаем готовую секцию. '
-            'Итоговая сумма автоматически меняется при настройке торта. '
-            'Высота iframe большая (≈1500px) — настраивайте под свою вёрстку.'
-        )
-        title = 'Kosmos — мобилка «всё-в-одном»'
-    elif mobile:
-        aspect = '360/620'
-        iframe_w, iframe_h = 360, 620
-        base = BASE_URL_M
-        h1 = 'Все торты — мобильные превью (только калькулятор)'
-        lead = (
-            'Мобильные версии: без заголовков, фикс-высота, в ярусных тортах поля начинок скрыты '
-            '(стоимость начинки 3 200р/кг фиксированная). Этот блок встаёт под уже свёрстанный заголовок. '
-            'Если хотите получить «калькулятор + доставку» одним iframe — смотрите <a href="../cakes-mobile-full/">cakes-mobile-full</a>.'
-        )
-        title = 'Kosmos — мобильные калькуляторы'
-    else:
-        aspect = '380/760'
-        iframe_w, iframe_h = 380, 760
-        base = BASE_URL
-        h1 = 'Все торты — десктоп превью'
-        lead = (
-            'Каждая карточка — отдельный готовый файл-калькулятор для своего торта. '
-            'Жми «Копировать сниппет» и вставляй в Readymag/Tilda как HTML-виджет. Кнопку «далее» добавит сайт — '
-            'она будет открывать <a href="../delivery/preview.html">блок доставки</a>.'
-        )
-        title = 'Kosmos — все калькуляторы'
+def _asset_versions():
+    css = ROOT / "style.css"
+    js = ROOT / "core.js"
+    return (
+        str(int(css.stat().st_mtime)) if css.exists() else "",
+        str(int(js.stat().st_mtime)) if js.exists() else "",
+    )
+
+
+def preview_page(cakes):
+    aspect = '380/760'
+    css_v, js_v = _asset_versions()
+    h1 = 'Все торты — калькуляторы (адаптивные)'
+    lead = (
+        'Каждая карточка — inline HTML для вставки в Readymag/Tilda (без iframe). '
+        'Страницы тортов: <a href="../../site/cakes/">site/cakes</a>. '
+        'Блок доставки: <a href="../delivery/preview.html">delivery</a>.'
+    )
+    title = 'Kosmos — все калькуляторы'
 
     cards = []
     for i, c in enumerate(cakes):
         path = f"{c['type']}/{c['id']}.html"
-        full_url = f"{base}/{path}"
-        snippet = f'<iframe src="{full_url}" width="{iframe_w}" height="{iframe_h}" frameborder="0" style="border:0;max-width:100%"></iframe>'
+        snippet = calc_embed_snippet(c, css_v, js_v)
         sid = f"snip{i}"
+        esc_snip = snippet.replace("&", "&amp;").replace("<", "&lt;")
         cards.append(f"""
     <div class="card">
       <header>
@@ -404,9 +441,9 @@ def preview_page(cakes, mobile=False, full=False):
         <span class="name">{c['name']}</span>
         <a class="open" href="{path}" target="_blank" title="открыть в новой вкладке">↗</a>
       </header>
-      <div class="frame-wrap"><iframe src="{path}" loading="lazy" title="{c['name']}"></iframe></div>
+      <div class="frame-wrap"><object data="{path}" type="text/html" title="{c['name']}"></object></div>
       <div class="snip">
-        <textarea readonly id="{sid}">{snippet}</textarea>
+        <textarea readonly id="{sid}">{esc_snip}</textarea>
         <div class="snip-row">
           <button type="button" data-copy="{sid}">копировать сниппет</button>
           <span class="ok" data-ok="{sid}">✓ скопировано</span>
@@ -415,13 +452,7 @@ def preview_page(cakes, mobile=False, full=False):
     </div>""")
 
     delivery_test_link = '../delivery/preview.html'
-    other_links = ''
-    if full:
-        other_links = '<a href="../cakes/">↗ десктоп</a> <a href="../cakes-mobile/">↗ мобилка (только калькулятор)</a>'
-    elif mobile:
-        other_links = '<a href="../cakes/">↗ десктоп</a> <a href="../cakes-mobile-full/">↗ мобилка «всё-в-одном»</a>'
-    else:
-        other_links = '<a href="../cakes-mobile/">↗ мобилка</a> <a href="../cakes-mobile-full/">↗ мобилка «всё-в-одном»</a>'
+    other_links = '<a href="../../site/cakes/">↗ страницы тортов</a>'
 
     return f"""<!doctype html>
 <html lang="ru">
@@ -451,7 +482,7 @@ def preview_page(cakes, mobile=False, full=False):
   .card a.open{{color:#999;text-decoration:none;font-size:14px}}
   .card a.open:hover{{color:#d83448}}
   .frame-wrap{{aspect-ratio:{aspect};width:100%;background:#cfcfcf}}
-  .frame-wrap iframe{{display:block;width:100%;height:100%;border:0}}
+  .frame-wrap object{{display:block;width:100%;height:100%;border:0}}
 
   .snip{{padding:10px 12px;border-top:1px solid #eee;background:#fafafa;display:flex;flex-direction:column;gap:6px}}
   .snip textarea{{
@@ -513,7 +544,7 @@ function flash(id){{
 # ----------------------------------------------------------------
 import shutil
 
-def build_into(target_dir, mobile, full=False):
+def build_into(target_dir):
     if target_dir.exists():
         shutil.rmtree(target_dir)
     target_dir.mkdir(parents=True)
@@ -522,18 +553,27 @@ def build_into(target_dir, mobile, full=False):
     generated = []
     for cake in CAKES:
         path = target_dir / cake['type'] / f"{cake['id']}.html"
-        path.write_text(cake_template(cake, mobile=mobile, full=full), encoding='utf-8')
+        path.write_text(cake_template(cake), encoding='utf-8')
         generated.append(path.relative_to(target_dir))
-    (target_dir / "index.html").write_text(preview_page(CAKES, mobile=mobile, full=full), encoding='utf-8')
+    (target_dir / "index.html").write_text(preview_page(CAKES), encoding='utf-8')
     return generated
 
-desktop_files     = build_into(OUT,    mobile=False)
-mobile_files      = build_into(OUT_M,  mobile=True)
-mobile_full_files = build_into(OUT_MF, mobile=True, full=True)
 
-print(f"Десктоп       ({OUT.name}/):   {len(desktop_files)} файлов")
-print(f"Мобилка       ({OUT_M.name}/): {len(mobile_files)} файлов")
-print(f"Мобилка-всё   ({OUT_MF.name}/): {len(mobile_full_files)} файлов")
-print(f"\nПревью десктоп: {(OUT   / 'index.html').relative_to(ROOT)}")
-print(f"Превью мобилка:  {(OUT_M / 'index.html').relative_to(ROOT)}")
-print(f"Превью мобилка-всё-в-одном: {(OUT_MF / 'index.html').relative_to(ROOT)}")
+def remove_legacy_calc_dirs() -> None:
+    for name in ("cakes-mobile", "cakes-mobile-full"):
+        d = ROOT / name
+        if d.is_dir():
+            shutil.rmtree(d)
+
+
+def main():
+    if hasattr(sys.stdout, "buffer"):
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+    remove_legacy_calc_dirs()
+    cake_files = build_into(OUT)
+    print(f"Калькуляторы ({OUT.name}/): {len(cake_files)} файлов")
+    print(f"Превью: {(OUT / 'index.html').relative_to(ROOT)}")
+
+
+if __name__ == "__main__":
+    main()

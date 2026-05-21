@@ -100,7 +100,7 @@ calculator/style.css
 ## 5. Чего НЕ нужно править руками
 
 - `core.js` — там логика (цены начинок, формулы расчёта). Если меняется цена начинки — это там, объект `FILLING_PRICES` (строки 5–12).
-- `cakes/*/*.html` и `cakes-mobile/*/*.html` — это 60 готовых файлов, генерируются автоматически из `build_cakes.py`. Никогда не правь их по отдельности.
+- `cakes/*/*.html` — 30 готовых файлов, генерируются из `build_cakes.py`. Не правь их по отдельности.
 - `assets/` — шрифты.
 
 ---
@@ -132,7 +132,7 @@ calculator/style.css
 
 Параметры конкретного торта (мин. вес, мин. ярусы, стоимость декора, набор начинок) лежат в `build_cakes.py` в массиве `CAKES`. Если меняется параметр одного торта:
 1. Открой `build_cakes.py`, найди нужный торт в `CAKES`, поправь.
-2. В терминале в папке `calculator/`: `python build_cakes.py` — перегенерирует все 60 файлов.
+2. В корне репозитория: `python build.py` — перегенерирует калькуляторы и страницы сайта.
 3. `push.bat` — залить на сайт.
 
 ---
@@ -141,22 +141,13 @@ calculator/style.css
 
 ```
 calculator/
-  index.html             ← лендинг с двумя ссылками: десктоп / мобилка
-  style.css              ← ВСЕ стили
-  core.js                ← ВСЯ логика
-  STYLE_GUIDE.md         ← этот файл
-  push.bat               ← одноклик-пуш на GitHub
-  build_cakes.py         ← генератор 60 HTML файлов
-  build_iframe_table.py  ← обновляет тортоначинки.xlsx (добавляет URL/IFRAME)
-  assets/                ← шрифты
-  cakes/                 ← 30 десктопных калькуляторов
-    index.html           ← превью всех 30 в iframes
-    tiered/  (10 шт)
-    fixed/   (4 шт)
-    weight/  (16 шт)
-  cakes-mobile/          ← 30 мобильных калькуляторов
-    index.html           ← превью всех 30 в iframes (компактнее)
-    tiered/  (10 шт)
-    fixed/   (4 шт)
-    weight/  (16 шт)
+  index.html             ← лендинг
+  style.css              ← стили калькулятора
+  core.js                ← логика
+  build_cakes.py         ← генератор calculator/cakes/
+  cakes/                 ← 30 калькуляторов (tiered / fixed / weight)
+site/
+  cakes/                 ← 30 адаптивных страниц тортов (десктоп + мобилка)
+  index.html             ← каталог
+  about.html             ← о нас
 ```
