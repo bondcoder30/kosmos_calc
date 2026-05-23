@@ -97,7 +97,13 @@ CAKES = [
         "subtitle":"Торт назван в честь главной героини романа Джейн Остин «Гордость и предубеждение».",
         "decorPerTier":3000, "minWeight":1.5, "minTiers":1, "fillings":"BASE"
     },
-
+     {
+        "id":"fuji", "type":"tiered", "name":"fuji",
+        "title":"fuji",
+        "desc":"Объёмная шапка из крема, цветные полоски, бантики, ягоды. Азиатский стиль!",
+        "subtitle":"Торт назван в честь главного символа Японии.",
+        "decorPerTier":3500, "minWeight":1.5, "minTiers":1, "fillings":"BASE"
+    },
     # ============ ТИП 2 — ФИКС. ВЕС ============
     {
         "id":"faberge", "type":"fixed", "name":"фаберже",
@@ -247,14 +253,7 @@ CAKES = [
         "decorTable":[(1.5,2.5,2500),(3,5,3500)],
         "minWeight":1.5, "maxWeight":5, "fillings":"PLUS_CHEESECAKE"
     },
-    {
-        "id":"fuji", "type":"weight", "name":"fuji",
-        "title":"fuji",
-        "desc":"Объёмная шапка из крема, цветные полоски, бантики, ягоды. Азиатский стиль!",
-        "subtitle":"Торт назван в честь главного символа Японии.",
-        "decorTable":[(1.5,2.5,3000),(3,5.5,4000)],
-        "minWeight":1.5, "maxWeight":5.5, "fillings":"PLUS_CHERNIKA"
-    },
+   
     {
         "id":"tiramisu", "type":"weight", "name":"тирамису",
         "title":"тирамису",
