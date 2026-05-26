@@ -451,8 +451,7 @@ UNIFIED_PAGE = """<!doctype html>
     .col-info .calc-frame{width:96%;max-width:440px;height:auto;min-height:0;flex:none;margin:8px auto 32px}
     .col-third{overflow:hidden;height:100%;position:relative}
     .col-third .col-fillings,.col-third .col-delivery{position:absolute;inset:0;height:auto;overflow-y:auto}
-    .col-third .col-delivery{display:none;flex-direction:column}
-    .cake-page.is-delivery .col-third .col-delivery{display:flex}
+    .col-third.is-delivery .col-delivery{display:flex;flex-direction:column}
     .cake-page.is-delivery .col-third .col-fillings{display:none}
     .delivery-back{position:absolute;right:18px;bottom:18px;left:auto;width:36px;height:36px}
     .delivery-back svg{width:100%;height:100%}
