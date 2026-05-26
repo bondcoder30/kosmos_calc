@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>fuji — kosmos</title>
 <link rel="stylesheet" href="../style.css">
-<link rel="stylesheet" href="../../calculator/style.css?v=1779506130">
-<link rel="stylesheet" href="../../calculator/delivery/delivery.css?v=1779506130">
+<link rel="stylesheet" href="../../calculator/style.css?v=1779804074">
+<link rel="stylesheet" href="../../calculator/delivery/delivery.css?v=1779726900">
 <style>
   /* Узкая колонка: три колонки остаются в ряд. */
   @media (min-width:901px) and (max-width:1280px){
@@ -47,8 +47,7 @@
 
   <section class="cake-col col-photo" aria-label="фото торта">
     <div class="cake-photos" id="cake-photos">
-      <img class="photo" src="../photos/fuji/обложка.JPG" alt="fuji — деталь" loading="eager">
-      <img class="photo" src="../photos/fuji/cover.jpg" alt="fuji" loading="lazy">
+      <img class="photo" src="../photos/fuji/cover.webp" alt="fuji" loading="eager">
     </div>
     <div class="cake-photo-dots mob-dots" id="cake-photo-dots" aria-hidden="true"></div>
   </section>
@@ -66,7 +65,7 @@
     <div class="cake-fill-head">
       <h2 class="mob-section-title">Что внутри?<img class="mob-section-cherry" src="../assets/cherry.svg" alt="" aria-hidden="true"></h2>
     </div>
-    <div class="col-fillings" id="fillings-col" data-fillings="PLUS_CHERNIKA"></div>
+    <div class="col-fillings" id="fillings-col" data-fillings="BASE"></div>
     <div class="cake-fillings-dots mob-dots mob-dots--small" id="cake-fillings-dots" aria-hidden="true"></div>
     <div class="col-delivery" id="delivery-col" aria-hidden="true">
       <button class="delivery-back" id="delivery-back" type="button" aria-label="закрыть доставку">
@@ -80,33 +79,22 @@
 
 </div>
 
-<script src="../../calculator/core.js?v=1779506130"></script>
+<script src="../../calculator/core.js?v=1779726900"></script>
 <script>
-renderWeightCake({
+renderTieredCake({
   "id": "fuji",
   "name": "fuji",
   "title": "fuji",
   "desc": "Объёмная шапка из крема, цветные полоски, бантики, ягоды. Азиатский стиль!",
   "subtitle": "Торт назван в честь главного символа Японии.",
-  "decorTable": [
-    {
-      "min": 1.5,
-      "max": 2.5,
-      "price": 3000
-    },
-    {
-      "min": 3,
-      "max": 5.5,
-      "price": 4000
-    }
-  ],
+  "decorPerTier": 3500,
   "minWeight": 1.5,
-  "maxWeight": 5.5,
+  "minTiers": 1,
   "mobile": true,
-  "fillings": FILLING_SETS.PLUS_CHERNIKA
+  "fillings": FILLING_SETS.BASE
 });
 </script>
-<script src="../../calculator/delivery/delivery.js?v=1779506130"></script>
+<script src="../../calculator/delivery/delivery.js?v=1779804267"></script>
 <script>Kosmos.mountDelivery(document.getElementById('dlv-root'));</script>
 <script src="../fillings/data.js"></script>
 <script>
@@ -179,7 +167,7 @@ renderWeightCake({
     if (slug){
       const cls = document.createElement('img');
       cls.className = 'bb-class';
-      cls.src = `../assets/class-${slug}.svg?v=1778863750`;
+      cls.src = `../assets/class-${slug}.svg?v=1779726900`;
       cls.alt = f.cls;
       cls.title = f.cls;
       bubble.appendChild(cls);

@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>люмьер — kosmos</title>
 <link rel="stylesheet" href="../style.css">
-<link rel="stylesheet" href="../../calculator/style.css?v=1779295272">
-<link rel="stylesheet" href="../../calculator/delivery/delivery.css?v=1779294378">
+<link rel="stylesheet" href="../../calculator/style.css?v=1779804074">
+<link rel="stylesheet" href="../../calculator/delivery/delivery.css?v=1779726900">
 <style>
   /* Узкая колонка: три колонки остаются в ряд. */
   @media (min-width:901px) and (max-width:1280px){
@@ -47,8 +47,9 @@
 
   <section class="cake-col col-photo" aria-label="фото торта">
     <div class="cake-photos" id="cake-photos">
-      <img class="photo" src="../photos/lumiere/IMG_2679.JPG" alt="люмьер — деталь" loading="eager">
-      <img class="photo" src="../photos/lumiere/cover.jpg" alt="люмьер" loading="lazy">
+      <img class="photo" src="../photos/lumiere/1.webp" alt="люмьер — деталь" loading="eager">
+      <img class="photo" src="../photos/lumiere/2.webp" alt="люмьер — деталь" loading="lazy">
+      <img class="photo" src="../photos/lumiere/cover.webp" alt="люмьер" loading="lazy">
     </div>
     <div class="cake-photo-dots mob-dots" id="cake-photo-dots" aria-hidden="true"></div>
   </section>
@@ -80,7 +81,7 @@
 
 </div>
 
-<script src="../../calculator/core.js?v=1779294368"></script>
+<script src="../../calculator/core.js?v=1779726900"></script>
 <script>
 renderTieredCake({
   "id": "lumiere",
@@ -95,7 +96,7 @@ renderTieredCake({
   "fillings": FILLING_SETS.PLUS_CHEESECAKE
 });
 </script>
-<script src="../../calculator/delivery/delivery.js?v=1779294380"></script>
+<script src="../../calculator/delivery/delivery.js?v=1779804267"></script>
 <script>Kosmos.mountDelivery(document.getElementById('dlv-root'));</script>
 <script src="../fillings/data.js"></script>
 <script>
@@ -168,7 +169,7 @@ renderTieredCake({
     if (slug){
       const cls = document.createElement('img');
       cls.className = 'bb-class';
-      cls.src = `../assets/class-${slug}.svg?v=1779126608`;
+      cls.src = `../assets/class-${slug}.svg?v=1779726900`;
       cls.alt = f.cls;
       cls.title = f.cls;
       bubble.appendChild(cls);

@@ -30,15 +30,11 @@ html,body{
   margin:0;padding:0;height:100%;
   background:var(--bg);
   color:#1a1a1a;font-family:var(--text);
-  cursor:url('assets/cursor.svg') 8 8, auto;
 }
 
 /* глобально прячем скроллбары — скролл работает, но полосок не видно */
 *{scrollbar-width:none;-ms-overflow-style:none}
 *::-webkit-scrollbar{display:none;width:0;height:0}
-button,a,.menu-btn,.menu-list li{
-  cursor:url('assets/cursor.svg') 8 8, pointer;
-}
 a{color:inherit}
 img{display:block;max-width:100%}
 
@@ -465,7 +461,6 @@ body.about-page{
   display:flex;align-items:center;justify-content:center;
   color:var(--red);
   transition:transform .12s ease, color .15s ease;
-  cursor:url('assets/cursor.svg') 8 8, pointer;
 }
 .delivery-back:hover{color:var(--rose)}
 .delivery-back:active{transform:scale(.9)}
@@ -574,7 +569,6 @@ body.about-page{
   border:0;background:none;padding:0;
   display:flex;align-items:center;justify-content:center;
   color:var(--red);z-index:4;
-  cursor:url('assets/cursor.svg') 8 8, pointer;
   transition:color .15s ease, transform .08s ease;
 }
 .slice-wrap .filling-bubble .close:hover{color:var(--rose)}
