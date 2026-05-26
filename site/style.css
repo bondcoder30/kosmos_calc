@@ -36,9 +36,6 @@ html,body{
 /* глобально прячем скроллбары — скролл работает, но полосок не видно */
 *{scrollbar-width:none;-ms-overflow-style:none}
 *::-webkit-scrollbar{display:none;width:0;height:0}
-button,a,.menu-btn,.menu-list li{
-  cursor:url('assets/cursor.svg') 8 8, pointer;
-}
 a{color:inherit}
 img{display:block;max-width:100%}
 
