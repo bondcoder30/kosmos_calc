@@ -1122,7 +1122,7 @@ def write_unified_catalog_entrypoint(by_id: dict) -> None:
         cid_esc = html.escape(cid)
         rows.append(
             f'  <a class="cover" href="cakes/{cid_esc}.html">'
-            f'<img src="photos/{cid_esc}/{cov}" alt="{nm}" loading="lazy" '
+            f'<img src="photos/{cid_esc}/{cov}" alt="{nm}"   '
             f'onerror="if(!this.dataset.fbk){{this.dataset.fbk=1;'
             f'this.src=this.src.replace(/cover\\.(jpg|jpeg|png|webp)$/i,'
             f"'cover.' + ((RegExp.$1||'jpg').toUpperCase()));}}\">"

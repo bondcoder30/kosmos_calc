@@ -44,13 +44,9 @@ html,body{
   margin:0;padding:0;height:100%;
   background:var(--bg);
   font-family:var(--text);color:#1a1a1a;
-  cursor:url('assets/cursor.svg') 8 8, auto;
   overflow-x:hidden;
   overscroll-behavior-x:none;
   touch-action:pan-y;
-}
-button, select, .csel__trigger, .csel__opt, .radio-big, .fixed-row, .next-btn, .stepper .step-btn{
-  cursor:url('assets/cursor.svg') 8 8, pointer;
 }
 
 /* ============ FRAME ============ */
@@ -300,9 +296,9 @@ body.mobile .fill-class{margin-top:8px}
 /* Cache-bust версия после ?v= автоматически обновляется build_site_pages.py
    по mtime файлов assets/class-*.svg, чтобы после ручной замены картинки
    браузер сразу подгружал новую версию, а не отдавал из кэша. */
-.fill-class__ico.is-base   {background-image:url('assets/class-base.svg?v=1779126608')}
-.fill-class__ico.is-classic{background-image:url('assets/class-classic.svg?v=1778841156')}
-.fill-class__ico.is-lux    {background-image:url('assets/class-lux.svg?v=1778841156')}
+.fill-class__ico.is-base   {background-image:url('assets/class-base.svg?v=1779726900')}
+.fill-class__ico.is-classic{background-image:url('assets/class-classic.svg?v=1779726900')}
+.fill-class__ico.is-lux    {background-image:url('assets/class-lux.svg?v=1779726900')}
 
 /* В ярусных — три рядом, чуть мельче чтобы умещались в одну линию */
 .fill-class--all{gap:12px;margin-top:18px}
