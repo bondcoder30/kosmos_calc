@@ -63,7 +63,7 @@
     }).join('');
     return ''+
 '<div class="dlv-frame">'+
-'  <div class="dlv-map"><iframe src="'+MAP_SRC+'" title="Зоны доставки" loading="lazy" allowfullscreen></iframe></div>'+
+'  <div class="dlv-map"><iframe src="'+MAP_SRC+'" title="Зоны доставки"   allowfullscreen></iframe></div>'+
 '  <p class="dlv-title">Мы бережно доставляем торты по всей Москве и до 20 км от МКАД.</p>'+
 '  <div class="dlv-zone-label">выберите зону</div>'+
 '  <div class="dlv-zones" data-role="zones">'+zonesHTML+'</div>'+

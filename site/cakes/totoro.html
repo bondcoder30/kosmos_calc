@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>тоторо — kosmos</title>
 <link rel="stylesheet" href="../style.css">
-<link rel="stylesheet" href="../../calculator/style.css?v=1779295272">
-<link rel="stylesheet" href="../../calculator/delivery/delivery.css?v=1779294378">
+<link rel="stylesheet" href="../../calculator/style.css?v=1779821378">
+<link rel="stylesheet" href="../../calculator/delivery/delivery.css?v=1779726900">
 <style>
   /* Узкая колонка: три колонки остаются в ряд. */
   @media (min-width:901px) and (max-width:1280px){
@@ -27,8 +27,7 @@
     .col-info .calc-frame{width:96%;max-width:440px;height:auto;min-height:0;flex:none;margin:8px auto 32px}
     .col-third{overflow:hidden;height:100%;position:relative}
     .col-third .col-fillings,.col-third .col-delivery{position:absolute;inset:0;height:auto;overflow-y:auto}
-    .col-third .col-delivery{display:none;flex-direction:column}
-    .cake-page.is-delivery .col-third .col-delivery{display:flex}
+    .col-third .col-delivery{display:flex;flex-direction:column}
     .cake-page.is-delivery .col-third .col-fillings{display:none}
     .delivery-back{position:absolute;right:18px;bottom:18px;left:auto;width:36px;height:36px}
     .delivery-back svg{width:100%;height:100%}
@@ -47,10 +46,11 @@
 
   <section class="cake-col col-photo" aria-label="фото торта">
     <div class="cake-photos" id="cake-photos">
-      <img class="photo" src="../photos/totoro/IMG_1339.JPG" alt="тоторо — деталь" loading="eager">
-      <img class="photo" src="../photos/totoro/IMG_3102.JPG" alt="тоторо — деталь" loading="lazy">
-      <img class="photo" src="../photos/totoro/IMG_8566.JPG" alt="тоторо — деталь" loading="lazy">
-      <img class="photo" src="../photos/totoro/cover.jpg" alt="тоторо" loading="lazy">
+      <img class="photo" src="../photos/totoro/1.webp" alt="тоторо — деталь" loading="eager">
+      <img class="photo" src="../photos/totoro/2.webp" alt="тоторо — деталь" loading="lazy">
+      <img class="photo" src="../photos/totoro/3.webp" alt="тоторо — деталь" loading="lazy">
+      <img class="photo" src="../photos/totoro/4.webp" alt="тоторо — деталь" loading="lazy">
+      <img class="photo" src="../photos/totoro/cover.webp" alt="тоторо" loading="lazy">
     </div>
     <div class="cake-photo-dots mob-dots" id="cake-photo-dots" aria-hidden="true"></div>
   </section>
@@ -82,7 +82,7 @@
 
 </div>
 
-<script src="../../calculator/core.js?v=1779294368"></script>
+<script src="../../calculator/core.js?v=1779804907"></script>
 <script>
 renderWeightCake({
   "id": "totoro",
@@ -108,7 +108,7 @@ renderWeightCake({
   "fillings": FILLING_SETS.PLUS_CHEESECAKE
 });
 </script>
-<script src="../../calculator/delivery/delivery.js?v=1779294380"></script>
+<script src="../../calculator/delivery/delivery.js?v=1779804267"></script>
 <script>Kosmos.mountDelivery(document.getElementById('dlv-root'));</script>
 <script src="../fillings/data.js"></script>
 <script>
@@ -181,7 +181,7 @@ renderWeightCake({
     if (slug){
       const cls = document.createElement('img');
       cls.className = 'bb-class';
-      cls.src = `../assets/class-${slug}.svg?v=1779126608`;
+      cls.src = `../assets/class-${slug}.svg?v=1779726900`;
       cls.alt = f.cls;
       cls.title = f.cls;
       bubble.appendChild(cls);
