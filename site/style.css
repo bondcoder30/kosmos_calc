@@ -822,4 +822,97 @@ body.mob-page .menu-list{top:80px;left:14px}
     padding-left: 20px;
     margin-bottom: 20px;
   }
+
+
+  .cover[data-cake='fairy cake']{
+    order: 0;
+  }
+  .cover[data-cake='тирамису']{
+    order: 1;
+  }
+  .cover[data-cake='келли']{
+    order: 2;
+  }
+  .cover[data-cake='люмьер']{
+    order: 3;
+  }
+  .cover[data-cake='вавилон']{
+    order: 4;
+  }
+  .cover[data-cake='аполлон']{
+    order: 5;
+  }
+  .cover[data-cake='любовное настроение']{
+    order: 6;
+  }
+  .cover[data-cake='белль']{
+    order: 7;
+  }
+  .cover[data-cake='dancing queen']{
+    order: 8;
+  }
+  .cover[data-cake='лебединое озеро']{
+    order: 9;
+  }
+  .cover[data-cake='ягодные поля навсегда']{
+    order: 10;
+  }
+  .cover[data-cake='богемская рапсодия']{
+    order: 11;
+  }
+  .cover[data-cake='big cherry fairy cake']{
+    order: 12;
+  }
+  .cover[data-cake='вишневый сад']{
+    order: 13;
+  }
+  .cover[data-cake='вам письмо']{
+    order: 14;
+  }
+  .cover[data-cake='shine bright']{
+    order: 15;
+  }
+  .cover[data-cake='blueberry hill']{
+    order: 16;
+  }
+  .cover[data-cake='тоторо']{
+    order: 17;
+  }
+  .cover[data-cake='sailor moon']{
+    order: 18;
+  }
+  .cover[data-cake='дарси']{
+    order: 19;
+  }
+  .cover[data-cake='орфей']{
+    order: 20;
+  }
+  .cover[data-cake='шапито']{
+    order: 21;
+  }
+  .cover[data-cake='la la land']{
+    order: 22;
+  }
+  .cover[data-cake='элизабет']{
+    order: 23;
+  }
+  .cover[data-cake='secret garden']{
+    order: 24;
+  }
+  .cover[data-cake='анна']{
+    order: 25;
+  }
+  .cover[data-cake='green day']{
+    order: 26;
+  }
+  .cover[data-cake='фаберже']{
+    order: 27;
+  }
+  .cover[data-cake='fuji']{
+    order: 28;
+  }  
+  .cover[data-cake='куинджи']{
+    order: 29;
+  }  
+  
 }
