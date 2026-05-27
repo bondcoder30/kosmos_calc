@@ -118,14 +118,14 @@ def bust_calc_asset_cache():
         if new != text:
             p.write_text(new, encoding="utf-8")
 
-# Порядок на главной (как договорились с заказчиком), без fuji
+# Порядок на главной (как договорились с заказчиком)
 CATALOG_ORDER = [
     "fairy-cake", "tiramisu", "lumiere", "letter", "big-cherry-fairy-cake",
     "swan-lake", "babylon", "love-in-mood", "dancing-queen", "secret-garden",
     "chapito", "anna", "bell", "bohemian-rhapsody", "totoro", "kelly",
     "la-la-land", "darcy", "shine-bright", "green-day", "orpheus",
     "cherry-orchard", "elizabeth", "berry-fields", "kuinji", "faberge",
-    "sailor-moon", "apollo", "blueberry-hill",
+    "sailor-moon", "apollo", "blueberry-hill", "fuji"
 ]
 
 _RE_MENU_CAKE_SHELL = re.compile(
